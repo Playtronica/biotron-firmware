@@ -36,7 +36,7 @@ add_compile_options(-Wall
         -Wno-maybe-uninitialized
         )
 
-add_subdirectory(include)
+#add_subdirectory(include)
 
 
 file(GLOB biotron_SRC "src/*.c")
