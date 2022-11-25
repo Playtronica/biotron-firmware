@@ -4,20 +4,174 @@
 
 #include "bsp/board.h"
 #include "tusb.h"
+#include "include/frequency_counter.h"
 
+#define STAB_TIME 40
+#define AVERAGE_TIME 40
+#define SLEEP_TIME 24
+
+#define PLANT_PIN  1
+#define BlUE_LED 0
+#define FIRST_GREEN_LED 2
+#define SECOND_GREEN_LED 3
+#define PHOTORESISTORS_PIN 4
+#define TEST_LED 25
+
+#define TIMER_MS 125
+#define TIMER_MULTIPLIER (1000 / TIMER_MS)
+#define MIN_FREQ 60
+
+uint32_t freq;
+const float sensitivity = 0.9;
+int countActiveValues = 0;
+bool sleepMode = true;
+
+int frequency;
+
+int averageFreq = 0;
+
+
+enum Status {
+    Sleep,
+    Avg,
+    Active
+};
+
+enum Status status = Sleep;
+
+void setup() {
+    gpio_init(PLANT_PIN);
+    gpio_init(BlUE_LED);
+    gpio_init(FIRST_GREEN_LED);
+    gpio_init(SECOND_GREEN_LED);
+    gpio_init(TEST_LED);
+
+    gpio_set_dir(PLANT_PIN, GPIO_IN);
+    gpio_set_dir(BlUE_LED, GPIO_OUT);
+    gpio_set_dir(FIRST_GREEN_LED, GPIO_OUT);
+    gpio_set_dir(SECOND_GREEN_LED, GPIO_OUT);
+    gpio_set_dir(TEST_LED, GPIO_OUT);
+}
+
+int filVal = 0;
+float k = 0.3;
+int expRunningAverage(float newVal) {
+    filVal += (newVal - filVal) * k;
+    return filVal;
+}
+
+float percentChange(int oldVal, int newVal) {
+    return ((newVal - oldVal) / (float) oldVal) * 100;
+}
+
+void frequencyWork() {
+    switch (status) {
+        case Sleep:
+            filVal = 0;
+            if (freq > MIN_FREQ) {
+                countActiveValues++;
+            } else {
+                countActiveValues = 0;
+            }
+
+            if (countActiveValues >= STAB_TIME) {
+                countActiveValues = 0;
+                averageFreq = 0;
+                status = Avg;
+                printf("[+] Change status: Sleep -> Stab\n");
+            }
+            break;
+        case Avg:
+            if (freq > MIN_FREQ) {
+                if (filVal == 0) {
+                    filVal = freq;
+                }
+                countActiveValues++;
+                int b = expRunningAverage(freq);
+                printf("[TEST] %d\n", b);
+                averageFreq += b;
+            } else {
+                averageFreq = 0;
+                countActiveValues = 0;
+                status = Sleep;
+                printf("[+] Change status: Stab -> Sleep\n");
+            }
+
+            if (countActiveValues > AVERAGE_TIME) {
+                averageFreq /= countActiveValues;
+                countActiveValues = 0;
+                status = Active;
+                printf("[+] Change status: Stab -> Active\n");
+            }
+            break;
+        case Active:
+            if (freq < MIN_FREQ) {
+                countActiveValues++;
+            } else {
+                countActiveValues = 0;
+            }
+
+            if (countActiveValues > SLEEP_TIME) {
+                countActiveValues = 0;
+                averageFreq = 0;
+                status = Sleep;
+                printf("[+] Change status: Active -> Sleep\n");
+            }
+            break;
+    }
+}
+
+void ledWork() {
+    gpio_put(BlUE_LED, 0);
+    gpio_put(FIRST_GREEN_LED, 0);
+    gpio_put(SECOND_GREEN_LED, 0);
+    switch (status) {
+        case Sleep:
+            gpio_put(BlUE_LED, 1);
+            break;
+        case Avg:
+            gpio_put(FIRST_GREEN_LED, 1);
+            break;
+        case Active:
+            gpio_put(FIRST_GREEN_LED, 1);
+            gpio_put(SECOND_GREEN_LED, 1);
+            break;
+    }
+}
 
 void midi_task(void);
 
 
 int main(void)
 {
+    stdio_init_all();
+    setup();
+    sleep_ms(3000);
+
+    gpio_put(TEST_LED, 1);
     tusb_init();
 
-    while (1)
+    beginTimer(PLANT_PIN, TIMER_MS);
+    
+    while (true)
     {
-        tud_task(); // tinyusb device task
-        midi_task();
+        tud_task();
+        gpio_put(TEST_LED, 1);
+        if (isReady()) {
+
+            freq = getFreq() * TIMER_MULTIPLIER;
+            if (freq > MIN_FREQ) {
+                gpio_put(TEST_LED, 1);
+            }
+            frequencyWork();
+            ledWork();
+            if (status == Active) {
+                midi_task();
+            }
+        }
+        sleep_ms(10);
     }
+
 }
 
 uint32_t note_pos = 0;
