@@ -178,12 +178,19 @@ uint32_t note_pos = 0;
 
 // Store example melody as an array of note values
 uint8_t note_sequence[] = {
-        74,78,81,86,90,93,98,102,57,61,66,69,73,78,81,
-        85,88,92,97,100,97,92,88,85,81,78,
-        74,69,66,62,57,62,66,69,74,78,81,86,90,93,
-        97,102,97,93,90,85,81,78,73,68,64,61,
-        56,61,64,68,74,78,81,86,90,93,98,102
+        36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46,
+        47, 48, 49, 50, 51, 52, 53, 54, 55, 56,
+        57, 58, 59, 60, 61, 62, 63, 64, 65, 66,
+        67, 68, 69, 70, 71, 72, 73, 74, 75, 76,
+        77, 78, 79, 80, 81, 82, 83, 84, 85, 86,
+        87, 88, 89, 90, 91, 92, 93, 94, 95, 96,
+        97, 98, 99, 100, 101, 102, 103, 104, 105,
+        106, 107, 108, 109, 110, 111, 112, 113, 114,
+        115, 116, 117, 118, 119
 };
+
+uint32_t current_note;
+uint32_t previous;
 
 void midi_task(void)
 {
@@ -198,24 +205,20 @@ void midi_task(void)
     uint8_t packet[4];
     while ( tud_midi_available() ) tud_midi_packet_read(packet);
 
-    // send note periodically
-    if (board_millis() - start_ms < 286) return; // not enough time
-    start_ms += 286;
 
-    // Previous positions in the note sequence.
-    int previous = (int) (note_pos - 1);
 
-    // If we currently are at position 0, set the
-    // previous position to the last note in the sequence.
-    if (previous < 0) previous = sizeof(note_sequence) - 1;
+    previous = current_note;
+
+    current_note = 43 + (percentChange(averageFreq, freq) / 1.5);
 
     // Send Note On for current position at full velocity (127) on channel 1.
-    uint8_t note_on[3] = { 0x90 | channel, note_sequence[0], 127 };
+    uint8_t note_on[3] = { 0x90 | channel, note_sequence[current_note], 127 };
     tud_midi_stream_write(cable_num, note_on, 3);
 
     // Send Note Off for previous note.
     uint8_t note_off[3] = { 0x80 | channel, note_sequence[previous], 0};
     tud_midi_stream_write(cable_num, note_off, 3);
+
 
     // Increment position
     note_pos++;
