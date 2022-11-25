@@ -2,9 +2,11 @@
 #include <stdio.h>
 #include <string.h>
 
+
 #include "bsp/board.h"
 #include "tusb.h"
-#include "include/frequency_counter.h"
+#include "frequency_counter.h"
+#include "notes.h"
 
 #define STAB_TIME 40
 #define AVERAGE_TIME 40
@@ -26,9 +28,8 @@ const float sensitivity = 0.9;
 int countActiveValues = 0;
 bool sleepMode = true;
 
-int frequency;
 
-int averageFreq = 0;
+uint32_t averageFreq = 0;
 
 
 enum Status {
@@ -38,6 +39,7 @@ enum Status {
 };
 
 enum Status status = Sleep;
+
 
 void setup() {
     gpio_init(PLANT_PIN);
@@ -53,16 +55,19 @@ void setup() {
     gpio_set_dir(TEST_LED, GPIO_OUT);
 }
 
-int filVal = 0;
-float k = 0.3;
-int expRunningAverage(float newVal) {
+
+uint32_t filVal = 0;
+double k = 0.3;
+uint32_t expRunningAverage(float newVal) {
     filVal += (newVal - filVal) * k;
     return filVal;
 }
 
-float percentChange(int oldVal, int newVal) {
-    return ((newVal - oldVal) / (float) oldVal) * 100;
+
+uint32_t percentChange(uint32_t oldVal, uint32_t newVal) {
+    return (newVal - oldVal) * 100 /  oldVal;
 }
+
 
 void frequencyWork() {
     switch (status) {
@@ -121,6 +126,7 @@ void frequencyWork() {
     }
 }
 
+
 void ledWork() {
     gpio_put(BlUE_LED, 0);
     gpio_put(FIRST_GREEN_LED, 0);
@@ -138,6 +144,7 @@ void ledWork() {
             break;
     }
 }
+
 
 void midi_task(void);
 
@@ -174,28 +181,11 @@ int main(void)
 
 }
 
-uint32_t note_pos = 0;
-
-// Store example melody as an array of note values
-uint8_t note_sequence[] = {
-        36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46,
-        47, 48, 49, 50, 51, 52, 53, 54, 55, 56,
-        57, 58, 59, 60, 61, 62, 63, 64, 65, 66,
-        67, 68, 69, 70, 71, 72, 73, 74, 75, 76,
-        77, 78, 79, 80, 81, 82, 83, 84, 85, 86,
-        87, 88, 89, 90, 91, 92, 93, 94, 95, 96,
-        97, 98, 99, 100, 101, 102, 103, 104, 105,
-        106, 107, 108, 109, 110, 111, 112, 113, 114,
-        115, 116, 117, 118, 119
-};
 
 uint32_t current_note;
 uint32_t previous;
-
 void midi_task(void)
 {
-    static uint32_t start_ms = 0;
-
     uint8_t const cable_num = 0; // MIDI jack associated with USB endpoint
     uint8_t const channel   = 0; // 0 for channel 1
 
@@ -209,20 +199,13 @@ void midi_task(void)
 
     previous = current_note;
 
-    current_note = 43 + (percentChange(averageFreq, freq) / 1.5);
+    current_note = getNote(((percentChange(averageFreq, freq) / 2)));
 
     // Send Note On for current position at full velocity (127) on channel 1.
-    uint8_t note_on[3] = { 0x90 | channel, note_sequence[current_note], 127 };
+    uint8_t note_on[3] = { 0x90 | channel, current_note, 127 };
     tud_midi_stream_write(cable_num, note_on, 3);
 
     // Send Note Off for previous note.
-    uint8_t note_off[3] = { 0x80 | channel, note_sequence[previous], 0};
+    uint8_t note_off[3] = { 0x80 | channel, previous, 0};
     tud_midi_stream_write(cable_num, note_off, 3);
-
-
-    // Increment position
-    note_pos++;
-
-    // If we are at the end of the sequence, start over.
-    if (note_pos >= sizeof(note_sequence)) note_pos = 0;
 }
