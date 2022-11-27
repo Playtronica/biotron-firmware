@@ -24,7 +24,7 @@
 #define MIN_FREQ 60
 
 uint32_t freq;
-const float sensitivity = 0.9;
+float sensitivity = 0.9;
 int countActiveValues = 0;
 bool sleepMode = true;
 
@@ -64,8 +64,8 @@ uint32_t expRunningAverage(float newVal) {
 }
 
 
-uint32_t percentChange(uint32_t oldVal, uint32_t newVal) {
-    return (newVal - oldVal) * 100 /  oldVal;
+int percentChange(uint32_t oldVal, uint32_t newVal) {
+    return newVal - oldVal;
 }
 
 
@@ -173,6 +173,7 @@ int main(void)
             frequencyWork();
             ledWork();
             if (status == Active) {
+                sensitivity = averageFreq / getCountNote();
                 midi_task();
             }
         }
@@ -199,7 +200,7 @@ void midi_task(void)
 
     previous = current_note;
 
-    current_note = getNote(((percentChange(averageFreq, freq) / 2)));
+    current_note = getNote(percentChange(averageFreq, freq) / sensitivity);
 
     // Send Note On for current position at full velocity (127) on channel 1.
     uint8_t note_on[3] = { 0x90 | channel, current_note, 127 };
