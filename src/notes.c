@@ -43,25 +43,29 @@ const NotesScale_t scales[] = {
         {8, diminished},
 };
 
-ScaleNums_t scale = SCALE_CHROM;
+ScaleNums_t scale = SCALE_MAJOR;
 
 
 uint32_t getNote(int percent) {
     NotesScale_t * _scale = &scales[scale];
     bool minus = percent < 0;
-
+    printf("LST %hhu\n", _scale->scale[0]);
     if (minus) percent *= -1;
-    printf("TEST PERCENT: %lu\n", percent);
+
     uint32_t note = MIDDLE_NOTE;
+
     if (!minus) {
-        int step = _scale[scale].steps - 1;
+        int step = _scale->steps - 1;
+
         for (int i = 0; i < percent; i++) {
             if (step < 0) {
-                step = _scale[scale].steps - 1;
+                step = _scale->steps - 1;
             }
-            note -= _scale[scale].scale[step];
-            printf("TEST MINUS NOTE: %lu\n", note);
-            step++;
+            printf("I AM NOTE %lu\n", note);
+
+            note -= _scale->scale[step];
+            printf("I AM NOTE %lu\n", note);
+            step--;
 
             if (note <= LOWEST_NOTE) {
                 note = LOWEST_NOTE;
@@ -71,11 +75,11 @@ uint32_t getNote(int percent) {
     else {
         int step = 0;
         for (int i = 0; i < percent; i++) {
-            if (step >= _scale[scale].steps) {
+            if (step >= _scale->steps) {
                 step = 0;
             }
-            note += _scale[scale].scale[step];
-            printf("TEST SUM NOTE: %lu\n", note);
+            note += _scale->scale[step];
+
             step++;
 
             if (note >= HIGHEST_NOTE) {
