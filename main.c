@@ -22,14 +22,17 @@
 #define TIMER_MS 125
 #define TIMER_MULTIPLIER (1000 / TIMER_MS)
 #define MIN_FREQ 60
+#define RANGE_PERCENT 40
 
-uint32_t freq;
-float sensitivity = 0.9;
+
+double sens;
+
+int freq;
 int countActiveValues = 0;
 bool sleepMode = true;
 
 
-uint32_t averageFreq = 0;
+int averageFreq = 0;
 
 
 enum Status {
@@ -64,8 +67,8 @@ uint32_t expRunningAverage(float newVal) {
 }
 
 
-int percentChange(uint32_t oldVal, uint32_t newVal) {
-    return newVal - oldVal;
+double percentChange(int oldVal, int newVal) {
+    return ((double)(newVal - oldVal) / (double)oldVal) * 100;
 }
 
 
@@ -159,7 +162,7 @@ int main(void)
     tusb_init();
 
     beginTimer(PLANT_PIN, TIMER_MS);
-    
+    sens = (double)(2 * RANGE_PERCENT) / getCountNote();
     while (true)
     {
         tud_task();
@@ -173,7 +176,6 @@ int main(void)
             frequencyWork();
             ledWork();
             if (status == Active) {
-                sensitivity = averageFreq / getCountNote();
                 midi_task();
             }
         }
@@ -200,7 +202,7 @@ void midi_task(void)
 
     previous = current_note;
 
-    current_note = getNote(percentChange(averageFreq, freq) / sensitivity);
+    current_note = getNote((int)(percentChange(averageFreq, freq) / sens));
 
     // Send Note On for current position at full velocity (127) on channel 1.
     uint8_t note_on[3] = { 0x90 | channel, current_note, 127 };

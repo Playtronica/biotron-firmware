@@ -4,6 +4,9 @@
 #define HIGHEST_NOTE 119
 #define MIDDLE_NOTE 72
 
+#ifndef OCTAVE
+#define OCTAVE 2
+#endif
 
 typedef struct {
     int steps;
@@ -43,7 +46,7 @@ const NotesScale_t scales[] = {
         {8, diminished},
 };
 
-ScaleNums_t scale = SCALE_MAJOR;
+ScaleNums_t scale = OCTAVE;
 
 
 uint32_t getNote(int percent) {
