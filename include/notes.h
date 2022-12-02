@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include "pico/stdlib.h"
 
+
 /** @brief Enumeration for scales */
 typedef enum{
     SCALE_MAJOR,
@@ -32,5 +33,8 @@ typedef enum{
 
 uint32_t getNote(int percent);
 uint32_t getCountNote();
+
+uint8_t getLengthOctave();
+uint32_t * getOctaveNotes();
 
 #endif

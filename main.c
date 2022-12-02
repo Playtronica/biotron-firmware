@@ -30,7 +30,7 @@ double sens;
 int freq;
 int countActiveValues = 0;
 bool sleepMode = true;
-
+int chan = 0x10;
 
 int averageFreq = 0;
 
@@ -66,16 +66,41 @@ uint32_t expRunningAverage(float newVal) {
     return filVal;
 }
 
-
-double percentChange(int oldVal, int newVal) {
-    return ((double)(newVal - oldVal) / (double)oldVal) * 100;
+int changes;
+int percentChange(int oldVal, int newVal) {
+    int diff = newVal - oldVal;
+    bool minus = diff < 0;
+    if (minus) diff *= -1;
+    const int n = 0;
+    double a = 0;
+    double b = 0.1;
+    int i;
+    if (diff - changes > 0) {
+        i = 1;
+        diff -= changes;
+    } else return 0;
+    double c;
+    while (diff - changes + n * (a + b) >= 0) {
+        i++;
+        diff -= changes + n * (a + b);
+        c = a + b;
+        a = b;
+        b = c;
+    }
+    if (minus) {
+        return -i;
+    }
+    return i;
 }
 
 
+int lastVal;
 void frequencyWork() {
     switch (status) {
         case Sleep:
             filVal = 0;
+            changes = 0;
+            lastVal = 0;
             if (freq > MIN_FREQ) {
                 countActiveValues++;
             } else {
@@ -97,6 +122,12 @@ void frequencyWork() {
                 countActiveValues++;
                 int b = expRunningAverage(freq);
                 printf("[TEST] %d\n", b);
+                if (averageFreq == 0) {
+                    lastVal = freq;
+                } else {
+                    changes += abs(lastVal - freq);
+                    freq = lastVal;
+                }
                 averageFreq += b;
             } else {
                 averageFreq = 0;
@@ -107,6 +138,8 @@ void frequencyWork() {
 
             if (countActiveValues > AVERAGE_TIME) {
                 averageFreq /= countActiveValues;
+                changes /= countActiveValues;
+//                changes = 1;
                 countActiveValues = 0;
                 status = Active;
                 printf("[+] Change status: Stab -> Active\n");
@@ -184,31 +217,54 @@ int main(void)
 
 }
 
+void changeChan() {
+
+}
+
 
 uint32_t current_note;
 uint32_t previous;
-void midi_task(void)
-{
+bool touch;
+void midi_task(void) {
     uint8_t const cable_num = 0; // MIDI jack associated with USB endpoint
-    uint8_t const channel   = 0; // 0 for channel 1
+    uint8_t channel = 0; // 0 for channel 1
 
     // The MIDI interface always creates input and output port/jack descriptors
     // regardless of these being used or not. Therefore incoming traffic should be read
     // (possibly just discarded) to avoid the sender blocking in IO
     uint8_t packet[4];
-    while ( tud_midi_available() ) tud_midi_packet_read(packet);
-
-
+    while (tud_midi_available()) tud_midi_packet_read(packet);
 
     previous = current_note;
 
-    current_note = getNote((int)(percentChange(averageFreq, freq) / sens));
+    current_note = getNote(percentChange(averageFreq, freq));
 
-    // Send Note On for current position at full velocity (127) on channel 1.
-    uint8_t note_on[3] = { 0x90 | channel, current_note, 127 };
-    tud_midi_stream_write(cable_num, note_on, 3);
+    uint8_t note_on[3] = {0x90 | channel, current_note, 127};
+    if (current_note != -1) {
+        tud_midi_stream_write(cable_num, note_on, 3);
+    }
+    else {
+        if (previous != -1) {
+            uint32_t *notes = getOctaveNotes();
+            for (int i = 0; i < getLengthOctave(); i++) {
+                note_on[1] = notes[i];
+                tud_midi_stream_write(cable_num, note_on, 3);
+            }
+        }
+    }
 
-    // Send Note Off for previous note.
-    uint8_t note_off[3] = { 0x80 | channel, previous, 0};
-    tud_midi_stream_write(cable_num, note_off, 3);
+    uint8_t note_off[3] = {0x80 | channel, previous, 0};
+    if (previous != -1) {
+        tud_midi_stream_write(cable_num, note_off, 3);
+    }
+    else {
+        if (current_note != -1) {
+            uint32_t *notes = getOctaveNotes();
+            for (int i = 0; i < getLengthOctave(); i++) {
+                note_off[1] = notes[i];
+                tud_midi_stream_write(cable_num, note_off, 3);
+            }
+        }
+    }
 }
+
