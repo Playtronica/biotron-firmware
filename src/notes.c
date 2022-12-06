@@ -1,5 +1,8 @@
 #include <malloc.h>
+#include <class/midi/midi_device.h>
+#include <hardware/adc.h>
 #include "../include/notes.h"
+#include "global.h"
 
 #define LOWEST_NOTE 36
 #define HIGHEST_NOTE 107
@@ -111,6 +114,75 @@ uint32_t* getOctaveNotes() {
     }
     return notes;
 }
+
+
+bool touch;
+void midi_plant(void) {
+    static uint32_t currentNote;
+    static uint32_t previousNote;
+    uint8_t const cable_num = 0;
+    uint8_t channel = 1;
+
+    uint8_t packet[4];
+    while (tud_midi_available()) tud_midi_packet_read(packet);
+
+    previousNote = currentNote;
+
+    currentNote = getNote(GetNoteDiff(averageFreq, realFrequency));
+
+    uint8_t note_on[3] = {0x90 | channel, currentNote, 127};
+    if (currentNote != -1) {
+        tud_midi_stream_write(cable_num, note_on, 3);
+    }
+    else {
+        if (previousNote != -1) {
+            uint32_t *notes = getOctaveNotes();
+            for (int i = 0; i < getLengthOctave(); i++) {
+                note_on[1] = notes[i];
+                tud_midi_stream_write(cable_num, note_on, 3);
+            }
+        }
+    }
+
+    uint8_t note_off[3] = {0x80 | channel, previousNote, 0};
+    if (previousNote != -1) {
+        tud_midi_stream_write(cable_num, note_off, 3);
+    }
+    else {
+        if (currentNote != -1) {
+            uint32_t *notes = getOctaveNotes();
+            for (int i = 0; i < getLengthOctave(); i++) {
+                note_off[1] = notes[i];
+                tud_midi_stream_write(cable_num, note_off, 3);
+            }
+        }
+    }
+}
+
+
+void midi_light(void) {
+    static uint32_t currentNote;
+    static uint32_t previousNote;
+
+    uint8_t const cable_num = 0;
+    uint8_t channel = 2;
+
+    uint8_t packet[4];
+    while (tud_midi_available()) tud_midi_packet_read(packet);
+
+    previousNote = currentNote;
+    int a = 4000 / 24;
+    currentNote = (4000 - adc_read()) / a + 24;
+
+    uint8_t note_on[3] = {0x90 | channel, currentNote, 127};
+    tud_midi_stream_write(cable_num, note_on, 3);
+
+    uint8_t note_off[3] = {0x80 | channel, previousNote, 0};
+    tud_midi_stream_write(cable_num, note_off, 3);
+}
+
+
+
 
 
 

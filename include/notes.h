@@ -9,11 +9,8 @@
 #ifndef TOUCHME_NOTES_H
 #define TOUCHME_NOTES_H
 
-
-
 #include <stdio.h>
 #include "pico/stdlib.h"
-
 
 /** @brief Enumeration for scales */
 typedef enum{
@@ -31,10 +28,7 @@ typedef enum{
     SCALE_DIMINISHED
 } ScaleNums_t;
 
-uint32_t getNote(int percent);
-uint32_t getCountNote();
-
-uint8_t getLengthOctave();
-uint32_t * getOctaveNotes();
+void midi_plant(void);
+void midi_light(void);
 
 #endif
