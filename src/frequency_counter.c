@@ -4,7 +4,7 @@
 #include "../include/frequency_counter.h"
 #include "pico/time.h"
 
-uint32_t freq = 0;
+uint32_t realFrequency = 0;
 uint8_t slice_num = 0;
 uint32_t count = 0;
 uint32_t LastCount = 0;
@@ -31,7 +31,7 @@ static uint32_t _pwm_read(uint sliceNum) {
 static bool _repeating_timer_callback_t(repeating_timer_t *rt) {
 
     freq_ready = true;
-    freq = _pwm_read(slice_num);
+    realFrequency = _pwm_read(slice_num);
 
     return true;
 }
@@ -46,7 +46,7 @@ bool isReady() {
 uint32_t getFreq() {
     if (freq_ready) {
         freq_ready = false;
-        return freq;
+        return realFrequency;
     }
     return 0;
 }

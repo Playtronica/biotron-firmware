@@ -51,23 +51,23 @@ ScaleNums_t scale = OCTAVE;
 
 
 uint32_t getNote(int percent) {
-    NotesScale_t * _scale = &scales[scale];
+    NotesScale_t _scale = scales[scale];
     bool minus = percent < 0;
-    printf("LST %hhu\n", _scale->scale[0]);
+    printf("LST %hhu\n", _scale.scale[0]);
     if (minus) percent *= -1;
 
     uint32_t note = MIDDLE_NOTE;
 
     if (!minus) {
-        int step = _scale->steps - 1;
+        int step = _scale.steps - 1;
 
         for (int i = 0; i < percent; i++) {
             if (step < 0) {
-                step = _scale->steps - 1;
+                step = _scale.steps - 1;
             }
             printf("I AM NOTE %lu\n", note);
 
-            note -= _scale->scale[step];
+            note -= _scale.scale[step];
             printf("I AM NOTE %lu\n", note);
             step--;
 
@@ -79,10 +79,10 @@ uint32_t getNote(int percent) {
     else {
         int step = 0;
         for (int i = 0; i < percent; i++) {
-            if (step >= _scale->steps) {
+            if (step >= _scale.steps) {
                 step = 0;
             }
-            note += _scale->scale[step];
+            note += _scale.scale[step];
 
             step++;
 
