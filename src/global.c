@@ -23,13 +23,13 @@ int GetNoteDiff(int oldVal, int newVal) {
     double second = FIRST_VALUE;
 
     int i;
-    if (diff - noteChangeValue > 0) {
+    if (diff - noteChangeValue >= 0) {
         i = 1;
         diff -= noteChangeValue;
     } else return 0;
 
     double extra;
-    while (diff - noteChangeValue + NOTE_DISTANCE * (first + second) >= 0) {
+    while (diff - (noteChangeValue + NOTE_DISTANCE * (first + second)) >= 0) {
         diff -= noteChangeValue + NOTE_DISTANCE * (first + second);
         extra = first + second;
         first = second;
@@ -112,7 +112,6 @@ void FrequencyStage() {
             if (realFrequency > MIN_FREQ) {
                 counterValues++;
                 uint32_t b = Filter(realFrequency, 0.3);
-                printf("[TEST] %d\n", b);
                 if (averageFreq == 0) {
                     lastFrequency = realFrequency;
                 } else {
@@ -152,7 +151,19 @@ void FrequencyStage() {
     }
 }
 
-
+void PrintLogo() {
+    printf("\n\n"
+           " _______ .-./`)     ,-----.  ,---------. .-------.        ,-----.    ,---.   .--. \n"
+           "\\  ____  \\ .-.')  .'  .-,  '.\\          \\|  _ _   \\     .'  .-,  '.  |    \\  |  | \n"
+           "| |    \\ / `-' \\ / ,-.|  \\ _ \\`--.  ,---'| ( ' )  |    / ,-.|  \\ _ \\ |  ,  \\ |  | \n"
+           "| |____/ /`-'`\"`;  \\  '_ /  | :  |   \\   |(_ o _) /   ;  \\  '_ /  | :|  |\\_ \\|  | \n"
+           "|   _ _ '..---. |  _`,/ \\ _/  |  :_ _:   | (_,_).' __ |  _`,/ \\ _/  ||  _( )_\\  | \n"
+           "|  ( ' )  \\   | : (  '\\_/ \\   ;  (_I_)   |  |\\ \\  |  |: (  '\\_/ \\   ;| (_ o _)  | \n"
+           "| (_(;)_) |   |  \\ `\"/  \\  ) /  (_(=)_)  |  | \\ `'   / \\ `\"/  \\  ) / |  (_,_)\\  | \n"
+           "|  (_,_)  /   |   '. \\_/``\".'    (_I_)   |  |  \\    /   '. \\_/``\".'  |  |    |  | \n"
+           "/_______.''---'     '-----'      '---'   ''-'   `'-'      '-----'    '--'    '--' \n"
+           "                                                                                  \n");
+}
 
 
 

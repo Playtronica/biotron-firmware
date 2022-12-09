@@ -23,6 +23,9 @@
 #define TIMER_MULTIPLIER (1000 / TIMER_MS)
 #define MIN_FREQ 60 // Frequency that is ignored
 
+//Light MIDI
+#define MAX_OF_PHOTO 4200
+
 //Fibonacci
 #define NOTE_DISTANCE 0
 #define FIRST_VALUE 0.1
@@ -30,6 +33,8 @@
 
 uint32_t realFrequency;
 uint32_t averageFreq;
+
+
 
 // Device Status
 enum Status {
@@ -49,5 +54,6 @@ void FrequencyStage();
 
 int GetNoteDiff(int oldVal, int newVal);
 
+void PrintLogo();
 
 #endif //BIOTRON_GLOBAL_H

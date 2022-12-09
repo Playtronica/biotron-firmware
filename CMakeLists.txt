@@ -45,7 +45,7 @@ add_executable(${TARGET_NAME} src/frequency_counter.c include/frequency_counter.
 target_sources(${TARGET_NAME} PUBLIC main.c ${biotron_SRC})
 target_include_directories(${TARGET_NAME} PUBLIC include())
 pico_enable_stdio_usb(${TARGET_NAME} 1)
-pico_enable_stdio_uart(${TARGET_NAME} 1)
+pico_enable_stdio_uart(${TARGET_NAME} 0)
 target_link_libraries(${TARGET_NAME} pico_stdlib tinyusb_device hardware_pwm hardware_adc)
 pico_add_extra_outputs(${TARGET_NAME})
 

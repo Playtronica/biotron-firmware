@@ -1,17 +1,19 @@
-#include <stdlib.h>
-#include <stdio.h>
 #include <hardware/adc.h>
-
+#include <stdio.h>
 #include "tusb.h"
 #include "frequency_counter.h"
 #include "notes.h"
 #include "global.h"
+#include "pico/stdlib.h"
+
 
 int main(void)
 {
     stdio_init_all();
     Setup();
     sleep_ms(3000);
+
+    PrintLogo();
 
     gpio_put(TEST_LED, 1);
     tusb_init();
@@ -27,9 +29,6 @@ int main(void)
         if (isReady()) {
 
             realFrequency = getFreq() * TIMER_MULTIPLIER;
-            if (realFrequency > MIN_FREQ) {
-                gpio_put(TEST_LED, 1);
-            }
             FrequencyStage();
             LedStage();
             if (status == Active) {
@@ -39,9 +38,13 @@ int main(void)
                     midi_light();
                     count = 0;
                 }
+                printf("{\"AverageFreq\": %d, \"Freq\": %d, \"PlantNote\": %d, \"PhotoNote\": %d }\n",
+                       averageFreq, realFrequency, lastNotePlant, lastNoteLight);
             }
         }
+
         sleep_ms(10);
+
     }
 
 }

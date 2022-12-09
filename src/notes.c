@@ -4,6 +4,8 @@
 #include "../include/notes.h"
 #include "global.h"
 
+#define PLANT_NOTE 24
+
 #define LOWEST_NOTE 36
 #define HIGHEST_NOTE 107
 #define MIDDLE_NOTE 60
@@ -56,7 +58,6 @@ ScaleNums_t scale = OCTAVE;
 uint32_t getNote(int percent) {
     NotesScale_t _scale = scales[scale];
     bool minus = percent < 0;
-    printf("LST %hhu\n", _scale.scale[0]);
     if (minus) percent *= -1;
 
     uint32_t note = MIDDLE_NOTE;
@@ -68,14 +69,14 @@ uint32_t getNote(int percent) {
             if (step < 0) {
                 step = _scale.steps - 1;
             }
-            printf("I AM NOTE %lu\n", note);
 
             note -= _scale.scale[step];
-            printf("I AM NOTE %lu\n", note);
             step--;
 
             if (note <= LOWEST_NOTE) {
-                note = -1;
+//                note = -1;  TOUCH MODE
+                note = LOWEST_NOTE;
+                break;
             }
         }
     }
@@ -90,7 +91,8 @@ uint32_t getNote(int percent) {
             step++;
 
             if (note >= HIGHEST_NOTE) {
-                note = -1;
+//                note = -1;  TOUCH MODE
+                note = HIGHEST_NOTE;
                 break;
             }
         }
@@ -129,7 +131,7 @@ void midi_plant(void) {
     previousNote = currentNote;
 
     currentNote = getNote(GetNoteDiff(averageFreq, realFrequency));
-
+    lastNotePlant = currentNote;
     uint8_t note_on[3] = {0x90 | channel, currentNote, 127};
     if (currentNote != -1) {
         tud_midi_stream_write(cable_num, note_on, 3);
@@ -171,8 +173,9 @@ void midi_light(void) {
     while (tud_midi_available()) tud_midi_packet_read(packet);
 
     previousNote = currentNote;
-    int a = 4000 / 24;
-    currentNote = (4000 - adc_read()) / a + 24;
+    int a = MAX_OF_PHOTO / 24;
+    currentNote = (MAX_OF_PHOTO - adc_read()) / a + 24;
+    lastNoteLight = currentNote;
 
     uint8_t note_on[3] = {0x90 | channel, currentNote, 127};
     tud_midi_stream_write(cable_num, note_on, 3);
