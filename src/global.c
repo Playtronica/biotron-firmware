@@ -2,17 +2,22 @@
 #include <pico/printf.h>
 #include <stdlib.h>
 #include "global.h"
+#include "hardware/pwm.h"
+#include "notes.h"
 
 int noteChangeValue;
 uint32_t lastFrequency;
 
 int counterValues = 0;
+pwm_config config;
 
 uint32_t filterValue = 0;
 uint32_t Filter(float newVal, double k) {
     filterValue +=  (newVal - filterValue) * k;
     return filterValue;
 }
+
+
 
 int GetNoteDiff(int oldVal, int newVal) {
     int diff = newVal - oldVal;
@@ -62,27 +67,59 @@ void Setup() {
     gpio_set_dir(SECOND_GREEN_LED, GPIO_OUT);
     gpio_set_dir(TEST_LED, GPIO_OUT);
 
+    gpio_set_function(FIRST_GREEN_LED, GPIO_FUNC_PWM);
+    gpio_set_function(SECOND_GREEN_LED, GPIO_FUNC_PWM);
+
     realFrequency = 0;
     counterValues = 0;
     averageFreq = 0;
+
+    uint sliceNum = pwm_gpio_to_slice_num(FIRST_GREEN_LED);
+    config = pwm_get_default_config();
+    pwm_init(sliceNum, &config, true);
 
     status = Sleep;
 }
 
 void LedStage() {
+    static uint32_t freq[ASYNC];
+    static int level = (MAX_LIGHT - MIN_LIGHT) / (TIMER_MULTIPLIER * 4);
     gpio_put(BlUE_LED, 0);
-    gpio_put(FIRST_GREEN_LED, 0);
-    gpio_put(SECOND_GREEN_LED, 0);
     switch (status) {
         case Sleep:
+            for (int i = 0; i < ASYNC; i++) freq[i] = 0;
             gpio_put(BlUE_LED, 1);
+            gpio_put(FIRST_GREEN_LED, freq[0]);
+            gpio_put(FIRST_GREEN_LED, freq[0]);
             break;
         case Avg:
-            gpio_put(FIRST_GREEN_LED, 1);
+            if (freq[ASYNC - 1] < 50000) {
+                freq[ASYNC - 1] += level;
+            }
+            pwm_set_gpio_level(FIRST_GREEN_LED, freq[ASYNC - 1]);
+            pwm_set_gpio_level(SECOND_GREEN_LED, freq[ASYNC - 1]);
             break;
         case Active:
-            gpio_put(FIRST_GREEN_LED, 1);
-            gpio_put(SECOND_GREEN_LED, 1);
+            if (freq[ASYNC - 1] >= MAX_LIGHT && level > 0) {
+                level *= -1;
+            }
+            else {
+                if (freq[ASYNC - 1] <= MIN_LIGHT && level < 0) {
+                    level *= -1;
+                }
+            }
+
+            for (int i = 0; i < ASYNC - 1; i++) {
+                freq[i] = freq[i + 1];
+            }
+
+            freq[ASYNC - 1] += level;
+
+//            printf("{first: %d, second: %d, level: %d}\n", freq[ASYNC - 1], freq[0], level);
+
+            pwm_set_gpio_level(FIRST_GREEN_LED, freq[0] + ((lastNotePlant - MIDDLE_NOTE) * NOTE_STRONG));
+            pwm_set_gpio_level(SECOND_GREEN_LED, freq[ASYNC - 1] + ((lastNotePlant - MIDDLE_NOTE) * NOTE_STRONG));
+
             break;
     }
 }

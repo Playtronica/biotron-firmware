@@ -6,9 +6,7 @@
 
 #define PLANT_NOTE 24
 
-#define LOWEST_NOTE 36
-#define HIGHEST_NOTE 107
-#define MIDDLE_NOTE 60
+
 
 #ifndef OCTAVE
 #define OCTAVE 0
