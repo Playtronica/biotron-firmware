@@ -121,12 +121,26 @@ void midi_plant(void) {
     static uint32_t currentNote;
     static uint32_t previousNote;
     uint8_t const cable_num = 0;
-    uint8_t channel = 1;
+    uint8_t channel = 0;
 
     uint8_t packet[4];
     while (tud_midi_available()) tud_midi_packet_read(packet);
 
     previousNote = currentNote;
+
+    uint8_t note_off[3] = {0x80 | channel, previousNote, 0};
+    if (previousNote != -1) {
+        tud_midi_stream_write(cable_num, note_off, 3);
+    }
+    else {
+        if (currentNote != -1) {
+            uint32_t *notes = getOctaveNotes();
+            for (int i = 0; i < getLengthOctave(); i++) {
+                note_off[1] = notes[i];
+                tud_midi_stream_write(cable_num, note_off, 3);
+            }
+        }
+    }
 
     currentNote = getNote(GetNoteDiff(averageFreq, realFrequency));
     lastNotePlant = currentNote;
@@ -143,20 +157,6 @@ void midi_plant(void) {
             }
         }
     }
-
-    uint8_t note_off[3] = {0x80 | channel, previousNote, 0};
-    if (previousNote != -1) {
-        tud_midi_stream_write(cable_num, note_off, 3);
-    }
-    else {
-        if (currentNote != -1) {
-            uint32_t *notes = getOctaveNotes();
-            for (int i = 0; i < getLengthOctave(); i++) {
-                note_off[1] = notes[i];
-                tud_midi_stream_write(cable_num, note_off, 3);
-            }
-        }
-    }
 }
 
 
@@ -165,7 +165,7 @@ void midi_light(void) {
     static uint32_t previousNote;
 
     uint8_t const cable_num = 0;
-    uint8_t channel = 2;
+    uint8_t channel = 1;
 
     uint8_t packet[4];
     while (tud_midi_available()) tud_midi_packet_read(packet);
@@ -173,16 +173,28 @@ void midi_light(void) {
     previousNote = currentNote;
     int a = MAX_OF_PHOTO / 24;
     currentNote = (MAX_OF_PHOTO - adc_read()) / a + 24;
-    lastNoteLight = currentNote;
-
-    uint8_t note_on[3] = {0x90 | channel, currentNote, 127};
-    tud_midi_stream_write(cable_num, note_on, 3);
+    lastNoteLight = previousNote;
 
     uint8_t note_off[3] = {0x80 | channel, previousNote, 0};
     tud_midi_stream_write(cable_num, note_off, 3);
+
+    uint8_t note_on[3] = {0x90 | channel, currentNote, 127};
+    tud_midi_stream_write(cable_num, note_on, 3);
 }
 
 
+void midi_stop() {
+    uint8_t const cable_num = 0;
+
+    uint8_t packet[4];
+    while (tud_midi_available()) tud_midi_packet_read(packet);
+
+    uint8_t LightNote[3] = {0x80 | 0, lastNoteLight, 127};
+    tud_midi_stream_write(cable_num, LightNote, 3);
+
+    uint8_t PlantNote[3] = {0x80 | 0, lastNotePlant, 127};
+    tud_midi_stream_write(cable_num, PlantNote, 3);
+}
 
 
 

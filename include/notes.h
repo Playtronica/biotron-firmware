@@ -35,4 +35,6 @@ typedef enum{
 void midi_plant(void);
 void midi_light(void);
 
+void midi_stop();
+
 #endif

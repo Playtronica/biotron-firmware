@@ -14,11 +14,10 @@ int main(void)
     Setup();
     sleep_ms(3000);
 
-    gpio_put(TEST_LED, 1);
     tusb_init();
-    PrintLogo();
 
     beginTimer(PLANT_PIN, TIMER_MS);
+    PrintLogo();
     uint32_t step = 0;
     while (true)
     {
@@ -37,10 +36,10 @@ int main(void)
                 }
                 printf("{\"AverageFreq\": %d, \"Freq\": %d, \"PlantNote\": %d, \"LightNote\": %d }\n",
                        averageFreq, realFrequency, lastNotePlant, lastNoteLight);
-            } else {
-                pwm_set_gpio_level(FIRST_GREEN_LED, 0);
-                pwm_set_gpio_level(SECOND_GREEN_LED, 0);
             }
+        }
+        if (status == Sleep) {
+
         }
         LedStage();
         sleep_ms(10);

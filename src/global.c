@@ -81,16 +81,18 @@ void Setup() {
     status = Sleep;
 }
 
+uint32_t freq[ASYNC];
 void LedStage() {
-    static uint32_t freq[ASYNC];
     static int level = (MAX_LIGHT - MIN_LIGHT) / (TIMER_MULTIPLIER * 4);
     gpio_put(BlUE_LED, 0);
     switch (status) {
         case Sleep:
-            for (int i = 0; i < ASYNC; i++) freq[i] = 0;
+            for (int i = ASYNC - 1; i >= 0; i--) {
+                freq[i] = 0;
+            }
             gpio_put(BlUE_LED, 1);
-            gpio_put(FIRST_GREEN_LED, freq[0]);
-            gpio_put(FIRST_GREEN_LED, freq[0]);
+            pwm_set_gpio_level(FIRST_GREEN_LED, 0);
+            pwm_set_gpio_level(SECOND_GREEN_LED, 0);
             break;
         case Avg:
             if (freq[ASYNC - 1] < 50000) {
@@ -115,7 +117,6 @@ void LedStage() {
 
             freq[ASYNC - 1] += level;
 
-//            printf("{first: %d, second: %d, level: %d}\n", freq[ASYNC - 1], freq[0], level);
 
             pwm_set_gpio_level(FIRST_GREEN_LED, freq[0] + ((lastNotePlant - MIDDLE_NOTE) * NOTE_STRONG));
             pwm_set_gpio_level(SECOND_GREEN_LED, freq[ASYNC - 1] + ((lastNotePlant - MIDDLE_NOTE) * NOTE_STRONG));
@@ -182,7 +183,9 @@ void FrequencyStage() {
                 counterValues = 0;
                 averageFreq = 0;
                 status = Sleep;
+
                 printf("[+] Change status: Active -> Sleep\n");
+                midi_stop();
             }
             break;
     }
