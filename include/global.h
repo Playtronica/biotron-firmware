@@ -31,7 +31,7 @@
 #define MAX_OF_PHOTO 4000
 
 //Fibonacci
-#define NOTE_DISTANCE 0
+#define NOTE_DISTANCE 0.5
 #define FIRST_VALUE 0.1
 
 // Led

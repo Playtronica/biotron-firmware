@@ -26,6 +26,8 @@ int main(void)
         if (isReady()) {
             realFrequency = getFreq() * TIMER_MULTIPLIER;
             FrequencyStage();
+            printf("{\"AverageFreq\": %d, \"Freq\": %d, \"PlantNote\": %d, \"LightNote\": %d }\n",
+                   averageFreq, realFrequency, lastNotePlant, lastNoteLight);
             if (status == Active) {
                 midi_plant();
                 step++;
