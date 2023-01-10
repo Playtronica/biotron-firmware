@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include "global.h"
 #include "hardware/pwm.h"
+#include "hardware/timer.h"
 #include "notes.h"
 
 int noteChangeValue;
@@ -16,7 +17,6 @@ uint32_t Filter(float newVal, double k) {
     filterValue +=  (newVal - filterValue) * k;
     return filterValue;
 }
-
 
 
 int GetNoteDiff(int oldVal, int newVal) {
@@ -67,6 +67,7 @@ void Setup() {
     gpio_set_dir(SECOND_GREEN_LED, GPIO_OUT);
     gpio_set_dir(TEST_LED, GPIO_OUT);
 
+    gpio_set_function(BlUE_LED, GPIO_FUNC_PWM);
     gpio_set_function(FIRST_GREEN_LED, GPIO_FUNC_PWM);
     gpio_set_function(SECOND_GREEN_LED, GPIO_FUNC_PWM);
 
@@ -74,7 +75,7 @@ void Setup() {
     counterValues = 0;
     averageFreq = 0;
 
-    uint sliceNum = pwm_gpio_to_slice_num(FIRST_GREEN_LED);
+    uint sliceNum = pwm_gpio_to_slice_num(BlUE_LED);
     config = pwm_get_default_config();
     pwm_init(sliceNum, &config, true);
 
@@ -83,14 +84,13 @@ void Setup() {
 
 uint32_t freq[ASYNC];
 void LedStage() {
+
     static int level = (MAX_LIGHT - MIN_LIGHT) / (TIMER_MULTIPLIER * 4);
-    gpio_put(BlUE_LED, 0);
     switch (status) {
         case Sleep:
             for (int i = ASYNC - 1; i >= 0; i--) {
                 freq[i] = 0;
             }
-            gpio_put(BlUE_LED, 1);
             pwm_set_gpio_level(FIRST_GREEN_LED, 0);
             pwm_set_gpio_level(SECOND_GREEN_LED, 0);
             break;
@@ -191,18 +191,26 @@ void FrequencyStage() {
     }
 }
 
-void PrintLogo() {
-    printf("\n\n"
-           " _______ .-./`)     ,-----.  ,---------. .-------.        ,-----.    ,---.   .--. \n"
-           "\\  ____  \\ .-.')  .'  .-,  '.\\          \\|  _ _   \\     .'  .-,  '.  |    \\  |  | \n"
-           "| |    \\ / `-' \\ / ,-.|  \\ _ \\`--.  ,---'| ( ' )  |    / ,-.|  \\ _ \\ |  ,  \\ |  | \n"
-           "| |____/ /`-'`\"`;  \\  '_ /  | :  |   \\   |(_ o _) /   ;  \\  '_ /  | :|  |\\_ \\|  | \n"
-           "|   _ _ '..---. |  _`,/ \\ _/  |  :_ _:   | (_,_).' __ |  _`,/ \\ _/  ||  _( )_\\  | \n"
-           "|  ( ' )  \\   | : (  '\\_/ \\   ;  (_I_)   |  |\\ \\  |  |: (  '\\_/ \\   ;| (_ o _)  | \n"
-           "| (_(;)_) |   |  \\ `\"/  \\  ) /  (_(=)_)  |  | \\ `'   / \\ `\"/  \\  ) / |  (_,_)\\  | \n"
-           "|  (_,_)  /   |   '. \\_/``\".'    (_I_)   |  |  \\    /   '. \\_/``\".'  |  |    |  | \n"
-           "/_______.''---'     '-----'      '---'   ''-'   `'-'      '-----'    '--'    '--' \n"
-           "                                                                                  \n");
+void Intro() {
+    uint32_t startTime = to_ms_since_boot(get_absolute_time());
+    while (to_ms_since_boot(get_absolute_time()) - startTime <= 1000) {
+        pwm_set_gpio_level(BlUE_LED,
+                           (uint16_t)((float)(to_ms_since_boot(get_absolute_time()) - startTime) / 1000 * MAX_LIGHT));
+    }
+    uint sliceNum = pwm_gpio_to_slice_num(FIRST_GREEN_LED);
+    config = pwm_get_default_config();
+    pwm_init(sliceNum, &config, true);
+//    printf("\n\n"
+//           " _______ .-./`)     ,-----.  ,---------. .-------.        ,-----.    ,---.   .--. \n"
+//           "\\  ____  \\ .-.')  .'  .-,  '.\\          \\|  _ _   \\     .'  .-,  '.  |    \\  |  | \n"
+//           "| |    \\ / `-' \\ / ,-.|  \\ _ \\`--.  ,---'| ( ' )  |    / ,-.|  \\ _ \\ |  ,  \\ |  | \n"
+//           "| |____/ /`-'`\"`;  \\  '_ /  | :  |   \\   |(_ o _) /   ;  \\  '_ /  | :|  |\\_ \\|  | \n"
+//           "|   _ _ '..---. |  _`,/ \\ _/  |  :_ _:   | (_,_).' __ |  _`,/ \\ _/  ||  _( )_\\  | \n"
+//           "|  ( ' )  \\   | : (  '\\_/ \\   ;  (_I_)   |  |\\ \\  |  |: (  '\\_/ \\   ;| (_ o _)  | \n"
+//           "| (_(;)_) |   |  \\ `\"/  \\  ) /  (_(=)_)  |  | \\ `'   / \\ `\"/  \\  ) / |  (_,_)\\  | \n"
+//           "|  (_,_)  /   |   '. \\_/``\".'    (_I_)   |  |  \\    /   '. \\_/``\".'  |  |    |  | \n"
+//           "/_______.''---'     '-----'      '---'   ''-'   `'-'      '-----'    '--'    '--' \n"
+//           "                                                                                  \n");
 }
 
 

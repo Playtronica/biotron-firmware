@@ -7,7 +7,7 @@
 
 // PINS
 #define PLANT_PIN  1
-#define BlUE_LED 0
+#define BlUE_LED 4
 #define FIRST_GREEN_LED 2
 #define SECOND_GREEN_LED 3
 #define PHOTORESISTORS_PIN 26
@@ -65,6 +65,6 @@ void FrequencyStage();
 
 int GetNoteDiff(int oldVal, int newVal);
 
-void PrintLogo();
+void Intro();
 
 #endif //BIOTRON_GLOBAL_H

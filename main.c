@@ -10,14 +10,14 @@
 
 int main(void)
 {
+
     stdio_init_all();
     Setup();
-    sleep_ms(3000);
+//    sleep_ms(3000);
 
     tusb_init();
-
+    Intro();
     beginTimer(PLANT_PIN, TIMER_MS);
-    PrintLogo();
     uint32_t step = 0;
     while (true)
     {
@@ -39,9 +39,6 @@ int main(void)
                 printf("{\"AverageFreq\": %d, \"Freq\": %d, \"PlantNote\": %d, \"LightNote\": %d }\n",
                        averageFreq, realFrequency, lastNotePlant, lastNoteLight);
             }
-        }
-        if (status == Sleep) {
-
         }
         LedStage();
         sleep_ms(10);

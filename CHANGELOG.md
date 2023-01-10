@@ -5,7 +5,13 @@
 ### Added
 
 - Configurations some variables
+- Docker
 
+## [0.0.3] - 2022-12-16
+
+### Added
+
+- Blue Led fade in on power.
 
 ## [0.0.3] - 2022-12-16
 
