@@ -24,9 +24,9 @@ WORK_DIR = .build
 build_image:
 
 	mkdir -p $(WORK_DIR)/usr/local/src/pico
-	git clone --branch 1.3.0 https://github.com/raspberrypi/pico-sdk/ $(WORK_DIR)/usr/local/src/pico/pico-sdk
-	git clone --branch sdk-1.3.0 https://github.com/raspberrypi/pico-extras $(WORK_DIR)/usr/local/src/pico/pico-extras
-	git clone --branch sdk-1.3.0 https://github.com/raspberrypi/pico-examples $(WORK_DIR)/usr/local/src/pico/pico-examples
+	git clone https://github.com/raspberrypi/pico-sdk/ $(WORK_DIR)/usr/local/src/pico/pico-sdk
+	git clone https://github.com/raspberrypi/pico-extras $(WORK_DIR)/usr/local/src/pico/pico-extras
+	git clone https://github.com/raspberrypi/pico-examples $(WORK_DIR)/usr/local/src/pico/pico-examples
 	cd $(WORK_DIR)/usr/local/src/pico/pico-sdk && git submodule update --init
 	docker build --file=Dockerfile -t $(IMAGE) $(WORK_DIR)
 	rm -rf $(WORK_DIR)

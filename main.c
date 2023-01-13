@@ -1,16 +1,15 @@
 #include <hardware/adc.h>
 #include <stdio.h>
-#include <hardware/pwm.h>
 #include "tusb.h"
 #include "frequency_counter.h"
 #include "notes.h"
 #include "global.h"
 #include "pico/stdlib.h"
+#include "pico.h"
 
 
 int main(void)
 {
-
     stdio_init_all();
     Setup();
 //    sleep_ms(3000);

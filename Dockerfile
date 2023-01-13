@@ -1,9 +1,7 @@
 FROM ubuntu:18.04
 
-ARG DEBIAN_FRONTEND=noninteractive
 ADD usr /usr
 ENV PICO_SDK_PATH=/usr/local/src/pico/pico-sdk
-ENV PICO_TINYUSB_PATH=/usr/local/src/pico/pico-sdk/lib/tinyusb
 RUN sh -xec 'apt update \
     && apt install -qqy --no-install-recommends git wget ca-certificates \
     software-properties-common make build-essential python3-serial python3-pip \

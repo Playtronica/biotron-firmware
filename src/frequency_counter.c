@@ -3,6 +3,7 @@
 #include "hardware/gpio.h"
 #include "../include/frequency_counter.h"
 #include "pico/time.h"
+#include "hardware/irq.h"
 
 uint32_t realFrequency = 0;
 uint8_t slice_num = 0;
