@@ -7,6 +7,11 @@
 - Configurations some variables
 
 
+## [0.0.4] - 2022-01-13
+
+### Added
+- Docker
+
 ## [0.0.3] - 2022-12-16
 
 ### Changed
@@ -17,6 +22,7 @@
 ### Added
 
 - Added note off, when device change status to Sleep.
+- Blue Led fade in on power.
 
 ## [0.0.2] - 2022-12-14
 

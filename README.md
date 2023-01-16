@@ -94,19 +94,21 @@ Install docker, example for Ubuntu 20.04
    ```sh
    git clone https://github.com/Playtronica/Biotron.git
    ```
-2. Build binary
+2. Setup build image
+   ```sh
+   make build_image
+   ```
+3. Build binary
    ```sh
    make build
    ```
-3. Boot touchme in bootloader mode
-- * Span the two boot contacts with something metal
-- * Plug in USB cable
-- * Will appear mass storage device
+4. Boot touchme in bootloader mode
+ - TODO
 
-4. Copy `biotron.uf2` from `build` dir to biotron mass storage device  
+5. Copy `biotron.uf2` from `output` dir to touchme mass storage device  
    Example:
     ```sh
-    cp output/touchme.uf2 /media/user/RPI-RP2
+    cp output/biotron.uf2 /media/user/RPI-RP2
     ```
 
 <p align="right">(<a href="#top">back to top</a>)</p>

@@ -1,23 +1,22 @@
 #include <hardware/adc.h>
 #include <stdio.h>
-#include <hardware/pwm.h>
 #include "tusb.h"
 #include "frequency_counter.h"
 #include "notes.h"
 #include "global.h"
 #include "pico/stdlib.h"
+#include "pico.h"
 
 
 int main(void)
 {
     stdio_init_all();
     Setup();
-    sleep_ms(3000);
+//    sleep_ms(3000);
 
     tusb_init();
-
+    Intro();
     beginTimer(PLANT_PIN, TIMER_MS);
-    PrintLogo();
     uint32_t step = 0;
     while (true)
     {
@@ -26,6 +25,8 @@ int main(void)
         if (isReady()) {
             realFrequency = getFreq() * TIMER_MULTIPLIER;
             FrequencyStage();
+            printf("{\"AverageFreq\": %d, \"Freq\": %d, \"PlantNote\": %d, \"LightNote\": %d }\n",
+                   averageFreq, realFrequency, lastNotePlant, lastNoteLight);
             if (status == Active) {
                 midi_plant();
                 step++;
@@ -37,9 +38,6 @@ int main(void)
                 printf("{\"AverageFreq\": %d, \"Freq\": %d, \"PlantNote\": %d, \"LightNote\": %d }\n",
                        averageFreq, realFrequency, lastNotePlant, lastNoteLight);
             }
-        }
-        if (status == Sleep) {
-
         }
         LedStage();
         sleep_ms(10);
