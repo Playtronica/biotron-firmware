@@ -5,13 +5,12 @@
 ### Added
 
 - Configurations some variables
-- Docker
 
-## [0.0.3] - 2022-12-16
+
+## [0.0.4] - 2022-01-13
 
 ### Added
-
-- Blue Led fade in on power.
+- Docker
 
 ## [0.0.3] - 2022-12-16
 
@@ -23,6 +22,7 @@
 ### Added
 
 - Added note off, when device change status to Sleep.
+- Blue Led fade in on power.
 
 ## [0.0.2] - 2022-12-14
 
