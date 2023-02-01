@@ -7,17 +7,15 @@
 #include "pico/stdlib.h"
 #include "pico.h"
 
-
 int main(void)
 {
     stdio_init_all();
     Setup();
-//    sleep_ms(3000);
 
     tusb_init();
     Intro();
-    beginTimer(PLANT_PIN, TIMER_MS);
-    uint32_t step = 0;
+
+
     while (true)
     {
         tud_task();
@@ -25,20 +23,20 @@ int main(void)
         if (isReady()) {
             realFrequency = getFreq() * TIMER_MULTIPLIER;
             FrequencyStage();
-            printf("{\"AverageFreq\": %d, \"Freq\": %d, \"PlantNote\": %d, \"LightNote\": %d }\n",
-                   averageFreq, realFrequency, lastNotePlant, lastNoteLight);
             if (status == Active) {
-                midi_plant();
-                step++;
-                LedStage();
-                if (step == 8) {
-                    midi_light();
-                    step = 0;
+                if (step % bps == 0) {
+                    midi_plant();
+                    if (step == bps * 8) {
+                        midi_light();
+                        step = 0;
+                    }
+                    printf("{\"AverageFreq\": %d, \"Freq\": %d, \"PlantNote\": %d, \"LightNote\": %d }\n",
+                           averageFreq, realFrequency, lastNotePlant, lastNoteLight);
                 }
-                printf("{\"AverageFreq\": %d, \"Freq\": %d, \"PlantNote\": %d, \"LightNote\": %d }\n",
-                       averageFreq, realFrequency, lastNotePlant, lastNoteLight);
             }
+            step++;
         }
+        midi_settings();
         LedStage();
         sleep_ms(10);
     }

@@ -14,12 +14,12 @@
 #define TEST_LED 25
 
 // Time Status (by counter)
-#define STAB_TIME 40
-#define AVERAGE_TIME 40
-#define SLEEP_TIME 24
+#define STAB_TIME (5 * TIMER_MULTIPLIER)
+#define AVERAGE_TIME (5 * TIMER_MULTIPLIER)
+#define SLEEP_TIME (3 * TIMER_MULTIPLIER)
 
 // Plant MIDI
-#define TIMER_MS 125 // Timer for receiving plant frequency
+#define TIMER_MS 100 // Timer for receiving plant frequency
 #define TIMER_MULTIPLIER (1000 / TIMER_MS)
 #define MIN_FREQ 60 // Frequency that is ignored
 
@@ -45,7 +45,8 @@
 uint32_t realFrequency;
 uint32_t averageFreq;
 
-
+uint32_t bps;
+uint32_t step;
 
 // Device Status
 enum Status {
@@ -66,5 +67,7 @@ void FrequencyStage();
 int GetNoteDiff(int oldVal, int newVal);
 
 void Intro();
+
+void changeBpm(uint16_t bpm);
 
 #endif //BIOTRON_GLOBAL_H

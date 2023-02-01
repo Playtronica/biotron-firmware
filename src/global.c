@@ -5,6 +5,7 @@
 #include "hardware/pwm.h"
 #include "hardware/timer.h"
 #include "notes.h"
+#include "frequency_counter.h"
 
 int noteChangeValue;
 uint32_t lastFrequency;
@@ -75,16 +76,20 @@ void Setup() {
     counterValues = 0;
     averageFreq = 0;
 
+    bps = TIMER_MULTIPLIER;
+    step = 0;
+
     uint sliceNum = pwm_gpio_to_slice_num(BlUE_LED);
     config = pwm_get_default_config();
     pwm_init(sliceNum, &config, true);
 
     status = Sleep;
+    beginTimer(PLANT_PIN, TIMER_MS);
 }
 
 uint32_t freq[ASYNC];
-void LedStage() {
 
+void LedStage() {
     static int level = (MAX_LIGHT - MIN_LIGHT) / (TIMER_MULTIPLIER * 4);
     switch (status) {
         case Sleep:
@@ -169,6 +174,7 @@ void FrequencyStage() {
                 noteChangeValue /= counterValues;
                 counterValues = 0;
                 status = Active;
+                step = 0;
                 printf("[+] Change status: Stab -> Active\n");
             }
             break;
@@ -190,6 +196,12 @@ void FrequencyStage() {
             break;
     }
 }
+
+
+//void changeBpm(uint16_t bpm) {
+//    uint16_t bps = bpm / 60;
+//    restartTimer(1000 / bps);
+//}
 
 void Intro() {
     uint32_t startTime = to_ms_since_boot(get_absolute_time());

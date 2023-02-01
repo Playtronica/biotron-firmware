@@ -116,7 +116,6 @@ uint32_t* getOctaveNotes() {
 }
 
 
-bool touch;
 void midi_plant(void) {
     static uint32_t currentNote;
     static uint32_t previousNote;
@@ -194,6 +193,33 @@ void midi_stop() {
 
     uint8_t PlantNote[3] = {0x80 | 0, lastNotePlant, 127};
     tud_midi_stream_write(cable_num, PlantNote, 3);
+}
+
+
+void midi_settings() {
+    uint8_t buff[4];
+    uint8_t res[100];
+    uint8_t len = 0;
+    while (tud_midi_packet_read(buff)) {
+        for (int i = 1; i < 4; ++i) {
+            if (buff[i] == 240) continue;
+            if (buff[i] == 247) break;
+            res[len++] = buff[i];
+        }
+    }
+
+    if (len == 3) {
+        switch (res[0]) {
+            case (0):
+                step = 0;
+                bps = TIMER_MULTIPLIER * ((float)60 / (float)(TIMER_MULTIPLIER * ((res[1] + res[2]) / TIMER_MULTIPLIER)));
+                if (bps == 0) bps = 1;
+                printf("[!] BPM HAS CHANGED. CURRENT BPM: %d, CURRENT BPS: %d. PERIOD: %d\n,", TIMER_MULTIPLIER * ((res[1] + res[2]) / TIMER_MULTIPLIER),
+                       (res[1] + res[2]) / 60, bps);
+
+        }
+
+    }
 }
 
 

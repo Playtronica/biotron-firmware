@@ -37,10 +37,7 @@ static bool _repeating_timer_callback_t(repeating_timer_t *rt) {
     return true;
 }
 
-
-
 bool isReady() {
-
     return freq_ready;
 }
 
@@ -75,6 +72,7 @@ void beginTimer(uint8_t freq_pin, uint16_t period_ms) {
     setupPwm(freq_pin);
     add_repeating_timer_ms(period_ms, _repeating_timer_callback_t,NULL, &timer);
 }
+
 
 
 
