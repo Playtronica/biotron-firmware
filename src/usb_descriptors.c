@@ -87,7 +87,7 @@ enum
 };
 
 #define CONFIG_TOTAL_LEN  (TUD_CONFIG_DESC_LEN + \
-(TUD_MIDI_DESC_HEAD_LEN + TUD_MIDI_DESC_JACK_LEN + TUD_MIDI_DESC_EP_LEN(1) * 2) + \
+(TUD_MIDI_DESC_HEAD_LEN + TUD_MIDI_DESC_JACK_LEN * MIDI_NUM_CABLES + TUD_MIDI_DESC_EP_LEN(MIDI_NUM_CABLES) * 2) + \
 (TUD_CDC_DESC_LEN))
 #if CFG_TUSB_MCU == OPT_MCU_LPC175X_6X || CFG_TUSB_MCU == OPT_MCU_LPC177X_8X || CFG_TUSB_MCU == OPT_MCU_LPC40XX
 // LPC 17xx and 40xx endpoint type (bulk/interrupt/iso) are fixed by its number
@@ -96,7 +96,7 @@ enum
 #else
 #define EPNUM_MIDI   0x01
 #endif
-
+#define MIDI_NUM_CABLES 2
 
 #if CFG_TUSB_MCU == OPT_MCU_LPC175X_6X || CFG_TUSB_MCU == OPT_MCU_LPC177X_8X || CFG_TUSB_MCU == OPT_MCU_LPC40XX
 // LPC 17xx and 40xx endpoint type (bulk/interrupt/iso) are fixed by its number
@@ -147,7 +147,15 @@ uint8_t const desc_fs_configuration[] =
                 TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, CONFIG_TOTAL_LEN, 0x00, 100),
 
                 TUD_CDC_DESCRIPTOR(ITF_NUM_CDC, 0, EPNUM_CDC_0_NOTIF, 8, EPNUM_CDC_0_OUT, EPNUM_CDC_0_IN, 64),
-                TUD_MIDI_DESCRIPTOR(ITF_NUM_MIDI, 0, EPNUM_MIDI, 0x80 | EPNUM_MIDI, 64)
+                TUD_MIDI_DESC_HEAD(ITF_NUM_MIDI, 0, MIDI_NUM_CABLES),
+                TUD_MIDI_DESC_JACK(1),
+                TUD_MIDI_DESC_JACK(2),
+                TUD_MIDI_DESC_EP(EPNUM_MIDI, 64, MIDI_NUM_CABLES),
+                TUD_MIDI_JACKID_IN_EMB(1),
+                TUD_MIDI_JACKID_IN_EMB(2),
+                TUD_MIDI_DESC_EP(0x80 | EPNUM_MIDI, 64, MIDI_NUM_CABLES),
+                TUD_MIDI_JACKID_OUT_EMB(1),
+                TUD_MIDI_JACKID_OUT_EMB(2),
         };
 
 #if TUD_OPT_HIGH_SPEED
