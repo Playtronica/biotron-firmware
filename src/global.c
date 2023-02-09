@@ -76,6 +76,11 @@ void Setup() {
     counterValues = 0;
     averageFreq = 0;
 
+    NOTE_DISTANCE = 0.5;
+    FIRST_VALUE = 0.1;
+
+    filterPercent = 0;
+
     bps = TIMER_MULTIPLIER;
     step = 0;
 
@@ -193,6 +198,8 @@ void FrequencyStage() {
                 printf("[+] Change status: Active -> Sleep\n");
                 midi_stop();
             }
+            if (filterPercent != 0) realFrequency = Filter(realFrequency, filterPercent);
+
             break;
     }
 }

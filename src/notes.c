@@ -188,11 +188,11 @@ void midi_stop() {
     uint8_t packet[4];
     while (tud_midi_available()) tud_midi_packet_read(packet);
 
-    uint8_t LightNote[3] = {0x80 | 0, lastNoteLight, 127};
-    tud_midi_stream_write(cable_num, LightNote, 3);
-
     uint8_t PlantNote[3] = {0x80 | 0, lastNotePlant, 127};
     tud_midi_stream_write(cable_num, PlantNote, 3);
+
+    uint8_t LightNote[3] = {0x80 | 1, lastNoteLight, 127};
+    tud_midi_stream_write(cable_num, LightNote, 3);
 }
 
 
@@ -207,18 +207,81 @@ void midi_settings() {
             res[len++] = buff[i];
         }
     }
+    if (res[0] != 11) return;
 
-    if (len == 3) {
-        switch (res[0]) {
-            case (0):
-                step = 0;
-                bps = TIMER_MULTIPLIER * ((float)60 / (float)(TIMER_MULTIPLIER * ((res[1] + res[2]) / TIMER_MULTIPLIER)));
-                if (bps == 0) bps = 1;
-                printf("[!] BPM HAS CHANGED. CURRENT BPM: %d, CURRENT BPS: %d. PERIOD: %d\n,", TIMER_MULTIPLIER * ((res[1] + res[2]) / TIMER_MULTIPLIER),
-                       (res[1] + res[2]) / 60, bps);
+    switch (res[1]) {
+        case (0):
+            step = 0;
+            int su = 0;
+            for (int i = 2; i < len; i++) {
+                su += res[i];
+            }
+            bps = TIMER_MULTIPLIER * (float)60 / (float)su;
+            if (bps == 0) bps = 1;
+            printf("[!] BPM HAS CHANGED. CURRENT BPM: %d, CURRENT BPS: %d. PERIOD: %d.\n",
+                   su, su / 60, bps);
+            break;
+        case (1):
+            if (len != 4) break;
+            NOTE_DISTANCE = (double )res[2] / 100;
+            FIRST_VALUE = (double )res[3] / 100;
+            if (NOTE_DISTANCE > 1) NOTE_DISTANCE = 1;
+            if (FIRST_VALUE > 1) FIRST_VALUE = 1;
+            printf("[!] FIBONACCI ALGORITHM HAS CHANGED. NOTE DISTANCE: %.2f, FIRST_VALUE: %.2f.\n",
+                   NOTE_DISTANCE, FIRST_VALUE);
+            break;
+        case (2):
+            filterPercent = (double )(res[2]) / 100;
+            if (filterPercent >= 1) filterPercent = 0.99;
+            printf("[!] FILTER VALUE HAS CHANGED. FILTER VALUE: %.2f.\n", filterPercent);
+            filterPercent = 1 - filterPercent;
 
-        }
-
+            break;
+        case (3):
+            if (res[2] >= 0 && res[2] < 12 ) {
+                scale = res[2];
+                char * octaveName = "";
+                switch (scale) {
+                    case SCALE_CHROM:
+                        octaveName = "CHROM";
+                        break;
+                    case SCALE_DIMINISHED:
+                        octaveName = "DIMINISHED";
+                        break;
+                    case SCALE_DORIAN:
+                        octaveName = "DORIAN";
+                        break;
+                    case SCALE_LYDIAN:
+                        octaveName = "LYDIAN";
+                        break;
+                    case SCALE_MAJBLUES:
+                        octaveName = "MAJBLUES";
+                        break;
+                    case SCALE_MAJOR:
+                        octaveName = "MAJOR";
+                        break;
+                    case SCALE_MAJPEN:
+                        octaveName = "MAJPEN";
+                        break;
+                    case SCALE_MINBLUES:
+                        octaveName = "MINBLUES";
+                        break;
+                    case SCALE_MINOR:
+                        octaveName = "MINOR";
+                        break;
+                    case SCALE_MINPEN:
+                        octaveName = "MINPEN";
+                        break;
+                    case SCALE_MIXOLYDIAN:
+                        octaveName = "MIXOLYDIAN";
+                        break;
+                    case SCALE_WHOLETONE:
+                        octaveName = "WHOLETONE";
+                        break;
+                }
+                printf("[!] OCTAVE HAS CHANGED. CURRENT OCTAVE IS %s.\n", octaveName);
+                break;
+            }
     }
 }
 

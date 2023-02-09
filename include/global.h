@@ -31,8 +31,7 @@
 #define MAX_OF_PHOTO 4000
 
 //Fibonacci
-#define NOTE_DISTANCE 0.5
-#define FIRST_VALUE 0.1
+
 
 // Led
 #define ASYNC 20
@@ -40,7 +39,10 @@
 #define MIN_LIGHT 5000
 #define NOTE_STRONG 414
 
+double NOTE_DISTANCE;
+double FIRST_VALUE;
 
+double filterPercent;
 
 uint32_t realFrequency;
 uint32_t averageFreq;
