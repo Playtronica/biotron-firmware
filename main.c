@@ -13,8 +13,8 @@ int main(void)
     Setup();
 
     tusb_init();
-    Intro();
 
+    Intro();
 
     while (true)
     {
@@ -28,5 +28,4 @@ int main(void)
         LedStage();
         sleep_ms(10);
     }
-
 }

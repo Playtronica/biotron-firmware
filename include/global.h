@@ -5,9 +5,9 @@
 #ifndef BIOTRON_GLOBAL_H
 #define BIOTRON_GLOBAL_H
 
-// PINS
 #include <pico/time.h>
 
+// PINS
 #define PLANT_PIN  1
 #define BlUE_LED 4
 #define FIRST_GREEN_LED 2
@@ -24,6 +24,7 @@
 #define TIMER_MIDI_US 1000000// Timer for receiving plant frequency
 #define MIN_FREQ 60 // Frequency that is ignored
 
+// Plant info
 #define TIMER_PLANT_MS 100
 #define TIMER_MULTIPLIER (1000 / TIMER_PLANT_MS)
 
@@ -34,25 +35,23 @@
 //Light MIDI
 #define MAX_OF_PHOTO 4000
 
-//Fibonacci
-
-
 // Led
 #define ASYNC 20
 #define MAX_LIGHT 40000
 #define MIN_LIGHT 5000
 #define NOTE_STRONG 414
 
+// Fibonacci
 double NOTE_DISTANCE;
 double FIRST_VALUE;
 
+// Filter
 double filterPercent;
 
 uint32_t realFrequency;
 uint32_t averageFreq;
 
 int time;
-
 
 // Device Status
 enum Status {
@@ -61,23 +60,25 @@ enum Status {
     Active
 };
 
+// Plays Notes
 struct repeating_timer timer;
+bool repeating_timer_callback(struct repeating_timer *t);
 
+// Device Status
 enum Status status;
 
+// Init pins and global variables
 void Setup();
 
-// Debug LEDS
+// Debug Leds
 void LedStage();
 
+// Collects data about plant frequency and depending on it change device status.
 void FrequencyStage();
 
+// Calculating Notes
 int GetNoteDiff(int oldVal, int newVal);
 
 void Intro();
-
-bool repeating_timer_callback(struct repeating_timer *t);
-
-void changeBpm(uint16_t bpm);
 
 #endif //BIOTRON_GLOBAL_H

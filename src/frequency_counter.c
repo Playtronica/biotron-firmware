@@ -22,11 +22,10 @@ static uint32_t _pwm_read(uint sliceNum) {
     uint16_t part_count = pwm_get_counter(sliceNum);
 
     if (part_count < 100) {
-        // Maybe it just rolled over?  Re-check base_count.
         this_count = count;
     }
     this_count += part_count;
-    uint32_t advance = (this_count - LastCount);  // Will handle wraparound correctly.
+    uint32_t advance = (this_count - LastCount);
     LastCount = this_count;
     return advance;
 }
@@ -61,7 +60,6 @@ void setupPwm(uint8_t freq_pin) {
     pwm_init(slice_num, &cfg, false);
     gpio_set_function(freq_pin, GPIO_FUNC_PWM);
     pwm_set_enabled(slice_num, true); //TODO Check
-// Новый код из другого файла
     pwm_clear_irq(slice_num);
     pwm_set_irq_enabled(slice_num, true);
     irq_set_exclusive_handler(PWM_IRQ_WRAP, _on_pwm_wrap);

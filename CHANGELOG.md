@@ -2,10 +2,18 @@
 
 ## [Unreleased]
 
+## Changed
+
+- Check led's indications. And maybe change it.
+
+## [1.0.0] - 2023-02-10
+
 ### Added
+- MIDI Commands. You can send MIDI commands to change some preferences.
+- Second MIDI virtual port. For settings, when the first port is busy.
 
-- Configurations some variables
-
+## Changed
+- New way to play notes. 
 
 ## [0.0.4] - 2022-01-13
 
