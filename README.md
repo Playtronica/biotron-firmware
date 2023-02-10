@@ -190,7 +190,7 @@ TODO Add license
 ## Contact
 
 * Project Link: [https://github.com/Playtronica/Biotron](https://github.com/Playtronica/Biotron)
-* Our website: [https://playtronica.com/](https://laytronica.com/)
+* Our website: [https://playtronica.com/](https://playtronica.com/)
 
 ### Social media
 * [Facebook](https://www.facebook.com/playtronica)
