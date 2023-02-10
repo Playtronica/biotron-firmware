@@ -10,7 +10,7 @@
 uint8_t pin;
 
 bool freq_ready;
-struct repeating_timer timer;
+struct repeating_timer timerPlant;
 
 void setupPwm(uint8_t freq_pin);
 void beginTimer(uint8_t freq_pin, uint16_t period_ms);

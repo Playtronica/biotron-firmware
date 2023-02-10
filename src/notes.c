@@ -209,17 +209,19 @@ void midi_settings() {
     }
     if (res[0] != 11) return;
 
+    double su = 0;
     switch (res[1]) {
         case (0):
-            step = 0;
-            int su = 0;
             for (int i = 2; i < len; i++) {
-                su += res[i];
+                su += res[i];;
             }
-            bps = TIMER_MULTIPLIER * (float)60 / (float)su;
-            if (bps == 0) bps = 1;
-            printf("[!] BPM HAS CHANGED. CURRENT BPM: %d, CURRENT BPS: %d. PERIOD: %d.\n",
-                   su, su / 60, bps);
+            time = (int)(1000000.0 / (su / 60.0));
+            if (status == Active) {
+                cancel_repeating_timer(&timer);
+                add_repeating_timer_us((int) (1000000.0 / (su / 60.0)),
+                                       repeating_timer_callback, NULL, &timer);
+            }
+            printf("[!] BPM HAS CHANGED. BPM: %d, TIME: %d.\n", (int)su, (int)time);
             break;
         case (1):
             if (len != 4) break;

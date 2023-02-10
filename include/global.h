@@ -6,6 +6,8 @@
 #define BIOTRON_GLOBAL_H
 
 // PINS
+#include <pico/time.h>
+
 #define PLANT_PIN  1
 #define BlUE_LED 4
 #define FIRST_GREEN_LED 2
@@ -18,10 +20,12 @@
 #define AVERAGE_TIME (5 * TIMER_MULTIPLIER)
 #define SLEEP_TIME (3 * TIMER_MULTIPLIER)
 
-// Plant MIDI
-#define TIMER_MS 100 // Timer for receiving plant frequency
-#define TIMER_MULTIPLIER (1000 / TIMER_MS)
+// MIDI
+#define TIMER_MIDI_US 1000000// Timer for receiving plant frequency
 #define MIN_FREQ 60 // Frequency that is ignored
+
+#define TIMER_PLANT_MS 100
+#define TIMER_MULTIPLIER (1000 / TIMER_PLANT_MS)
 
 #define LOWEST_NOTE 36
 #define HIGHEST_NOTE 107
@@ -47,8 +51,8 @@ double filterPercent;
 uint32_t realFrequency;
 uint32_t averageFreq;
 
-uint32_t bps;
-uint32_t step;
+int time;
+
 
 // Device Status
 enum Status {
@@ -56,6 +60,8 @@ enum Status {
     Avg,
     Active
 };
+
+struct repeating_timer timer;
 
 enum Status status;
 
@@ -69,6 +75,8 @@ void FrequencyStage();
 int GetNoteDiff(int oldVal, int newVal);
 
 void Intro();
+
+bool repeating_timer_callback(struct repeating_timer *t);
 
 void changeBpm(uint16_t bpm);
 

@@ -4,6 +4,7 @@
 #include "../include/frequency_counter.h"
 #include "pico/time.h"
 #include "hardware/irq.h"
+#include "global.h"
 
 uint32_t realFrequency = 0;
 uint8_t slice_num = 0;
@@ -32,7 +33,7 @@ static uint32_t _pwm_read(uint sliceNum) {
 static bool _repeating_timer_callback_t(repeating_timer_t *rt) {
 
     freq_ready = true;
-    realFrequency = _pwm_read(slice_num);
+    realFrequency = _pwm_read(slice_num) * TIMER_MULTIPLIER;
 
     return true;
 }
@@ -70,7 +71,7 @@ void setupPwm(uint8_t freq_pin) {
 
 void beginTimer(uint8_t freq_pin, uint16_t period_ms) {
     setupPwm(freq_pin);
-    add_repeating_timer_ms(period_ms, _repeating_timer_callback_t,NULL, &timer);
+    add_repeating_timer_ms(period_ms, _repeating_timer_callback_t,NULL, &timerPlant);
 }
 
 

@@ -21,20 +21,8 @@ int main(void)
         tud_task();
         gpio_put(TEST_LED, 1);
         if (isReady()) {
-            realFrequency = getFreq() * TIMER_MULTIPLIER;
+            realFrequency = getFreq();
             FrequencyStage();
-            if (status == Active) {
-                if (step % bps == 0) {
-                    midi_plant();
-                    if (step == bps * 8) {
-                        midi_light();
-                        step = 0;
-                    }
-                    printf("{\"AverageFreq\": %d, \"Freq\": %d, \"PlantNote\": %d, \"LightNote\": %d }\n",
-                           averageFreq, realFrequency, lastNotePlant, lastNoteLight);
-                }
-            }
-            step++;
         }
         midi_settings();
         LedStage();

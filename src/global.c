@@ -80,16 +80,15 @@ void Setup() {
     FIRST_VALUE = 0.1;
 
     filterPercent = 0;
+    time = TIMER_MIDI_US;
 
-    bps = TIMER_MULTIPLIER;
-    step = 0;
 
     uint sliceNum = pwm_gpio_to_slice_num(BlUE_LED);
     config = pwm_get_default_config();
     pwm_init(sliceNum, &config, true);
 
     status = Sleep;
-    beginTimer(PLANT_PIN, TIMER_MS);
+    beginTimer(PLANT_PIN, TIMER_PLANT_MS);
 }
 
 uint32_t freq[ASYNC];
@@ -135,6 +134,19 @@ void LedStage() {
     }
 }
 
+bool repeating_timer_callback(struct repeating_timer *t) {
+    static uint8_t counter = 0;
+    midi_plant();
+    if (counter++ == 3) {
+        midi_light();
+        counter = 0;
+    }
+    printf("{\"AverageFreq\": %d, \"Freq\": %d, \"PlantNote\": %d, \"LightNote\": %d }\n",
+           averageFreq, realFrequency, lastNotePlant, lastNoteLight);
+
+    return true;
+}
+
 void FrequencyStage() {
     switch (status) {
         case Sleep:
@@ -178,8 +190,8 @@ void FrequencyStage() {
                 averageFreq /= counterValues;
                 noteChangeValue /= counterValues;
                 counterValues = 0;
+                add_repeating_timer_us(time, repeating_timer_callback, NULL, &timer);
                 status = Active;
-                step = 0;
                 printf("[+] Change status: Stab -> Active\n");
             }
             break;
@@ -194,7 +206,7 @@ void FrequencyStage() {
                 counterValues = 0;
                 averageFreq = 0;
                 status = Sleep;
-
+                cancel_repeating_timer(&timer);
                 printf("[+] Change status: Active -> Sleep\n");
                 midi_stop();
             }
