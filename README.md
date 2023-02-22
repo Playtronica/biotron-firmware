@@ -141,6 +141,9 @@ The parameter is responsible for smoothness (from 0 to 99%).
 4) **Change scale (Major, minor, etc) (Function Number Bite = 3)** - Changes octave. Has one parameter.
 The parameter is responsible for octave. (from 0 to 11)
 
+<details>
+<summary>Table of Scale</summary>
+
 | Byte | Octave     |
 |------|------------|
 | 0    | MAJOR      |
@@ -155,6 +158,8 @@ The parameter is responsible for octave. (from 0 to 11)
 | 9    | MINPEN     |
 | A    | MAJPEN     |
 | B    | DIMINISHED |
+
+</details>
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 

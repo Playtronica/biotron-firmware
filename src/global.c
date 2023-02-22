@@ -13,6 +13,7 @@ uint32_t lastFrequency;
 int counterValues = 0;
 pwm_config config;
 
+
 uint32_t filterValue = 0;
 uint32_t Filter(float newVal, double k) {
     filterValue +=  (newVal - filterValue) * k;

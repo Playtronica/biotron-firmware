@@ -1,5 +1,4 @@
 #include <hardware/adc.h>
-#include <stdio.h>
 #include "tusb.h"
 #include "frequency_counter.h"
 #include "notes.h"
