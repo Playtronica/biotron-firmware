@@ -39,7 +39,7 @@ add_compile_options(-Wall
 
 file(GLOB biotron_SRC "src/*.c")
 
-add_executable(${TARGET_NAME} include/frequency_counter.h include/global.h include/chord.h)
+add_executable(${TARGET_NAME} include/frequency_counter.h include/global.h include/midifilter.h)
 target_sources(${TARGET_NAME} PUBLIC main.c ${biotron_SRC})
 target_include_directories(${TARGET_NAME} PUBLIC include())
 pico_enable_stdio_usb(${TARGET_NAME} 1)

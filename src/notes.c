@@ -2,7 +2,7 @@
 #include <class/midi/midi_device.h>
 #include <hardware/adc.h>
 #include "../include/notes.h"
-#include "../include/chord.h"
+#include "../include/midifilter.h"
 #include "global.h"
 
 #define PLANT_NOTE 24

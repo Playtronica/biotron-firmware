@@ -4,7 +4,7 @@
 
 #include "pico/stdlib.h"
 #include "global.h"
-#include "../include/chord.h"
+#include "../include/midifilter.h"
 #include <class/midi/midi_device.h>
 #include <malloc.h>
 
