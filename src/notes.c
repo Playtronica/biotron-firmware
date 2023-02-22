@@ -176,6 +176,7 @@ void midi_settings() {
     uint8_t buff[4];
     uint8_t res[100];
     uint8_t len = 0;
+
     while (tud_midi_packet_read(buff)) {
         for (int i = 1; i < 4; ++i) {
             printf("%d ", buff[i]);
@@ -190,12 +191,11 @@ void midi_settings() {
     printf("\n");
 
     if (res[0] == 11) {
-
         double su = 0;
         switch (res[1]) {
             case (0):
                 for (int i = 2; i < len; i++) {
-                    su += res[i];;
+                    su += res[i];
                 }
                 time = (int) (1000000.0 / (su / 60.0));
                 if (status == Active) {

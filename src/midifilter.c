@@ -8,17 +8,20 @@
 #include <class/midi/midi_device.h>
 #include <malloc.h>
 
+
 typedef struct Note {
     uint8_t note;
     uint8_t velocity;
 } Note;
 
 
-struct Vector {
+typedef struct Vector {
     Note *notes;
     int size;
     int capacity;
-};
+} Vector;
+
+struct Vector vec;
 
 typedef struct MidiFilter {
     void (*noteOn)(struct Vector* notes);
@@ -36,6 +39,12 @@ struct Vector create_vector(int n) {
     vec.notes = malloc(sizeof(int)*n);
 
     return vec;
+}
+
+void free_vector(struct Vector* vec) {
+    vec->size = 0;
+    vec->capacity = 0;
+    free(vec->notes);
 }
 
 void insert_shift_right(struct Vector* vec, struct Note note) {
@@ -82,7 +91,7 @@ MidiFilter filters[] = {
 
 
 void Play(uint8_t note, uint8_t channel, uint8_t cable_num) {
-    struct Vector vec = create_vector(100);
+    vec = create_vector(100);
     struct Note firstNote = {note, 127};
     insert_shift_right(&vec, firstNote);
 
@@ -103,10 +112,12 @@ void Play(uint8_t note, uint8_t channel, uint8_t cable_num) {
         uint8_t note_off[3] = {0x90 | channel, vec.notes[i].note, vec.notes[i].velocity};
         tud_midi_stream_write(cable_num, note_off, 3);
     }
+
+    free_vector(&vec);
 }
 
 void Stop(uint8_t note, uint8_t channel, uint8_t cable_num) {
-    struct Vector vec = create_vector(100);
+    vec = create_vector(100);
     struct Note firstNote = {note, 0};
     insert_shift_right(&vec, firstNote);
 
@@ -128,5 +139,5 @@ void Stop(uint8_t note, uint8_t channel, uint8_t cable_num) {
         tud_midi_stream_write(cable_num, note_off, 3);
     }
 
-
+    free_vector(&vec);
 }
