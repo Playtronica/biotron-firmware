@@ -38,4 +38,7 @@ void midi_light(void);
 void midi_stop();
 void midi_settings();
 
+uint32_t getNote(int percent, int note);
+void init_filters();
+
 #endif

@@ -51,7 +51,7 @@ double filterPercent;
 uint32_t realFrequency;
 uint32_t averageFreq;
 
-int time;
+int timer_notes;
 
 // Device Status
 enum Status {
@@ -62,7 +62,7 @@ enum Status {
 
 // Plays Notes
 struct repeating_timer timer;
-bool repeating_timer_callback(struct repeating_timer *t);
+bool playNote(struct repeating_timer *t);
 
 // Device Status
 enum Status status;

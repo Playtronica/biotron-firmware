@@ -1,6 +1,7 @@
 #include <hardware/adc.h>
 #include <pico/printf.h>
 #include <stdlib.h>
+#include <time.h>
 #include "global.h"
 #include "hardware/pwm.h"
 #include "hardware/timer.h"
@@ -81,7 +82,7 @@ void Setup() {
     FIRST_VALUE = 0.1;
 
     filterPercent = 0;
-    time = TIMER_MIDI_US;
+    timer_notes = TIMER_MIDI_US;
 
 
     uint sliceNum = pwm_gpio_to_slice_num(BlUE_LED);
@@ -90,6 +91,8 @@ void Setup() {
 
     status = Sleep;
     beginTimer(PLANT_PIN, TIMER_PLANT_MS);
+    srand(time(NULL));
+    init_filters();
 }
 
 uint32_t freq[ASYNC];
@@ -135,15 +138,13 @@ void LedStage() {
     }
 }
 
-bool repeating_timer_callback(struct repeating_timer *t) {
+bool playNote(struct repeating_timer *t) {
     static uint8_t counter = 0;
     midi_plant();
     if (counter++ == 3) {
         midi_light();
         counter = 0;
     }
-    printf("{\"AverageFreq\": %d, \"Freq\": %d, \"PlantNote\": %d, \"LightNote\": %d }\n",
-           averageFreq, realFrequency, lastNotePlant, lastNoteLight);
 
     return true;
 }
@@ -191,7 +192,7 @@ void FrequencyStage() {
                 averageFreq /= counterValues;
                 noteChangeValue /= counterValues;
                 counterValues = 0;
-                add_repeating_timer_us(time, repeating_timer_callback, NULL, &timer);
+                add_repeating_timer_us(timer_notes, playNote, NULL, &timer);
                 status = Active;
                 printf("[+] Change status: Stab -> Active\n");
             }
