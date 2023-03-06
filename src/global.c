@@ -82,6 +82,8 @@ void Setup() {
     filterPercent = 0;
     time = TIMER_MIDI_US;
 
+    plantVelocity = 127;
+    lightVelocity = 127;
 
     uint sliceNum = pwm_gpio_to_slice_num(BlUE_LED);
     config = pwm_get_default_config();

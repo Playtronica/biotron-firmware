@@ -51,6 +51,9 @@ double filterPercent;
 uint32_t realFrequency;
 uint32_t averageFreq;
 
+uint8_t plantVelocity;
+uint8_t lightVelocity;
+
 int time;
 
 // Device Status
