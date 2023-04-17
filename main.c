@@ -26,6 +26,6 @@ int main(void)
         }
         midi_settings();
         LedStage();
-        sleep_ms(10);
+        sleep_ms(1);
     }
 }

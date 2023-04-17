@@ -96,7 +96,7 @@ void Setup() {
 uint32_t freq[ASYNC];
 
 void LedStage() {
-    static int level = (MAX_LIGHT - MIN_LIGHT) / (TIMER_MULTIPLIER * 4);
+    static int level = (MAX_LIGHT - MIN_LIGHT) / (TIMER_MULTIPLIER * 40);
     switch (status) {
         case Sleep:
             for (int i = ASYNC - 1; i >= 0; i--) {
