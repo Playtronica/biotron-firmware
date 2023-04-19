@@ -7,6 +7,7 @@
 #include "notes.h"
 #include "frequency_counter.h"
 
+
 enum Status status;
 
 
@@ -16,6 +17,7 @@ void setFilterPercent(double newFilterPercent) {
     if (filterPercent >= 1) filterPercent = 0.99;
     filterPercent = 1 - filterPercent;
 }
+
 
 uint32_t freq = 0;
 uint32_t getFreq() {
@@ -27,10 +29,12 @@ uint32_t getLastFreq() {
     return lastFreq;
 }
 
+
 uint32_t averageFreq = 0;
 uint32_t getAvgFreq() {
     return averageFreq;
 }
+
 
 uint32_t averageFreqChanges = 0;
 uint32_t getAvgFreqChanges() {
@@ -144,11 +148,11 @@ void FrequencyStage() {
 
             if (counterValues >= STABILIZATION_TIME) {
                 counterValues = 0;
-                status = Avg;
+                status = Stabilization;
                 printf("[+] Change status: Sleep -> Stab\n");
             }
             break;
-        case Avg:
+        case Stabilization:
             if (freq > MIN_FREQ) {
                 counterValues++;
                 uint32_t b = FilterFrequency(freq, 0.3);
@@ -219,7 +223,7 @@ void LedStage() {
             pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_2, 0);
             pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_3, 0);
             break;
-        case Avg:
+        case Stabilization:
             if (ledsValue[ASYNC - 1] < MAX_LIGHT) {
                 ledsValue[ASYNC - 1] += level;
             }

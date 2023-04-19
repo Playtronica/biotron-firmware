@@ -1,5 +1,3 @@
-#include <hardware/adc.h>
-#include <stdio.h>
 #include "tusb.h"
 #include "frequency_counter.h"
 #include "notes.h"
@@ -19,12 +17,10 @@ int main(void)
         tud_task();
         gpio_put(TEST_LED, 1);
         if (isReady()) {
-
             FrequencyStage();
         }
         midi_settings();
         LedStage();
-
         sleep_ms(1);
     }
 

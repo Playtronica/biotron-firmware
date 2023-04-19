@@ -62,23 +62,22 @@
 
 // Led
 #define ASYNC 20
-#define MAX_LIGHT 40000
-#define MIN_LIGHT 5000
-#define NOTE_STRONG 414
 
 
+/** @brief Enum of possible device states */
 enum Status {
     Sleep,
-    Avg,
+    Stabilization,
     Active
 };
 
-/** @brief BPM in us */
+/** @brief change BPM in us (if device is Active reload timer) */
 void setBPM(int newTime);
 
 /** @brief Change filter values in active mode */
 void setFilterPercent(double newFilterPercent);
 
+/** @brief Getters for public variables */
 uint32_t getFreq();
 uint32_t getLastFreq();
 uint32_t getAvgFreq();
@@ -96,7 +95,7 @@ void FrequencyStage();
 /** @brief Calculating Notes */
 int GetNoteDiff(int oldVal, int newVal);
 
-/** @brief Function before main part () */
+/** @brief Function before main part (Smooth change in the brightness of the blue light) */
 void Intro();
 
 #endif //BIOTRON_GLOBAL_H

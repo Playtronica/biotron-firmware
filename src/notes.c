@@ -1,13 +1,14 @@
-#include <malloc.h>
 #include <class/midi/midi_device.h>
 #include <hardware/adc.h>
 #include <stdlib.h>
 #include "../include/notes.h"
 #include "global.h"
 
+
 #ifndef OCTAVE
 #define OCTAVE 0
 #endif
+
 
 uint32_t lastNotePlant;
 uint32_t lastNoteLight;
@@ -113,6 +114,7 @@ uint32_t* getOctaveNotes() {
     return notes;
 }
 
+
 double noteDistance = 0.5;
 double firstValue = 0.1;
 int GetNoteDiff(int oldVal, int newVal) {
@@ -144,6 +146,7 @@ int GetNoteDiff(int oldVal, int newVal) {
     }
     return i;
 }
+
 
 uint8_t plantVelocity = 127;
 void midi_plant(void) {
@@ -187,6 +190,7 @@ void midi_plant(void) {
         }
     }
 }
+
 
 uint8_t lightVelocity = 127;
 void midi_light(void) {

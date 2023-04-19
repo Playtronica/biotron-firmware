@@ -1,16 +1,5 @@
-/*!
-   * @file notes.h
-   * @brief Implementation of notes generation from ADC values
-   *
-   * @author Vladislav Aidarov
-   * @date   2022-04-20
-   */
-
 #ifndef TOUCHME_NOTES_H
 #define TOUCHME_NOTES_H
-
-#include <stdio.h>
-#include "pico/stdlib.h"
 
 
 /** @brief Enumeration for scales */
@@ -29,13 +18,20 @@ typedef enum{
     SCALE_DIMINISHED
 } ScaleNums_t;
 
+/** @brief Getters for public variables */
 uint32_t getLastNotePlant();
 uint32_t getLastNoteLight();
 
+/** @brief MIDI from plant (Channel 1) */
 void midi_plant(void);
+
+/** @brief MIDI from light (Channel 2) */
 void midi_light(void);
 
+/** @brief Stop all notes */
 void midi_stop();
+
+/** @brief Settings for device (CC commands and Byte commands (F0 .. F7)) */
 void midi_settings();
 
 #endif
