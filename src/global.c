@@ -7,136 +7,39 @@
 #include "notes.h"
 #include "frequency_counter.h"
 
-int noteChangeValue;
-uint32_t lastFrequency;
+enum Status status;
 
-int counterValues = 0;
-pwm_config config;
 
-uint32_t filterValue = 0;
-uint32_t Filter(float newVal, double k) {
-    filterValue +=  (newVal - filterValue) * k;
-    return filterValue;
+double filterPercent = 0;
+void setFilterPercent(double newFilterPercent) {
+    filterPercent = newFilterPercent;
+    if (filterPercent >= 1) filterPercent = 0.99;
+    filterPercent = 1 - filterPercent;
+}
+
+uint32_t freq = 0;
+uint32_t getFreq() {
+    return freq;
+}
+
+uint32_t lastFreq = 0;
+uint32_t getLastFreq() {
+    return lastFreq;
+}
+
+uint32_t averageFreq = 0;
+uint32_t getAvgFreq() {
+    return averageFreq;
+}
+
+uint32_t averageFreqChanges = 0;
+uint32_t getAvgFreqChanges() {
+    return averageFreqChanges;
 }
 
 
-int GetNoteDiff(int oldVal, int newVal) {
-    int diff = newVal - oldVal;
-    bool minus = diff < 0;
-    diff = abs(diff);
-
-    double first = 0;
-    double second = FIRST_VALUE;
-
-    int i;
-    if (diff - noteChangeValue >= 0) {
-        i = 1;
-        diff -= noteChangeValue;
-    } else return 0;
-
-    double extra;
-    while (diff - (noteChangeValue + NOTE_DISTANCE * (first + second)) >= 0) {
-        diff -= noteChangeValue + NOTE_DISTANCE * (first + second);
-        extra = first + second;
-        first = second;
-        second = extra;
-        i++;
-    }
-
-    if (minus) {
-        return -i;
-    }
-    return i;
-}
-
-void Setup() {
-    adc_init();
-
-    adc_gpio_init(PHOTORESISTORS_PIN);
-    adc_select_input(0);
-
-    gpio_init(PLANT_PIN);
-    gpio_init(BlUE_LED);
-    gpio_init(FIRST_GREEN_LED);
-    gpio_init(SECOND_GREEN_LED);
-    gpio_init(TEST_LED);
-
-    gpio_set_dir(PLANT_PIN, GPIO_IN);
-    gpio_set_dir(PHOTORESISTORS_PIN, GPIO_IN);
-    gpio_set_dir(BlUE_LED, GPIO_OUT);
-    gpio_set_dir(FIRST_GREEN_LED, GPIO_OUT);
-    gpio_set_dir(SECOND_GREEN_LED, GPIO_OUT);
-    gpio_set_dir(TEST_LED, GPIO_OUT);
-
-    gpio_set_function(BlUE_LED, GPIO_FUNC_PWM);
-    gpio_set_function(FIRST_GREEN_LED, GPIO_FUNC_PWM);
-    gpio_set_function(SECOND_GREEN_LED, GPIO_FUNC_PWM);
-
-    realFrequency = 0;
-    counterValues = 0;
-    averageFreq = 0;
-
-    NOTE_DISTANCE = 0.5;
-    FIRST_VALUE = 0.1;
-
-    filterPercent = 0;
-    time = TIMER_MIDI_US;
-
-    plantVelocity = 127;
-    lightVelocity = 127;
-
-    uint sliceNum = pwm_gpio_to_slice_num(BlUE_LED);
-    config = pwm_get_default_config();
-    pwm_init(sliceNum, &config, true);
-
-    status = Sleep;
-    beginTimer(PLANT_PIN, TIMER_PLANT_MS);
-}
-
-uint32_t freq[ASYNC];
-
-void LedStage() {
-    static int level = (MAX_LIGHT - MIN_LIGHT) / (TIMER_MULTIPLIER * 40);
-    switch (status) {
-        case Sleep:
-            for (int i = ASYNC - 1; i >= 0; i--) {
-                freq[i] = 0;
-            }
-            pwm_set_gpio_level(FIRST_GREEN_LED, 0);
-            pwm_set_gpio_level(SECOND_GREEN_LED, 0);
-            break;
-        case Avg:
-            if (freq[ASYNC - 1] < 50000) {
-                freq[ASYNC - 1] += level;
-            }
-            pwm_set_gpio_level(FIRST_GREEN_LED, freq[ASYNC - 1]);
-            pwm_set_gpio_level(SECOND_GREEN_LED, freq[ASYNC - 1]);
-            break;
-        case Active:
-            if (freq[ASYNC - 1] >= MAX_LIGHT && level > 0) {
-                level *= -1;
-            }
-            else {
-                if (freq[ASYNC - 1] <= MIN_LIGHT && level < 0) {
-                    level *= -1;
-                }
-            }
-
-            for (int i = 0; i < ASYNC - 1; i++) {
-                freq[i] = freq[i + 1];
-            }
-
-            freq[ASYNC - 1] += level;
-
-
-            pwm_set_gpio_level(FIRST_GREEN_LED, freq[0] + ((lastNotePlant - MIDDLE_NOTE) * NOTE_STRONG));
-            pwm_set_gpio_level(SECOND_GREEN_LED, freq[ASYNC - 1] + ((lastNotePlant - MIDDLE_NOTE) * NOTE_STRONG));
-
-            break;
-    }
-}
-
-bool repeating_timer_callback(struct repeating_timer *t) {
+struct repeating_timer midiTimer;
+bool _repeating_timer_callback(struct repeating_timer *t) {
     static uint8_t counter = 0;
     midi_plant();
     if (counter++ == 3) {
@@ -144,61 +47,140 @@ bool repeating_timer_callback(struct repeating_timer *t) {
         counter = 0;
     }
     printf("{\"AverageFreq\": %d, \"Freq\": %d, \"PlantNote\": %d, \"LightNote\": %d }\n",
-           averageFreq, realFrequency, lastNotePlant, lastNoteLight);
+           averageFreq, freq, getLastNotePlant(), getLastNoteLight());
 
     return true;
 }
 
+
+int time = TIMER_MIDI_US;
+void setBPM(int newTime) {
+    time = newTime;
+    if (status == Active) {
+        cancel_repeating_timer(&midiTimer);
+        add_repeating_timer_us(time, _repeating_timer_callback, NULL, &midiTimer);
+    }
+}
+
+pwm_config config;
+
+void Setup() {
+    adc_init();
+
+    adc_gpio_init(LIGHT_PIN);
+    adc_select_input(0);
+
+    gpio_init(PLANT_PIN);
+    gpio_init(GROUP_BlUE_LED_CENTER);
+    gpio_init(GROUP_BlUE_LED_LEFT);
+    gpio_init(GROUP_BlUE_LED_RIGHT);
+    gpio_init(FIRST_GROUP_GREEN_LED_1);
+    gpio_init(FIRST_GROUP_GREEN_LED_2);
+    gpio_init(FIRST_GROUP_GREEN_LED_3);
+    gpio_init(SECOND_GROUP_GREEN_LED_1);
+    gpio_init(SECOND_GROUP_GREEN_LED_2);
+    gpio_init(SECOND_GROUP_GREEN_LED_3);
+    gpio_init(TEST_LED);
+
+    gpio_set_dir(PLANT_PIN, GPIO_IN);
+    gpio_set_dir(LIGHT_PIN, GPIO_IN);
+    gpio_set_function(GROUP_BlUE_LED_CENTER, GPIO_FUNC_PWM);
+    gpio_set_function(GROUP_BlUE_LED_LEFT, GPIO_FUNC_PWM);
+    gpio_set_function(GROUP_BlUE_LED_RIGHT, GPIO_FUNC_PWM);
+    gpio_set_function(FIRST_GROUP_GREEN_LED_1, GPIO_FUNC_PWM);
+    gpio_set_function(FIRST_GROUP_GREEN_LED_2, GPIO_FUNC_PWM);
+    gpio_set_function(FIRST_GROUP_GREEN_LED_3, GPIO_FUNC_PWM);
+    gpio_set_function(SECOND_GROUP_GREEN_LED_1, GPIO_FUNC_PWM);
+    gpio_set_function(SECOND_GROUP_GREEN_LED_2, GPIO_FUNC_PWM);
+    gpio_set_function(SECOND_GROUP_GREEN_LED_3, GPIO_FUNC_PWM);
+
+    config = pwm_get_default_config();
+    pwm_init(pwm_gpio_to_slice_num(GROUP_BlUE_LED_CENTER), &config, true);
+    pwm_init(pwm_gpio_to_slice_num(GROUP_BlUE_LED_LEFT), &config, true);
+    pwm_init(pwm_gpio_to_slice_num(GROUP_BlUE_LED_RIGHT), &config, true);
+    pwm_init(pwm_gpio_to_slice_num(FIRST_GROUP_GREEN_LED_1), &config, true);
+    pwm_init(pwm_gpio_to_slice_num(FIRST_GROUP_GREEN_LED_2), &config, true);
+    pwm_init(pwm_gpio_to_slice_num(FIRST_GROUP_GREEN_LED_3), &config, true);
+    pwm_init(pwm_gpio_to_slice_num(SECOND_GROUP_GREEN_LED_1), &config, true);
+    pwm_init(pwm_gpio_to_slice_num(SECOND_GROUP_GREEN_LED_2), &config, true);
+    pwm_init(pwm_gpio_to_slice_num(SECOND_GROUP_GREEN_LED_3), &config, true);
+
+
+    status = Sleep;
+    initFrequencyTimer();
+}
+
+
+void Intro() {
+    uint32_t startTime = to_ms_since_boot(get_absolute_time());
+    while (to_ms_since_boot(get_absolute_time()) - startTime <= 1000) {
+        pwm_set_gpio_level(GROUP_BlUE_LED_LEFT,
+                           (uint16_t)((float)(to_ms_since_boot(get_absolute_time()) - startTime) / 1000 * MAX_LIGHT));
+        pwm_set_gpio_level(GROUP_BlUE_LED_CENTER,
+                           (uint16_t)((float)(to_ms_since_boot(get_absolute_time()) - startTime) / 1000 * MAX_LIGHT));
+        pwm_set_gpio_level(GROUP_BlUE_LED_RIGHT,
+                           (uint16_t)((float)(to_ms_since_boot(get_absolute_time()) - startTime) / 1000 * MAX_LIGHT));
+    }
+}
+
+
+uint32_t FilterFrequency(double newVal, double k) {
+    static uint32_t filterValue;
+    filterValue +=  (newVal - filterValue) * k;
+    return filterValue;
+}
+
+
+uint8_t counterValues = 0;
 void FrequencyStage() {
+    freq = getRealFreq();
     switch (status) {
         case Sleep:
-            filterValue = 0;
-            noteChangeValue = 0;
-            lastFrequency = 0;
-
-            if (realFrequency > MIN_FREQ) {
+            if (freq > MIN_FREQ) {
                 counterValues++;
             } else {
                 counterValues = 0;
             }
 
-            if (counterValues >= STAB_TIME) {
+            if (counterValues >= STABILIZATION_TIME) {
                 counterValues = 0;
-                averageFreq = 0;
                 status = Avg;
-                filterValue = realFrequency;
                 printf("[+] Change status: Sleep -> Stab\n");
             }
             break;
         case Avg:
-            if (realFrequency > MIN_FREQ) {
+            if (freq > MIN_FREQ) {
                 counterValues++;
-                uint32_t b = Filter(realFrequency, 0.3);
+                uint32_t b = FilterFrequency(freq, 0.3);
                 if (averageFreq == 0) {
-                    lastFrequency = realFrequency;
+                    lastFreq = freq;
                 } else {
-                    noteChangeValue += abs(lastFrequency - realFrequency);
-                    realFrequency = lastFrequency;
+                    averageFreqChanges += abs((int)(lastFreq - freq));
+                    freq = lastFreq;
                 }
                 averageFreq += b;
             } else {
-                averageFreq = 0;
                 counterValues = 0;
+                lastFreq = 0;
+                averageFreq = 0;
+                averageFreqChanges = 0;
+
                 status = Sleep;
+                FilterFrequency(0, 0);
                 printf("[+] Change status: Stab -> Sleep\n");
             }
 
             if (counterValues > AVERAGE_TIME) {
                 averageFreq /= counterValues;
-                noteChangeValue /= counterValues;
+                averageFreqChanges /= counterValues;
                 counterValues = 0;
-                add_repeating_timer_us(time, repeating_timer_callback, NULL, &timer);
+                add_repeating_timer_us(time, _repeating_timer_callback, NULL, &midiTimer);
                 status = Active;
                 printf("[+] Change status: Stab -> Active\n");
             }
             break;
         case Active:
-            if (realFrequency < MIN_FREQ) {
+            if (freq < MIN_FREQ) {
                 counterValues++;
             } else {
                 counterValues = 0;
@@ -206,38 +188,74 @@ void FrequencyStage() {
 
             if (counterValues > SLEEP_TIME) {
                 counterValues = 0;
+                lastFreq = 0;
                 averageFreq = 0;
+                averageFreqChanges = 0;
                 status = Sleep;
-                cancel_repeating_timer(&timer);
-                printf("[+] Change status: Active -> Sleep\n");
+                cancel_repeating_timer(&midiTimer);
+                FilterFrequency(0, 0);
                 midi_stop();
+                printf("[+] Change status: Active -> Sleep\n");
             }
-            if (filterPercent != 0) realFrequency = Filter(realFrequency, filterPercent);
+            if (filterPercent != 0) freq = FilterFrequency(freq, filterPercent);
 
             break;
     }
 }
 
-void Intro() {
-    uint32_t startTime = to_ms_since_boot(get_absolute_time());
-    while (to_ms_since_boot(get_absolute_time()) - startTime <= 1000) {
-        pwm_set_gpio_level(BlUE_LED,
-                           (uint16_t)((float)(to_ms_since_boot(get_absolute_time()) - startTime) / 1000 * MAX_LIGHT));
+
+uint32_t ledsValue[ASYNC];
+void LedStage() {
+    static int level = (MAX_LIGHT - MIN_LIGHT) / (TIMER_MULTIPLIER * 40);
+    switch (status) {
+        case Sleep:
+            for (int i = ASYNC - 1; i >= 0; i--) {
+                ledsValue[i] = 0;
+            }
+            pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_1, 0);
+            pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_2, 0);
+            pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_3, 0);
+            pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_1, 0);
+            pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_2, 0);
+            pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_3, 0);
+            break;
+        case Avg:
+            if (ledsValue[ASYNC - 1] < MAX_LIGHT) {
+                ledsValue[ASYNC - 1] += level;
+            }
+            pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_1, ledsValue[ASYNC - 1]);
+            pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_2, ledsValue[ASYNC - 1]);
+            pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_3, ledsValue[ASYNC - 1]);
+            pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_1, ledsValue[ASYNC - 1]);
+            pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_2, ledsValue[ASYNC - 1]);
+            pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_3, ledsValue[ASYNC - 1]);
+            break;
+        case Active:
+            if (ledsValue[ASYNC - 1] >= MAX_LIGHT && level > 0) {
+                level *= -1;
+            }
+            else {
+                if (ledsValue[ASYNC - 1] <= MIN_LIGHT && level < 0) {
+                    level *= -1;
+                }
+            }
+
+            for (int i = 0; i < ASYNC - 1; i++) {
+                ledsValue[i] = ledsValue[i + 1];
+            }
+
+            ledsValue[ASYNC - 1] += level;
+
+            uint32_t lastNotePlant = getLastNotePlant();
+            pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_1, ledsValue[0] + ((lastNotePlant - MIDDLE_NOTE) * NOTE_STRONG));
+            pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_2, ledsValue[0] + ((lastNotePlant - MIDDLE_NOTE) * NOTE_STRONG));
+            pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_3, ledsValue[0] + ((lastNotePlant - MIDDLE_NOTE) * NOTE_STRONG));
+            pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_1, ledsValue[ASYNC - 1] + ((lastNotePlant - MIDDLE_NOTE) * NOTE_STRONG));
+            pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_2, ledsValue[ASYNC - 1] + ((lastNotePlant - MIDDLE_NOTE) * NOTE_STRONG));
+            pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_3, ledsValue[ASYNC - 1] + ((lastNotePlant - MIDDLE_NOTE) * NOTE_STRONG));
+
+            break;
     }
-    uint sliceNum = pwm_gpio_to_slice_num(FIRST_GREEN_LED);
-    config = pwm_get_default_config();
-    pwm_init(sliceNum, &config, true);
-    printf("\n\n"
-           " _______ .-./`)     ,-----.  ,---------. .-------.        ,-----.    ,---.   .--. \n"
-           "\\  ____  \\ .-.')  .'  .-,  '.\\          \\|  _ _   \\     .'  .-,  '.  |    \\  |  | \n"
-           "| |    \\ / `-' \\ / ,-.|  \\ _ \\`--.  ,---'| ( ' )  |    / ,-.|  \\ _ \\ |  ,  \\ |  | \n"
-           "| |____/ /`-'`\"`;  \\  '_ /  | :  |   \\   |(_ o _) /   ;  \\  '_ /  | :|  |\\_ \\|  | \n"
-           "|   _ _ '..---. |  _`,/ \\ _/  |  :_ _:   | (_,_).' __ |  _`,/ \\ _/  ||  _( )_\\  | \n"
-           "|  ( ' )  \\   | : (  '\\_/ \\   ;  (_I_)   |  |\\ \\  |  |: (  '\\_/ \\   ;| (_ o _)  | \n"
-           "| (_(;)_) |   |  \\ `\"/  \\  ) /  (_(=)_)  |  | \\ `'   / \\ `\"/  \\  ) / |  (_,_)\\  | \n"
-           "|  (_,_)  /   |   '. \\_/``\".'    (_I_)   |  |  \\    /   '. \\_/``\".'  |  |    |  | \n"
-           "/_______.''---'     '-----'      '---'   ''-'   `'-'      '-----'    '--'    '--' \n"
-           "                                                                                  \n");
 }
 
 

@@ -11,9 +11,7 @@ int main(void)
 {
     stdio_init_all();
     Setup();
-
     tusb_init();
-
     Intro();
 
     while (true)
@@ -21,11 +19,13 @@ int main(void)
         tud_task();
         gpio_put(TEST_LED, 1);
         if (isReady()) {
-            realFrequency = getFreq();
+
             FrequencyStage();
         }
         midi_settings();
         LedStage();
+
         sleep_ms(1);
     }
+
 }

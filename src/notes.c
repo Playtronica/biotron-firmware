@@ -1,16 +1,23 @@
 #include <malloc.h>
 #include <class/midi/midi_device.h>
 #include <hardware/adc.h>
+#include <stdlib.h>
 #include "../include/notes.h"
 #include "global.h"
-
-#define PLANT_NOTE 24
-
-
 
 #ifndef OCTAVE
 #define OCTAVE 0
 #endif
+
+uint32_t lastNotePlant;
+uint32_t lastNoteLight;
+uint32_t getLastNotePlant() {
+    return lastNotePlant;
+}
+uint32_t getLastNoteLight() {
+    return lastNoteLight;
+}
+
 
 typedef struct {
     int steps;
@@ -31,9 +38,6 @@ const uint8_t minpen[] = { 3, 2, 2, 3, 2 };
 const uint8_t majpen[] = { 2, 2, 3, 2, 3 };
 const uint8_t diminished[] = { 2, 1, 2, 1, 2, 1, 2, 1 };
 
-uint32_t getCountNote(){
-    return HIGHEST_NOTE - LOWEST_NOTE;
-}
 
 const NotesScale_t scales[] = {
         {7, major},
@@ -50,7 +54,11 @@ const NotesScale_t scales[] = {
         {8, diminished},
 };
 
+
 ScaleNums_t scale = OCTAVE;
+uint8_t getLengthOctave() {
+    return scales[scale].steps;
+}
 
 
 uint32_t getNote(int percent) {
@@ -62,17 +70,14 @@ uint32_t getNote(int percent) {
 
     if (!minus) {
         int step = _scale.steps - 1;
-
         for (int i = 0; i < percent; i++) {
             if (step < 0) {
                 step = _scale.steps - 1;
             }
-
             note -= _scale.scale[step];
             step--;
 
             if (note <= LOWEST_NOTE) {
-//                note = -1;  TOUCH MODE
                 note = LOWEST_NOTE;
                 break;
             }
@@ -85,11 +90,8 @@ uint32_t getNote(int percent) {
                 step = 0;
             }
             note += _scale.scale[step];
-
             step++;
-
             if (note >= HIGHEST_NOTE) {
-//                note = -1;  TOUCH MODE
                 note = HIGHEST_NOTE;
                 break;
             }
@@ -99,10 +101,6 @@ uint32_t getNote(int percent) {
     return note;
 }
 
-
-uint8_t getLengthOctave() {
-    return scales[scale].steps;
-}
 
 uint32_t* getOctaveNotes() {
     NotesScale_t _scale = scales[scale];
@@ -115,7 +113,39 @@ uint32_t* getOctaveNotes() {
     return notes;
 }
 
+double noteDistance = 0.5;
+double firstValue = 0.1;
+int GetNoteDiff(int oldVal, int newVal) {
+    int diff = newVal - oldVal;
+    bool minus = diff < 0;
+    diff = abs(diff);
 
+    double first = 0;
+    double second = firstValue;
+
+    int i;
+    uint32_t noteChangeValue = getAvgFreqChanges();
+    if (diff - noteChangeValue >= 0) {
+        i = 1;
+        diff -= noteChangeValue;
+    } else return 0;
+
+    double extra;
+    while (diff - (noteChangeValue + noteDistance * (first + second)) >= 0) {
+        diff -= noteChangeValue + noteDistance * (first + second);
+        extra = first + second;
+        first = second;
+        second = extra;
+        i++;
+    }
+
+    if (minus) {
+        return -i;
+    }
+    return i;
+}
+
+uint8_t plantVelocity = 127;
 void midi_plant(void) {
     static uint32_t currentNote;
     static uint32_t previousNote;
@@ -141,7 +171,7 @@ void midi_plant(void) {
         }
     }
 
-    currentNote = getNote(GetNoteDiff(averageFreq, realFrequency));
+    currentNote = getNote(GetNoteDiff(getAvgFreq(), getFreq()));
     lastNotePlant = currentNote;
     uint8_t note_on[3] = {0x90 | channel, currentNote, plantVelocity};
     if (currentNote != -1) {
@@ -158,7 +188,7 @@ void midi_plant(void) {
     }
 }
 
-
+uint8_t lightVelocity = 127;
 void midi_light(void) {
     static uint32_t currentNote;
     static uint32_t previousNote;
@@ -217,29 +247,21 @@ void midi_settings() {
                 for (int i = 2; i < len; i++) {
                     su += res[i];;
                 }
-                time = (int)(1000000.0 / (su / 60.0));
-                if (status == Active) {
-                    cancel_repeating_timer(&timer);
-                    add_repeating_timer_us((int) (1000000.0 / (su / 60.0)),
-                                           repeating_timer_callback, NULL, &timer);
-                }
-                printf("[!] BPM HAS CHANGED. BPM: %d, TIME: %d.\n", (int)su, (int)time);
+                setBPM((int) (1000000.0 / (su / 60.0)));
+                printf("[!] BPM HAS CHANGED. BPM: %d, TIME: %d.\n", (int)su, (int)(1000000.0 / (su / 60.0)));
                 break;
             case (1):
                 if (len != 4) break;
-                NOTE_DISTANCE = (double) res[2] / 100;
-                FIRST_VALUE = (double) res[3] / 100;
-                if (NOTE_DISTANCE > 1) NOTE_DISTANCE = 1;
-                if (FIRST_VALUE > 1) FIRST_VALUE = 1;
+                noteDistance = (double) res[2] / 100;
+                firstValue = (double) res[3] / 100;
+                if (noteDistance > 1) noteDistance = 1;
+                if (firstValue > 1) firstValue = 1;
                 printf("[!] FIBONACCI ALGORITHM HAS CHANGED. NOTE DISTANCE: %.2f, FIRST_VALUE: %.2f.\n",
-                       NOTE_DISTANCE, FIRST_VALUE);
+                       noteDistance, firstValue);
                 break;
             case (2):
-                filterPercent = (double) (res[2]) / 100;
-                if (filterPercent >= 1) filterPercent = 0.99;
-                printf("[!] FILTER VALUE HAS CHANGED. FILTER VALUE: %.2f.\n", filterPercent);
-                filterPercent = 1 - filterPercent;
-
+                setFilterPercent((double) (res[2]) / 100);
+                printf("[!] FILTER VALUE HAS CHANGED. FILTER VALUE: %.2f.\n", (double) (res[2]) / 100);
                 break;
             case (3):
                 if (res[2] >= 0 && res[2] < 12) {
@@ -300,10 +322,8 @@ void midi_settings() {
     else if (res[0] == 176) {
         switch (res[1]) {
             case (3):
-                filterPercent = (double) (res[2]) / 127;
-                if (filterPercent >= 1) filterPercent = 0.99;
-                printf("[!] FILTER VALUE HAS CHANGED. FILTER VALUE: %.2f.\n", filterPercent);
-                filterPercent = 1 - filterPercent;
+                setFilterPercent((double)(res[2]) / 127);
+                printf("[!] FILTER VALUE HAS CHANGED. FILTER VALUE: %.2f.\n", (double)(res[2]) / 127);
                 break;
             case(9):
                 plantVelocity = res[2];

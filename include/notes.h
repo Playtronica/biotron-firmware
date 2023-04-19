@@ -13,9 +13,6 @@
 #include "pico/stdlib.h"
 
 
-uint32_t lastNotePlant;
-uint32_t lastNoteLight;
-
 /** @brief Enumeration for scales */
 typedef enum{
     SCALE_MAJOR,
@@ -31,6 +28,9 @@ typedef enum{
     SCALE_MAJPEN,
     SCALE_DIMINISHED
 } ScaleNums_t;
+
+uint32_t getLastNotePlant();
+uint32_t getLastNoteLight();
 
 void midi_plant(void);
 void midi_light(void);

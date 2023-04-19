@@ -1,27 +1,52 @@
-//
-// Created by user on 06.12.22.
-//
-
 #ifndef BIOTRON_GLOBAL_H
 #define BIOTRON_GLOBAL_H
 
-#include <pico/time.h>
+/** @brief Led Pins */
+#ifdef DEBUG_LED_BUILD
+#define GROUP_BlUE_LED_CENTER 1
+    #define GROUP_BlUE_LED_LEFT 0
+    #define GROUP_BlUE_LED_RIGHT 16
 
-// PINS
-#define PLANT_PIN  1
-#define BlUE_LED 4
-#define FIRST_GREEN_LED 2
-#define SECOND_GREEN_LED 3
-#define PHOTORESISTORS_PIN 26
+    #define FIRST_GROUP_GREEN_LED_1 2
+    #define FIRST_GROUP_GREEN_LED_2 3
+    #define FIRST_GROUP_GREEN_LED_3 4
+
+    #define SECOND_GROUP_GREEN_LED_1 9
+    #define SECOND_GROUP_GREEN_LED_2 10
+    #define SECOND_GROUP_GREEN_LED_3 11
+
+    #define MAX_LIGHT 60000
+    #define MIN_LIGHT 5000
+    #define NOTE_STRONG 414
+#else
+    #define GROUP_BlUE_LED_CENTER 4
+    #define GROUP_BlUE_LED_LEFT 4
+    #define GROUP_BlUE_LED_RIGHT 4
+
+    #define FIRST_GROUP_GREEN_LED_1 2
+    #define FIRST_GROUP_GREEN_LED_2 2
+    #define FIRST_GROUP_GREEN_LED_3 2
+
+    #define SECOND_GROUP_GREEN_LED_1 3
+    #define SECOND_GROUP_GREEN_LED_2 3
+    #define SECOND_GROUP_GREEN_LED_3 3
+
+    #define MAX_LIGHT 40000
+    #define MIN_LIGHT 5000
+    #define NOTE_STRONG 414
+#endif
 #define TEST_LED 25
 
-// Time Status (by counter)
-#define STAB_TIME (5 * TIMER_MULTIPLIER)
+#define PLANT_PIN  1
+#define LIGHT_PIN 26
+
+
+#define STABILIZATION_TIME (5 * TIMER_MULTIPLIER)
 #define AVERAGE_TIME (5 * TIMER_MULTIPLIER)
 #define SLEEP_TIME (3 * TIMER_MULTIPLIER)
 
 // MIDI
-#define TIMER_MIDI_US 1000000// Timer for receiving plant frequency
+#define TIMER_MIDI_US 1000000 // Timer for receiving plant frequency
 #define MIN_FREQ 60 // Frequency that is ignored
 
 // Plant info
@@ -41,47 +66,37 @@
 #define MIN_LIGHT 5000
 #define NOTE_STRONG 414
 
-// Fibonacci
-double NOTE_DISTANCE;
-double FIRST_VALUE;
 
-// Filter
-double filterPercent;
-
-uint32_t realFrequency;
-uint32_t averageFreq;
-
-uint8_t plantVelocity;
-uint8_t lightVelocity;
-
-int time;
-
-// Device Status
 enum Status {
     Sleep,
     Avg,
     Active
 };
 
-// Plays Notes
-struct repeating_timer timer;
-bool repeating_timer_callback(struct repeating_timer *t);
+/** @brief BPM in us */
+void setBPM(int newTime);
 
-// Device Status
-enum Status status;
+/** @brief Change filter values in active mode */
+void setFilterPercent(double newFilterPercent);
 
-// Init pins and global variables
+uint32_t getFreq();
+uint32_t getLastFreq();
+uint32_t getAvgFreq();
+uint32_t getAvgFreqChanges();
+
+/** @brief Init pins */
 void Setup();
 
-// Debug Leds
+/** @brief Debug Leds */
 void LedStage();
 
-// Collects data about plant frequency and depending on it change device status.
+/** @brief Collects data about plant frequency and depending on it change device status. */
 void FrequencyStage();
 
-// Calculating Notes
+/** @brief Calculating Notes */
 int GetNoteDiff(int oldVal, int newVal);
 
+/** @brief Function before main part () */
 void Intro();
 
 #endif //BIOTRON_GLOBAL_H
