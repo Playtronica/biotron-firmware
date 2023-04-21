@@ -146,7 +146,7 @@ void Intro() {
  * @param
  *  k - coefficient of filter power (must be lower then 1)
  */
-uint32_t FilterFrequency(uint32_t newVal, double k) {
+uint32_t FilterFrequency(double newVal, double k) {
     static uint32_t filterValue;
     if (filterValue == 0) {
         filterValue = newVal;
@@ -261,6 +261,7 @@ void LedStage() {
          *
          */
         case Sleep:
+            if (level < 0) level *= -1;
             for (int i = ASYNC - 1; i >= 0; i--) {
                 ledsValue[i] = 0;
             }

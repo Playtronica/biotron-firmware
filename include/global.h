@@ -78,7 +78,7 @@
 #define MAX_OF_LIGHT 4000
 
 /** @brief Asynchronous LEDs for wave effect */
-#define ASYNC 200
+#define ASYNC 50
 
 /** @brief Enum of possible device states */
 enum Status {
