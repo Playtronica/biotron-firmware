@@ -17,9 +17,9 @@ int main(void)
         tud_task();
         gpio_put(TEST_LED, 1);
         if (isReady()) {
-            FrequencyStage();
+            MainStage();
         }
-        midi_settings();
+        MidiSettings();
         LedStage();
         sleep_ms(1);
     }

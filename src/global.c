@@ -41,13 +41,17 @@ uint32_t getAvgFreqChanges() {
     return averageFreqChanges;
 }
 
-
+/** @brief Repeating timer and function for midi
+ *
+ *  Everytime calls midi_plant and every 4th note calls midi_light
+ *
+ */
 struct repeating_timer midiTimer;
 bool _repeating_timer_callback(struct repeating_timer *t) {
     static uint8_t counter = 0;
-    midi_plant();
+    MidiPlant();
     if (counter++ == 3) {
-        midi_light();
+        MidiLight();
         counter = 0;
     }
     printf("{\"AverageFreq\": %d, \"Freq\": %d, \"PlantNote\": %d, \"LightNote\": %d }\n",
@@ -60,6 +64,7 @@ bool _repeating_timer_callback(struct repeating_timer *t) {
 int time = TIMER_MIDI_US;
 void setBPM(int newTime) {
     time = newTime;
+    /** if status is active, restart timer */
     if (status == Active) {
         cancel_repeating_timer(&midiTimer);
         add_repeating_timer_us(time, _repeating_timer_callback, NULL, &midiTimer);
@@ -67,7 +72,6 @@ void setBPM(int newTime) {
 }
 
 pwm_config config;
-
 void Setup() {
     adc_init();
 
@@ -127,18 +131,44 @@ void Intro() {
     }
 }
 
-
-uint32_t FilterFrequency(double newVal, double k) {
+/** @brief Filter for frequency
+ *
+ * In Average device state smoothes trash values,
+ * In Active device state (if enabled) makes smooth transition between notes
+ * Working by Running Average
+ *
+ * @var
+ *  filterValue - last saved value of frequency, if it equals zero takes first value without filtration.
+ *  If both params are equal zero, filterValue resets to zero
+ *
+ * @param
+ *  newVal - current frequency
+ * @param
+ *  k - coefficient of filter power (must be lower then 1)
+ */
+uint32_t FilterFrequency(uint32_t newVal, double k) {
     static uint32_t filterValue;
+    if (filterValue == 0) {
+        filterValue = newVal;
+    }
+    if (newVal == 0 && k == 0) {
+        filterValue = 0;
+    }
     filterValue +=  (newVal - filterValue) * k;
     return filterValue;
 }
 
 
 uint8_t counterValues = 0;
-void FrequencyStage() {
+void MainStage() {
     freq = getRealFreq();
     switch (status) {
+        /** @brief Sleep mode
+         *
+         * Does nothing, until doesn't have frequencies above MIN_FREQ STABILIZATION_TIME in a row.
+         * After that change status to Stabilization
+         *
+         */
         case Sleep:
             if (freq > MIN_FREQ) {
                 counterValues++;
@@ -152,6 +182,13 @@ void FrequencyStage() {
                 printf("[+] Change status: Sleep -> Stab\n");
             }
             break;
+         /** @brief Stabilization mode
+         *
+         * Collects frequency for average frequency and average frequency changes.
+         * If one of the frequency become below MIN_FREQ, state of device changes to SLEEP
+         * If gets AVERAGE_TIME frequencies, state of device changes to ACTIVE and repeating midi timer activates
+         *
+         */
         case Stabilization:
             if (freq > MIN_FREQ) {
                 counterValues++;
@@ -183,6 +220,12 @@ void FrequencyStage() {
                 printf("[+] Change status: Stab -> Active\n");
             }
             break;
+         /** @brief Active mode
+         *
+         * Catch new Frequency for midi_plant.
+         * If gets frequencies below MIN_FREQ SLEEP_TIME in a row change device state to sleep
+         *
+         */
         case Active:
             if (freq < MIN_FREQ) {
                 counterValues++;
@@ -198,7 +241,7 @@ void FrequencyStage() {
                 status = Sleep;
                 cancel_repeating_timer(&midiTimer);
                 FilterFrequency(0, 0);
-                midi_stop();
+                MidiStop();
                 printf("[+] Change status: Active -> Sleep\n");
             }
             if (filterPercent != 0) freq = FilterFrequency(freq, filterPercent);
@@ -212,17 +255,27 @@ uint32_t ledsValue[ASYNC];
 void LedStage() {
     static int level = (MAX_LIGHT - MIN_LIGHT) / (TIMER_MULTIPLIER * 40);
     switch (status) {
+        /** @brief Sleep mode
+         *
+         * All green LEDs are disabled
+         *
+         */
         case Sleep:
             for (int i = ASYNC - 1; i >= 0; i--) {
                 ledsValue[i] = 0;
             }
-            pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_1, 0);
-            pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_2, 0);
-            pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_3, 0);
-            pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_1, 0);
-            pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_2, 0);
-            pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_3, 0);
+            pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_1, ledsValue[ASYNC - 1]);
+            pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_2, ledsValue[ASYNC - 1]);
+            pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_3, ledsValue[ASYNC - 1]);
+            pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_1, ledsValue[ASYNC - 1]);
+            pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_2, ledsValue[ASYNC - 1]);
+            pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_3, ledsValue[ASYNC - 1]);
             break;
+         /** @brief Stabilization mode
+         *
+         * Smooth switching on green LEDs
+         *
+         */
         case Stabilization:
             if (ledsValue[ASYNC - 1] < MAX_LIGHT) {
                 ledsValue[ASYNC - 1] += level;
@@ -234,6 +287,12 @@ void LedStage() {
             pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_2, ledsValue[ASYNC - 1]);
             pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_3, ledsValue[ASYNC - 1]);
             break;
+         /** @brief Active mode
+         *
+         * Leds work in pulse mode,
+         * also LEDs change brightness in dependence of last played midi_plant note (higher note, higher brightness)
+         * Leds work in ASYNC mode, so one of them work with a delay
+         */
         case Active:
             if (ledsValue[ASYNC - 1] >= MAX_LIGHT && level > 0) {
                 level *= -1;

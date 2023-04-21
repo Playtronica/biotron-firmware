@@ -231,11 +231,11 @@ uint8_t const * tud_descriptor_configuration_cb(uint8_t index)
 // array of pointer to string descriptors
 char const* string_desc_arr [] =
         {
-                (const char[]) { 0x09, 0x04 }, // 0: is supported language is English (0x0409)
-                "Playtronica",                     // 1: Manufacturer
-                "Biotron",              // 2: Product
-                "123456",                      // 3: Serials, should use chip ID
-                "TinyUSB CDC"             // 4: CDC Interface
+        (const char[]) { 0x09, 0x04 },  // 0: is supported language is English (0x0409)
+        "Playtronica",                          // 1: Manufacturer
+        "Biotron",                              // 2: Product
+        "123456",                               // 3: Serials, should use chip ID
+        "TinyUSB CDC"                           // 4: CDC Interface
         };
 
 static uint16_t _desc_str[32];
@@ -252,7 +252,8 @@ uint16_t const* tud_descriptor_string_cb(uint8_t index, uint16_t langid)
     {
         memcpy(&_desc_str[1], string_desc_arr[0], 2);
         chr_count = 1;
-    }else
+    }
+    else
     {
         // Note: the 0xEE index string is a Microsoft OS 1.0 Descriptors.
         // https://docs.microsoft.com/en-us/windows-hardware/drivers/usbcon/microsoft-defined-usb-descriptors

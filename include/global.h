@@ -32,37 +32,53 @@
     #define SECOND_GROUP_GREEN_LED_3 3
 
     #define MAX_LIGHT 40000
-    #define MIN_LIGHT 5000
+    #define MIN_LIGHT 10000
     #define NOTE_STRONG 414
 #endif
 #define TEST_LED 25
 
+/** @brief Pins for getting data for music */
 #define PLANT_PIN  1
 #define LIGHT_PIN 26
 
-
+/** @brief Time (in counters) for change status
+ *
+ * STABILIZATION_TIME change time between SLEEP and STABILIZATION statuses,
+ * AVERAGE_TIME change time between STABILIZATION and ACTIVE statuses,
+ * SLEEP_TIME change time between ACTIVE and STABILIZATION statuses,
+ * Change status from STABILIZATION to SLEEP happens instantly
+ */
 #define STABILIZATION_TIME (5 * TIMER_MULTIPLIER)
 #define AVERAGE_TIME (5 * TIMER_MULTIPLIER)
 #define SLEEP_TIME (3 * TIMER_MULTIPLIER)
 
-// MIDI
-#define TIMER_MIDI_US 1000000 // Timer for receiving plant frequency
-#define MIN_FREQ 60 // Frequency that is ignored
-
-// Plant info
+/** @brief Constants for describing getting values from PLANT PIN
+ *
+ * TIMER_PLANT_MS responsible for the speed of data receiving (the higher the speed, the greater the error),
+ * TIMER_MULTIPLIER coefficient controls scale of horizontal sweep,
+ * MIN_FREQ is minimum perceived frequency
+ */
 #define TIMER_PLANT_MS 100
 #define TIMER_MULTIPLIER (1000 / TIMER_PLANT_MS)
+#define MIN_FREQ 60
 
+/** @brief Start BPM of device in us
+ *
+ *  This variable works with repeating times, that play notes.
+ *  Converting formula => BPM = (1 sec * 60) / TIME
+ */
+#define TIMER_MIDI_US 1000000
+
+/** @brief Notes settings */
 #define LOWEST_NOTE 36
 #define HIGHEST_NOTE 107
 #define MIDDLE_NOTE 60
 
-//Light MIDI
-#define MAX_OF_PHOTO 4000
+/** @brief (Maximum possible value from photoresistor - 10%) for LIGHT NOTES*/
+#define MAX_OF_LIGHT 4000
 
-// Led
-#define ASYNC 20
-
+/** @brief Asynchronous LEDs for wave effect */
+#define ASYNC 200
 
 /** @brief Enum of possible device states */
 enum Status {
@@ -86,16 +102,26 @@ uint32_t getAvgFreqChanges();
 /** @brief Init pins */
 void Setup();
 
-/** @brief Debug Leds */
+/** @brief Work with leds
+ *
+ * Smooth switching on of green LEDs on stabilization
+ * Controls green LEDs on Active mode
+ *
+ */
 void LedStage();
 
-/** @brief Collects data about plant frequency and depending on it change device status. */
-void FrequencyStage();
+/** @brief Main part of code
+ *
+ * Collects frequency from PLANT_PIN and filter it (if it require),
+ * Changes statuses of device,
+ * Init MIDI repeating timer
+ */
+void MainStage();
 
-/** @brief Calculating Notes */
-int GetNoteDiff(int oldVal, int newVal);
-
-/** @brief Function before main part (Smooth change in the brightness of the blue light) */
+/** @brief Animation before start
+ *
+ *  Smooth switching on of blue LEDs
+ * */
 void Intro();
 
 #endif //BIOTRON_GLOBAL_H
