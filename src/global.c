@@ -265,12 +265,12 @@ void LedStage() {
             for (int i = ASYNC - 1; i >= 0; i--) {
                 ledsValue[i] = 0;
             }
-            pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_1, ledsValue[ASYNC - 1]);
-            pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_2, ledsValue[ASYNC - 1]);
-            pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_3, ledsValue[ASYNC - 1]);
-            pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_1, ledsValue[ASYNC - 1]);
-            pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_2, ledsValue[ASYNC - 1]);
-            pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_3, ledsValue[ASYNC - 1]);
+            pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_1, 0);
+            pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_2, 0);
+            pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_3, 0);
+            pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_1, 0);
+            pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_2, 0);
+            pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_3, 0);
             break;
          /** @brief Stabilization mode
          *
@@ -317,7 +317,6 @@ void LedStage() {
             pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_1, ledsValue[ASYNC - 1] + ((lastNotePlant - MIDDLE_NOTE) * NOTE_STRONG));
             pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_2, ledsValue[ASYNC - 1] + ((lastNotePlant - MIDDLE_NOTE) * NOTE_STRONG));
             pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_3, ledsValue[ASYNC - 1] + ((lastNotePlant - MIDDLE_NOTE) * NOTE_STRONG));
-
             break;
     }
 }

@@ -10,7 +10,7 @@
 #endif
 
 
-uint32_t lastNotePlant;
+uint32_t lastNotePlant = MIDDLE_NOTE;
 uint32_t lastNoteLight;
 uint32_t getLastNotePlant() {
     return lastNotePlant;
