@@ -333,7 +333,7 @@ void MidiSettings() {
              * @param x - if equals 1, change plant midi velocity, else if equals = 2 change light midi velocity
              * @param y - velocity (Max = 127)
              */
-            case(5):
+            case(4):
                 if (res[2] == 1) {
                     plantVelocity = res[3];
                     printf("[!] Plant Velocity has been changed. Velocity: %d\n", plantVelocity);
