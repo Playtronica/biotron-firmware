@@ -118,43 +118,8 @@ Install docker, example for Ubuntu 20.04
 <!-- COMMANDS -->
 ## MIDI Commands
 
-Biotron has some custom MIDI commands. 
 
-### Syntax
-
-| Number of Byte  | 1          | 2        | 3                    | 4               | 5              | ..  | 6        |
-|-----------------|------------|----------|----------------------|-----------------|----------------|-----|----------|
-| Possible Values | F0         | B        | 0-3                  | 0-7F            | 0-7F           | ..  | F7       |
-| Info            | Start Byte | Key Byte | Function Number Byte | Parameters Byte | Parametrs Byte | ..  | End Byte |
-
-### Commands
-1) **BPM change (Function Number Bite = 0)** - Change BPM of Biotron. Can have infinite variables.
-Sum of the variables -> bps. **(Warning. With very big value, device can crash)**.
-
-2) **Change sensitivity (fibonacci algorithm) (Function Number Bite = 1)** - Function that create longer
-distance between notes. Has two parameters. First is influence on main algorithm (from 0 to 100%). And Second is
-first value of fibonacci (from 0 to 100, but it converts in 0 to 1).
-
-3) **Change smoothness (Function Number Bite = 2)** - It changes the smoothness of note changes. Has one parameter.
-The parameter is responsible for smoothness (from 0 to 99%). 
-
-4) **Change scale (Major, minor, etc) (Function Number Bite = 3)** - Changes octave. Has one parameter.
-The parameter is responsible for octave. (from 0 to 11)
-
-| Byte | Octave     |
-|------|------------|
-| 0    | MAJOR      |
-| 1    | MINOR      |
-| 2    | CHROM      |
-| 3    | DORIAN     |
-| 4    | MIXOLYDIAN |
-| 5    | LYDIAN     |
-| 6    | WHOLETONE  |
-| 7    | MINBLUES   |
-| 8    | MAJBLUES   |
-| 9    | MINPEN     |
-| A    | MAJPEN     |
-| B    | DIMINISHED |
+Read more [here](./COMMANDS.md)
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
