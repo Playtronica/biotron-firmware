@@ -5,7 +5,7 @@
 #include "pico/time.h"
 #include "hardware/irq.h"
 #include "global.h"
-
+#include <stdlib.h>
 
 struct repeating_timer getFrequencyTimer;
 uint8_t slice_num = 0;
@@ -36,7 +36,7 @@ static uint32_t _pwm_read(uint sliceNum) {
 
 static bool _repeating_timer_callback_t(repeating_timer_t *rt) {
     freq_ready = true;
-    realFreq = _pwm_read(slice_num) * TIMER_MULTIPLIER;
+    realFreq = _pwm_read(slice_num) * TIMER_MULTIPLIER + rand() % 10;
     return true;
 }
 
