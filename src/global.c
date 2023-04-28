@@ -146,10 +146,11 @@ void Intro() {
  * @param
  *  k - coefficient of filter power (must be lower then 1)
  */
+uint32_t filterValue;
 uint32_t FilterFrequency(double newVal, double k) {
-    static uint32_t filterValue;
     if (filterValue == 0) {
         filterValue = newVal;
+        return filterValue;
     }
     if (newVal == 0 && k == 0) {
         filterValue = 0;
@@ -205,7 +206,6 @@ void MainStage() {
                 lastFreq = 0;
                 averageFreq = 0;
                 averageFreqChanges = 0;
-
                 status = Sleep;
                 FilterFrequency(0, 0);
                 printf("[+] Change status: Stab -> Sleep\n");
@@ -215,6 +215,7 @@ void MainStage() {
                 averageFreq /= counterValues;
                 averageFreqChanges /= counterValues;
                 counterValues = 0;
+                FilterFrequency(0, 0);
                 add_repeating_timer_us(time, _repeating_timer_callback, NULL, &midiTimer);
                 status = Active;
                 printf("[+] Change status: Stab -> Active\n");
@@ -233,6 +234,10 @@ void MainStage() {
                 counterValues = 0;
             }
 
+            if (filterPercent != 0)
+                freq = FilterFrequency(freq, filterPercent);
+
+
             if (counterValues > SLEEP_TIME) {
                 counterValues = 0;
                 lastFreq = 0;
@@ -244,7 +249,7 @@ void MainStage() {
                 MidiStop();
                 printf("[+] Change status: Active -> Sleep\n");
             }
-            if (filterPercent != 0) freq = FilterFrequency(freq, filterPercent);
+
 
             break;
     }
