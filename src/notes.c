@@ -231,6 +231,9 @@ void MidiSettings() {
         printf("\n");
     }
 
+    if (len == 0) {
+        return;
+    }
 
     /** @brief Byte Commands
      *
