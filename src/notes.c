@@ -320,7 +320,7 @@ void MidiSettings() {
                             octaveName = "WHOLETONE";
                             break;
                     }
-                    printf("[!] SCALE HAS CHANGED. CURRENT OCTAVE IS %s.\n", octaveName);
+                    printf("[!] SCALE HAS CHANGED. CURRENT SCALE IS %s.\n", octaveName);
                 }
                 break;
             /** @brief F0 B 1 x y F7 - Change velocity command
