@@ -5,12 +5,14 @@
 #include "pico/stdlib.h"
 #include "pico.h"
 
+
 int main(void)
 {
     stdio_init_all();
-    Setup();
     tusb_init();
+
     Intro();
+    Setup();
 
     while (true)
     {
@@ -19,6 +21,7 @@ int main(void)
         if (isReady()) {
             MainStage();
         }
+
         MidiSettings();
         LedStage();
         sleep_ms(1);

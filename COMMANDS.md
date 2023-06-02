@@ -32,7 +32,7 @@
         <li><a href="#change-bpm">Change BPM</a></li>
         <li><a href="#change-sensitivity">Change sensitivity</a></li>
         <li><a href="#change-smoothness">Change smoothness</a></li>
-        <li><a href="#change-octave">Change octave</a></li>
+        <li><a href="#change-scale">Change scale</a></li>
         <li><a href="#change-velocity">Change velocity</a></li>
       </ul>
     </li>
@@ -93,13 +93,13 @@ It changes the smoothness of note changes.
 Has one parameter.
 The parameter is responsible for smoothness (from 0 to 99%)
 
-### Change octave
+### Change scale
 (Function Number Bite = 3)
 
-Changes octave.
+Changes scale.
 
 Has one parameter.
-The parameter is responsible for octave. (from 0 to 11)
+The parameter is responsible for scale. (from 0 to 11)
 
 | Byte | Octave     |
 |------|------------|

@@ -6,16 +6,21 @@
 #include "hardware/timer.h"
 #include "notes.h"
 #include "frequency_counter.h"
+#include "settings.h"
 
 
 enum Status status;
 
 
-double filterPercent = 0;
+double filterPercent = DEF_FILTER_PERCENT;
 void setFilterPercent(double newFilterPercent) {
     filterPercent = newFilterPercent;
     if (filterPercent >= 1) filterPercent = 0.99;
     filterPercent = 1 - filterPercent;
+    SaveSettings();
+}
+double getFilterPercent() {
+    return filterPercent;
 }
 
 
@@ -69,6 +74,58 @@ void setBPM(int newTime) {
         cancel_repeating_timer(&midiTimer);
         add_repeating_timer_us(time, _repeating_timer_callback, NULL, &midiTimer);
     }
+    SaveSettings();
+}
+
+int getBPM() {
+    return time;
+}
+
+double fibPower = DEF_FIB_POW;
+double firstValue = DEF_FIB_FIRST;
+void setFreqPower(double power, double value) {
+    fibPower = power < 1 ? power : 1;
+    firstValue = value < 1 ? value : 1;
+    SaveSettings();
+}
+
+double getFibPower() {
+    return fibPower;
+}
+double getFirstValue() {
+    return firstValue;
+}
+
+
+ScaleNums_t scale = SCALE;
+void setScale(int id) {
+    scale = id;
+    SaveSettings();
+}
+int getScale() {
+    return scale;
+}
+
+uint8_t plantVelocity = 127;
+void setPlantVelocity(uint8_t velocity) {
+    if (velocity > 127) return;
+    plantVelocity = velocity;
+    SaveSettings();
+}
+
+uint8_t getPlantVelocity() {
+    return plantVelocity;
+}
+
+uint8_t lightVelocity = 127;
+void setLightVelocity(uint8_t velocity) {
+    if (velocity > 127) return;
+    lightVelocity = velocity;
+    SaveSettings();
+}
+
+uint8_t getLightVelocity() {
+    return lightVelocity;
 }
 
 pwm_config config;
@@ -113,9 +170,11 @@ void Setup() {
     pwm_init(pwm_gpio_to_slice_num(SECOND_GROUP_GREEN_LED_2), &config, true);
     pwm_init(pwm_gpio_to_slice_num(SECOND_GROUP_GREEN_LED_3), &config, true);
 
-
+    ReadSettings();
+    SaveSettings();
     status = Sleep;
     initFrequencyTimer();
+
 }
 
 
@@ -129,6 +188,27 @@ void Intro() {
         pwm_set_gpio_level(GROUP_BlUE_LED_RIGHT,
                            (uint16_t)((float)(to_ms_since_boot(get_absolute_time()) - startTime) / 1000 * MAX_LIGHT));
     }
+    PrintInfo();
+}
+
+void PrintInfo() {
+    printf("\n\n"
+           " _______ .-./`)     ,-----.  ,---------. .-------.        ,-----.    ,---.   .--. \n"
+           "\\  ____  \\ .-.')  .'  .-,  '.\\          \\|  _ _   \\     .'  .-,  '.  |    \\  |  | \n"
+           "| |    \\ / `-' \\ / ,-.|  \\ _ \\`--.  ,---'| ( ' )  |    / ,-.|  \\ _ \\ |  ,  \\ |  | \n"
+           "| |____/ /`-'`\"`;  \\  '_ /  | :  |   \\   |(_ o _) /   ;  \\  '_ /  | :|  |\\_ \\|  | \n"
+           "|   _ _ '..---. |  _`,/ \\ _/  |  :_ _:   | (_,_).' __ |  _`,/ \\ _/  ||  _( )_\\  | \n"
+           "|  ( ' )  \\   | : (  '\\_/ \\   ;  (_I_)   |  |\\ \\  |  |: (  '\\_/ \\   ;| (_ o _)  | \n"
+           "| (_(;)_) |   |  \\ `\"/  \\  ) /  (_(=)_)  |  | \\ `'   / \\ `\"/  \\  ) / |  (_,_)\\  | \n"
+           "|  (_,_)  /   |   '. \\_/``\".'    (_I_)   |  |  \\    /   '. \\_/``\".'  |  |    |  | \n"
+           "/_______.''---'     '-----'      '---'   ''-'   `'-'      '-----'    '--'    '--' \n"
+           "                                                                                  \n");
+    printf("BPM: %d Fib. NOTE DISTANCE: %.2f, FIRST_VALUE: %.2f\n",
+           (int)((double)1000000 / (double)getBPM() * (double)60),
+           getFibPower(), getFirstValue());
+    printf("FILTER VALUE: %.2f\n", getFilterPercent());
+    printf("SCALE: %d\n", getScale());
+    printf("PlantVelocity: %d, LightVelocity: %d\n", getPlantVelocity(), getLightVelocity());
 }
 
 /** @brief Filter for frequency

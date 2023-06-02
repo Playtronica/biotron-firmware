@@ -2,8 +2,10 @@
 #define BIOTRON_GLOBAL_H
 
 /** @brief Led Pins */
+#include "notes.h"
+
 #ifdef DEBUG_LED_BUILD
-#define GROUP_BlUE_LED_CENTER 1
+    #define GROUP_BlUE_LED_CENTER 1
     #define GROUP_BlUE_LED_LEFT 0
     #define GROUP_BlUE_LED_RIGHT 16
 
@@ -80,6 +82,15 @@
 /** @brief Asynchronous LEDs for wave effect */
 #define ASYNC 200
 
+#define DEF_FIB_POW 0.5
+#define DEF_FIB_FIRST 0.1
+
+#define DEF_FILTER_PERCENT 1
+
+#ifndef SCALE
+#define SCALE 0
+#endif
+
 /** @brief Enum of possible device states */
 enum Status {
     Sleep,
@@ -87,11 +98,26 @@ enum Status {
     Active
 };
 
+void setScale(int id);
+int getScale();
+
+void setPlantVelocity(uint8_t velocity);
+uint8_t getPlantVelocity();
+
+void setLightVelocity(uint8_t velocity);
+uint8_t getLightVelocity();
+
 /** @brief change BPM in us (if device is Active reload timer) */
 void setBPM(int newTime);
+int getBPM();
+
+void setFreqPower(double power, double value);
+double getFibPower();
+double getFirstValue();
 
 /** @brief Change filter values in active mode */
 void setFilterPercent(double newFilterPercent);
+double getFilterPercent();
 
 /** @brief Getters for public variables */
 uint32_t getFreq();
@@ -101,6 +127,12 @@ uint32_t getAvgFreqChanges();
 
 /** @brief Init pins */
 void Setup();
+/** @brief Animation before start
+ *
+ *  Smooth switching on of blue LEDs
+ * */
+void Intro();
+void PrintInfo();
 
 /** @brief Work with leds
  *
@@ -118,10 +150,6 @@ void LedStage();
  */
 void MainStage();
 
-/** @brief Animation before start
- *
- *  Smooth switching on of blue LEDs
- * */
-void Intro();
+
 
 #endif //BIOTRON_GLOBAL_H

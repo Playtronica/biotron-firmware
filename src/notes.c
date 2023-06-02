@@ -1,13 +1,12 @@
 #include <class/midi/midi_device.h>
 #include <hardware/adc.h>
 #include <stdlib.h>
+#include <hardware/sync.h>
 #include "../include/notes.h"
 #include "global.h"
 
 
-#ifndef OCTAVE
-#define OCTAVE 0
-#endif
+
 
 
 uint32_t lastNotePlant = MIDDLE_NOTE;
@@ -27,8 +26,8 @@ typedef struct {
 
 /** @brief Octave description
  *
- * Every array describe how to play notes in current octave.
- * For example: If octave is major, the third note it is MIDDLE_NOTE + (2 + 2 + 1)
+ * Every array describe how to play notes in current scale.
+ * For example: If scale is major, the third note it is MIDDLE_NOTE + (2 + 2 + 1)
  *
  */
 const uint8_t major[] = { 2, 2, 1, 2, 2, 2, 1 };
@@ -44,7 +43,7 @@ const uint8_t minpen[] = { 3, 2, 2, 3, 2 };
 const uint8_t majpen[] = { 2, 2, 3, 2, 3 };
 const uint8_t diminished[] = { 2, 1, 2, 1, 2, 1, 2, 1 };
 
-/** @brief Length of every octave description */
+/** @brief Length of every scale description */
 const NotesScale_t scales[] = {
         {7, major},
         {7, minor},
@@ -61,7 +60,7 @@ const NotesScale_t scales[] = {
 };
 
 
-ScaleNums_t scale = OCTAVE;
+
 
 /** @brief Function to find distance from average and current + (Fibonacci algorithm)
  *
@@ -74,8 +73,7 @@ ScaleNums_t scale = OCTAVE;
  *
  * @return Distance to change note
  */
-double fibPower = 0.5;
-double firstValue = 0.1;
+
 int GetFrequencyDiff() {
     uint32_t oldVal = getAvgFreq();
     uint32_t newVal = getFreq();
@@ -84,7 +82,7 @@ int GetFrequencyDiff() {
     diff = abs(diff);
 
     double first = 0;
-    double second = firstValue;
+    double second = getFirstValue();
 
     int i;
     uint32_t noteChangeValue = getAvgFreqChanges();
@@ -94,8 +92,8 @@ int GetFrequencyDiff() {
     } else return 0;
 
     double extra;
-    while (diff - (noteChangeValue + fibPower * (first + second)) >= 0) {
-        diff -= noteChangeValue + fibPower * (first + second);
+    while (diff - (noteChangeValue + getFibPower() * (first + second)) >= 0) {
+        diff -= noteChangeValue + getFibPower() * (first + second);
         extra = first + second;
         first = second;
         second = extra;
@@ -118,7 +116,7 @@ int GetFrequencyDiff() {
  */
 uint32_t GetNote() {
     int counter = GetFrequencyDiff();
-    NotesScale_t _scale = scales[scale];
+    NotesScale_t _scale = scales[getScale()];
     bool minus = counter < 0;
     if (minus) counter *= -1;
 
@@ -158,39 +156,35 @@ uint32_t GetNote() {
 }
 
 
-uint8_t plantVelocity = 127;
+
 void MidiPlant(void) {
     uint8_t const cable_num = 0;
     uint8_t channel = 0;
 
-    uint8_t packet[4];
-    while (tud_midi_available()) tud_midi_packet_read(packet);
 
     uint8_t note_off[3] = {0x80 | channel, lastNotePlant, 0};
     tud_midi_stream_write(cable_num, note_off, 3);
 
     uint8_t currentNote = GetNote();
-    uint8_t note_on[3] = {0x90 | channel, currentNote, plantVelocity};
+    uint8_t note_on[3] = {0x90 | channel, currentNote, getPlantVelocity()};
     tud_midi_stream_write(cable_num, note_on, 3);
 
     lastNotePlant = currentNote;
 }
 
 
-uint8_t lightVelocity = 127;
+
 void MidiLight(void) {
     uint8_t const cable_num = 0;
     uint8_t channel = 1;
 
-    uint8_t packet[4];
-    while (tud_midi_available()) tud_midi_packet_read(packet);
 
     uint8_t note_off[3] = {0x80 | channel, lastNoteLight, 0};
     tud_midi_stream_write(cable_num, note_off, 3);
 
     uint8_t currentNote = (MAX_OF_LIGHT - adc_read()) / (MAX_OF_LIGHT / 24) + 24;
 
-    uint8_t note_on[3] = {0x90 | channel, currentNote, lightVelocity};
+    uint8_t note_on[3] = {0x90 | channel, currentNote, getLightVelocity()};
     tud_midi_stream_write(cable_num, note_on, 3);
 
     lastNoteLight = currentNote;
@@ -235,6 +229,7 @@ void MidiSettings() {
         return;
     }
 
+
     /** @brief Byte Commands
      *
      * res[0] == 11 is the key to remove trash commands (11 = B) */
@@ -264,12 +259,9 @@ void MidiSettings() {
              */
             case (1):
                 if (len != 4) break;
-                fibPower = (double) res[2] / 100;
-                firstValue = (double) res[3] / 100;
-                if (fibPower > 1) fibPower = 1;
-                if (firstValue > 1) firstValue = 1;
+                setFreqPower((double) res[2] / 100, (double) res[3] / 100);
                 printf("[!] FIBONACCI ALGORITHM HAS CHANGED. NOTE DISTANCE: %.2f, FIRST_VALUE: %.2f.\n",
-                       fibPower, firstValue);
+                       getFibPower(), getFirstValue());
                 break;
             /** @brief F0 B 2 x F7 - Filter in active state command
              *
@@ -280,17 +272,17 @@ void MidiSettings() {
              * */
             case (2):
                 setFilterPercent((double) (res[2]) / 100);
-                printf("[!] FILTER VALUE HAS CHANGED. FILTER VALUE: %.2f.\n", (double) (res[2]) / 100);
+                printf("[!] FILTER VALUE HAS CHANGED. FILTER VALUE: %.2f.\n", getFilterPercent());
                 break;
-            /** @brief F0 B 2 x F7 - Choose octave command
+            /** @brief F0 B 2 x F7 - Choose scale command
              *
-             * @param x - num of octave
+             * @param x - num of scale
              */
             case (3):
                 if (res[2] >= 0 && res[2] < 12) {
-                    scale = res[2];
+                    setScale(res[2]);
                     char *octaveName = "";
-                    switch (scale) {
+                    switch (getScale()) {
                         case SCALE_CHROM:
                             octaveName = "CHROM";
                             break;
@@ -328,7 +320,7 @@ void MidiSettings() {
                             octaveName = "WHOLETONE";
                             break;
                     }
-                    printf("[!] OCTAVE HAS CHANGED. CURRENT OCTAVE IS %s.\n", octaveName);
+                    printf("[!] SCALE HAS CHANGED. CURRENT OCTAVE IS %s.\n", octaveName);
                 }
                 break;
             /** @brief F0 B 1 x y F7 - Change velocity command
@@ -338,12 +330,24 @@ void MidiSettings() {
              */
             case(4):
                 if (res[2] == 1) {
-                    plantVelocity = res[3];
-                    printf("[!] Plant Velocity has been changed. Velocity: %d\n", plantVelocity);
+                    setPlantVelocity(res[3]);
+                    printf("[!] Plant Velocity has been changed. Velocity: %d\n", getPlantVelocity());
                 } else if (res[2] == 2) {
-                    lightVelocity = res[3];
-                    printf("[!] Light Velocity has been changed. Velocity: %d\n", lightVelocity);
+                    setLightVelocity(res[3]);
+                    printf("[!] Light Velocity has been changed. Velocity: %d\n", getLightVelocity());
                 }
+                break;
+            case (5):
+                setBPM(TIMER_MIDI_US);
+                setFreqPower(DEF_FIB_POW, DEF_FIB_FIRST);
+                setFilterPercent(DEF_FILTER_PERCENT);
+                setScale(SCALE);
+                setPlantVelocity(127);
+                setLightVelocity(127);
+                printf("[!] Return default settings\n");
+                break;
+            case (6):
+                PrintInfo();
                 break;
         }
     }
@@ -366,8 +370,8 @@ void MidiSettings() {
             * @param x - velocity (Max = 127)
              */
             case(9):
-                plantVelocity = res[2];
-                printf("[!] Plant Velocity has been changed. Velocity: %d\n", plantVelocity);
+                setPlantVelocity(res[2]);
+                printf("[!] Plant Velocity has been changed. Velocity: %d\n", getPlantVelocity());
                 break;
             /** @brief CC120 - Stop all notes */
             case(120):
@@ -384,8 +388,8 @@ void MidiSettings() {
             * @param x - velocity (Max = 127)
              */
             case(9):
-                lightVelocity = res[2];
-                printf("[!] Light Velocity has been changed. Velocity: %d\n", lightVelocity);
+                setLightVelocity(res[3]);
+                printf("[!] Light Velocity has been changed. Velocity: %d\n", getLightVelocity());
                 break;
             /** @brief CC120 - Stop all notes */
             case(120):
@@ -393,6 +397,7 @@ void MidiSettings() {
                 printf("[!] All NOTES OFF\n");
                 break;
         }
+
     }
 }
 
