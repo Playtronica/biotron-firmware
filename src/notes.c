@@ -6,9 +6,6 @@
 #include "global.h"
 
 
-
-
-
 uint32_t lastNotePlant = MIDDLE_NOTE;
 uint32_t lastNoteLight;
 uint32_t getLastNotePlant() {
@@ -344,10 +341,17 @@ void MidiSettings() {
                 setScale(SCALE);
                 setPlantVelocity(127);
                 setLightVelocity(127);
+                setLightBPM(LIGHT_BPM_DEF);
                 printf("[!] Return default settings\n");
                 break;
             case (6):
                 PrintInfo();
+                break;
+            case(7):
+                if (res[2] > 0) {
+                    setLightBPM(res[2]);
+                    printf("[!] Light BPM has been changed. Every %d Plant Note\n", res[2]);
+                }
                 break;
         }
     }
@@ -388,8 +392,14 @@ void MidiSettings() {
             * @param x - velocity (Max = 127)
              */
             case(9):
-                setLightVelocity(res[3]);
+                setLightVelocity(res[2]);
                 printf("[!] Light Velocity has been changed. Velocity: %d\n", getLightVelocity());
+                break;
+            case(14):
+                if (res[2] > 0) {
+                    setLightBPM(res[2]);
+                    printf("[!] Light BPM has been changed. Every %d Plant Note\n", res[2]);
+                }
                 break;
             /** @brief CC120 - Stop all notes */
             case(120):

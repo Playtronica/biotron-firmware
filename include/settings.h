@@ -5,6 +5,7 @@
 
 typedef struct {
     int BPM;
+    int lightBPM;
     double fibPower;
     double firstValue;
     double filterPercent;

@@ -4,21 +4,23 @@
 /** @brief Led Pins */
 #include "notes.h"
 
+#define DEBUG_LED_BUILD 1;
+
 #ifdef DEBUG_LED_BUILD
-    #define GROUP_BlUE_LED_CENTER 1
+    #define GROUP_BlUE_LED_CENTER 9
     #define GROUP_BlUE_LED_LEFT 0
-    #define GROUP_BlUE_LED_RIGHT 16
+    #define GROUP_BlUE_LED_RIGHT 10
 
-    #define FIRST_GROUP_GREEN_LED_1 2
-    #define FIRST_GROUP_GREEN_LED_2 3
-    #define FIRST_GROUP_GREEN_LED_3 4
+    #define FIRST_GROUP_GREEN_LED_1 13
+    #define FIRST_GROUP_GREEN_LED_2 11
+    #define FIRST_GROUP_GREEN_LED_3 12
 
-    #define SECOND_GROUP_GREEN_LED_1 9
-    #define SECOND_GROUP_GREEN_LED_2 10
-    #define SECOND_GROUP_GREEN_LED_3 11
+    #define SECOND_GROUP_GREEN_LED_1 16
+    #define SECOND_GROUP_GREEN_LED_2 15
+    #define SECOND_GROUP_GREEN_LED_3 14
 
     #define MAX_LIGHT 60000
-    #define MIN_LIGHT 5000
+    #define MIN_LIGHT 7000
     #define NOTE_STRONG 414
 #else
     #define GROUP_BlUE_LED_CENTER 4
@@ -69,7 +71,8 @@
  *  This variable works with repeating times, that play notes.
  *  Converting formula => BPM = (1 sec * 60) / TIME
  */
-#define TIMER_MIDI_US 1000000
+#define TIMER_MIDI_US 500000
+#define LIGHT_BPM_DEF 4
 
 /** @brief Notes settings */
 #define LOWEST_NOTE 36
@@ -85,7 +88,7 @@
 #define DEF_FIB_POW 0.5
 #define DEF_FIB_FIRST 0.1
 
-#define DEF_FILTER_PERCENT 1
+#define DEF_FILTER_PERCENT 0
 
 #ifndef SCALE
 #define SCALE 0
@@ -110,6 +113,9 @@ uint8_t getLightVelocity();
 /** @brief change BPM in us (if device is Active reload timer) */
 void setBPM(int newTime);
 int getBPM();
+void setLightBPM(uint32_t newBPM);
+int getLightBPM();
+
 
 void setFreqPower(double power, double value);
 double getFibPower();

@@ -11,6 +11,7 @@ bool init = false;
 void SaveSettings() {
     if (init) return;
     settings.BPM = getBPM();
+    settings.lightBPM = getLightBPM();
     settings.fibPower = getFibPower();
     settings.firstValue = getFirstValue();
     settings.filterPercent = getFilterPercent();
@@ -52,6 +53,7 @@ void ReadSettings() {
 
     init = true;
     settings.BPM = settings.BPM <= 0 ? TIMER_MIDI_US : settings.BPM;
+    settings.lightBPM = settings.lightBPM <= 0 ? LIGHT_BPM_DEF : settings.lightBPM;
     settings.fibPower = settings.fibPower == 0 ? DEF_FIB_POW : settings.fibPower;
     settings.firstValue = settings.firstValue == 0 ? DEF_FIB_FIRST : settings.firstValue;
     settings.filterPercent = settings.filterPercent == 0 ? DEF_FILTER_PERCENT : settings.filterPercent;
@@ -60,6 +62,7 @@ void ReadSettings() {
     settings.lightVelocity = settings.lightVelocity == 0 ? 127 : settings.lightVelocity;
 
     setBPM(settings.BPM);
+    setLightBPM(settings.lightBPM);
     setFreqPower(settings.fibPower, settings.firstValue);
     setFilterPercent(1 - settings.filterPercent);
     setScale(settings.scale);
