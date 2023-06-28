@@ -11,8 +11,8 @@ int main(void)
     stdio_init_all();
     tusb_init();
 
-    Intro();
     Setup();
+    Intro();
 
     while (true)
     {

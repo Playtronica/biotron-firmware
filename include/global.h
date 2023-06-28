@@ -4,25 +4,28 @@
 /** @brief Led Pins */
 #include "notes.h"
 
-#define DEBUG_LED_BUILD 1;
+//#define DEBUG_LED_BUILD
 
 #ifdef DEBUG_LED_BUILD
-    #define GROUP_BlUE_LED_CENTER 9
+    #define PLANT_PIN  13
+
+    #define GROUP_BlUE_LED_CENTER 1
     #define GROUP_BlUE_LED_LEFT 0
-    #define GROUP_BlUE_LED_RIGHT 10
+    #define GROUP_BlUE_LED_RIGHT 16
 
-    #define FIRST_GROUP_GREEN_LED_1 13
-    #define FIRST_GROUP_GREEN_LED_2 11
-    #define FIRST_GROUP_GREEN_LED_3 12
+    #define FIRST_GROUP_GREEN_LED_1 2
+    #define FIRST_GROUP_GREEN_LED_2 3
+    #define FIRST_GROUP_GREEN_LED_3 4
 
-    #define SECOND_GROUP_GREEN_LED_1 16
-    #define SECOND_GROUP_GREEN_LED_2 15
-    #define SECOND_GROUP_GREEN_LED_3 14
+    #define SECOND_GROUP_GREEN_LED_1 9
+    #define SECOND_GROUP_GREEN_LED_2 10
+    #define SECOND_GROUP_GREEN_LED_3 11
 
     #define MAX_LIGHT 60000
     #define MIN_LIGHT 7000
     #define NOTE_STRONG 414
 #else
+    #define PLANT_PIN  1
     #define GROUP_BlUE_LED_CENTER 4
     #define GROUP_BlUE_LED_LEFT 4
     #define GROUP_BlUE_LED_RIGHT 4
@@ -42,7 +45,7 @@
 #define TEST_LED 25
 
 /** @brief Pins for getting data for music */
-#define PLANT_PIN  1
+
 #define LIGHT_PIN 26
 
 /** @brief Time (in counters) for change status

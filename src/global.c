@@ -159,23 +159,23 @@ void Setup() {
     gpio_set_dir(PLANT_PIN, GPIO_IN);
     gpio_set_dir(LIGHT_PIN, GPIO_IN);
     gpio_set_function(GROUP_BlUE_LED_CENTER, GPIO_FUNC_PWM);
-//    gpio_set_function(GROUP_BlUE_LED_LEFT, GPIO_FUNC_PWM);
+    gpio_set_function(GROUP_BlUE_LED_LEFT, GPIO_FUNC_PWM);
     gpio_set_function(GROUP_BlUE_LED_RIGHT, GPIO_FUNC_PWM);
     gpio_set_function(FIRST_GROUP_GREEN_LED_1, GPIO_FUNC_PWM);
     gpio_set_function(FIRST_GROUP_GREEN_LED_2, GPIO_FUNC_PWM);
     gpio_set_function(FIRST_GROUP_GREEN_LED_3, GPIO_FUNC_PWM);
-//    gpio_set_function(SECOND_GROUP_GREEN_LED_1, GPIO_FUNC_PWM);
+    gpio_set_function(SECOND_GROUP_GREEN_LED_1, GPIO_FUNC_PWM);
     gpio_set_function(SECOND_GROUP_GREEN_LED_2, GPIO_FUNC_PWM);
     gpio_set_function(SECOND_GROUP_GREEN_LED_3, GPIO_FUNC_PWM);
 
     config = pwm_get_default_config();
     pwm_init(pwm_gpio_to_slice_num(GROUP_BlUE_LED_CENTER), &config, true);
-//    pwm_init(pwm_gpio_to_slice_num(GROUP_BlUE_LED_LEFT), &config, true);
+    pwm_init(pwm_gpio_to_slice_num(GROUP_BlUE_LED_LEFT), &config, true);
     pwm_init(pwm_gpio_to_slice_num(GROUP_BlUE_LED_RIGHT), &config, true);
     pwm_init(pwm_gpio_to_slice_num(FIRST_GROUP_GREEN_LED_1), &config, true);
     pwm_init(pwm_gpio_to_slice_num(FIRST_GROUP_GREEN_LED_2), &config, true);
     pwm_init(pwm_gpio_to_slice_num(FIRST_GROUP_GREEN_LED_3), &config, true);
-//    pwm_init(pwm_gpio_to_slice_num(SECOND_GROUP_GREEN_LED_1), &config, true);
+    pwm_init(pwm_gpio_to_slice_num(SECOND_GROUP_GREEN_LED_1), &config, true);
     pwm_init(pwm_gpio_to_slice_num(SECOND_GROUP_GREEN_LED_2), &config, true);
     pwm_init(pwm_gpio_to_slice_num(SECOND_GROUP_GREEN_LED_3), &config, true);
 
@@ -189,20 +189,20 @@ void Setup() {
 
 void Intro() {
     uint32_t startTime = to_ms_since_boot(get_absolute_time());
-//    while (to_ms_since_boot(get_absolute_time()) - startTime <= 1000) {
-//        pwm_set_gpio_level(GROUP_BlUE_LED_LEFT,
-//                           (uint16_t)((float)(to_ms_since_boot(get_absolute_time()) - startTime) / 1000 * MAX_LIGHT));
-//        pwm_set_gpio_level(GROUP_BlUE_LED_CENTER,
-//                           (uint16_t)((float)(to_ms_since_boot(get_absolute_time()) - startTime) / 1000 * MAX_LIGHT));
-//        pwm_set_gpio_level(GROUP_BlUE_LED_RIGHT,
-//                           (uint16_t)((float)(to_ms_since_boot(get_absolute_time()) - startTime) / 1000 * MAX_LIGHT));
-//    }
-//    pwm_set_gpio_level(GROUP_BlUE_LED_LEFT,
+    while (to_ms_since_boot(get_absolute_time()) - startTime <= 1000) {
+        pwm_set_gpio_level(GROUP_BlUE_LED_LEFT,
+                           (uint16_t)((float)(to_ms_since_boot(get_absolute_time()) - startTime) / 1000 * MAX_LIGHT));
+        pwm_set_gpio_level(GROUP_BlUE_LED_CENTER,
+                           (uint16_t)((float)(to_ms_since_boot(get_absolute_time()) - startTime) / 1000 * MAX_LIGHT));
+        pwm_set_gpio_level(GROUP_BlUE_LED_RIGHT,
+                           (uint16_t)((float)(to_ms_since_boot(get_absolute_time()) - startTime) / 1000 * MAX_LIGHT));
+    }
+////    pwm_set_gpio_level(GROUP_BlUE_LED_LEFT,
+////                       MIN_LIGHT);
+//    pwm_set_gpio_level(GROUP_BlUE_LED_CENTER,
 //                       MIN_LIGHT);
-    pwm_set_gpio_level(GROUP_BlUE_LED_CENTER,
-                       MIN_LIGHT);
-    pwm_set_gpio_level(GROUP_BlUE_LED_RIGHT,
-                       MIN_LIGHT);
+//    pwm_set_gpio_level(GROUP_BlUE_LED_RIGHT,
+//                       MIN_LIGHT);
     PrintInfo();
 }
 
@@ -366,12 +366,12 @@ void LedStage() {
             for (int i = ASYNC - 1; i >= 0; i--) {
                 ledsValue[i] = 0;
             }
-            pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_1, MAX_LIGHT);
-            pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_2, MAX_LIGHT);
-            pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_3, MAX_LIGHT);
-//            pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_1, MAX_LIGHT);
-            pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_2, MAX_LIGHT);
-            pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_3, MAX_LIGHT);
+            pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_1, 0);
+            pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_2, 0);
+            pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_3, 0);
+            pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_1, 0);
+            pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_2, 0);
+            pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_3, 0);
             break;
          /** @brief Stabilization mode
          *
@@ -379,13 +379,13 @@ void LedStage() {
          *
          */
         case Stabilization:
-            if (ledsValue[ASYNC - 1] > MIN_LIGHT) {
-                ledsValue[ASYNC - 1] -= level;
+            if (ledsValue[ASYNC - 1] < MAX_LIGHT) {
+                ledsValue[ASYNC - 1] += level;
             }
             pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_1, ledsValue[ASYNC - 1]);
             pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_2, ledsValue[ASYNC - 1]);
             pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_3, ledsValue[ASYNC - 1]);
-//            pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_1, ledsValue[ASYNC - 1]);
+            pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_1, ledsValue[ASYNC - 1]);
             pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_2, ledsValue[ASYNC - 1]);
             pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_3, ledsValue[ASYNC - 1]);
             break;
@@ -415,8 +415,7 @@ void LedStage() {
             pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_1, ledsValue[0] + ((lastNotePlant - MIDDLE_NOTE) * NOTE_STRONG));
             pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_2, ledsValue[0] + ((lastNotePlant - MIDDLE_NOTE) * NOTE_STRONG));
             pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_3, ledsValue[0] + ((lastNotePlant - MIDDLE_NOTE) * NOTE_STRONG));
-//            pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_1, ledsValue[ASYNC - 1] + ((lastNotePlant - MIDDLE_NOTE) * NOTE_STRONG));
-//            pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_1, MIN_LIGHT);
+            pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_1, ledsValue[ASYNC - 1] + ((lastNotePlant - MIDDLE_NOTE) * NOTE_STRONG));
             pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_2, ledsValue[ASYNC - 1] + ((lastNotePlant - MIDDLE_NOTE) * NOTE_STRONG));
             pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_3, ledsValue[ASYNC - 1] + ((lastNotePlant - MIDDLE_NOTE) * NOTE_STRONG));
             break;
