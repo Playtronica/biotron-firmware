@@ -32,7 +32,7 @@
         <li><a href="#change-bpm">Change BPM</a></li>
         <li><a href="#change-sensitivity">Change sensitivity</a></li>
         <li><a href="#change-smoothness">Change smoothness</a></li>
-        <li><a href="#change-octave">Change octave</a></li>
+        <li><a href="#change-scale">Change scale</a></li>
         <li><a href="#change-velocity">Change velocity</a></li>
       </ul>
     </li>
@@ -93,13 +93,13 @@ It changes the smoothness of note changes.
 Has one parameter.
 The parameter is responsible for smoothness (from 0 to 99%)
 
-### Change octave
+### Change scale
 (Function Number Bite = 3)
 
-Changes octave.
+Changes scale.
 
 Has one parameter.
-The parameter is responsible for octave. (from 0 to 11)
+The parameter is responsible for scale. (from 0 to 11)
 
 | Byte | Octave     |
 |------|------------|
@@ -126,6 +126,27 @@ Has two parameters:
 1) Channel (if equal 1 change plant velocity, else if equal 2 change light velocity)
 2) Velocity (from 0 to 127)
 
+### Return default settings
+(Function Number Bite = 5)
+
+Return initial settings.
+
+Don't need any parameters
+
+### Log current settings
+(Function Number Bite = 6)
+
+Display all settings in serial.
+
+Don't need any parameters
+
+### Change BPM of the light sensor
+(Function Number Bite = 7)
+
+Change speed of the second channel (light sensor). Depends on BPM of first channel.
+
+Has one parameter:
+1) Light BPM - how many Plant notes must play, before new Light note would be played. (from 0 to 127)
 
 ## CC commands
 Its more simplified type of commands than bytes commands. You can send it by terminal, 
@@ -147,8 +168,19 @@ Change velocity of current channel
 
 The parameter is responsible for velocity (from 0 to 127)
 
+### Change BPM of the light sensor (only for second channel)
+(CC command number = 14)
+Change speed of the second channel (light sensor). Depends on BPM of first channel.
+
+The parameter is Light BPM - how many Plant notes must play, before new Light note would be played. (from 0 to 127)
+
 ### Stop all notes
 (CC command number = 120)
 
 Stop all notes.
-Don't need any parameters/
+Don't need any parameters
+
+
+
+
+
