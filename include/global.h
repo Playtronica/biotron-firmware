@@ -4,7 +4,7 @@
 /** @brief Led Pins */
 #include "notes.h"
 
-//#define DEBUG_LED_BUILD
+#define DEBUG_LED_BUILD
 
 #ifdef DEBUG_LED_BUILD
     #define PLANT_PIN  13

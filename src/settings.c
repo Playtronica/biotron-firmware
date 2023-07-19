@@ -56,7 +56,7 @@ void ReadSettings() {
     settings.lightBPM = settings.lightBPM <= 0 ? LIGHT_BPM_DEF : settings.lightBPM;
     settings.fibPower = settings.fibPower == 0 ? DEF_FIB_POW : settings.fibPower;
     settings.firstValue = settings.firstValue == 0 ? DEF_FIB_FIRST : settings.firstValue;
-    settings.filterPercent = settings.filterPercent == 0 ? DEF_FILTER_PERCENT : settings.filterPercent;
+    settings.filterPercent = settings.filterPercent == 0 ? DEF_FILTER_PERCENT : 1 - settings.filterPercent;
     settings.scale = settings.scale < 0 || settings.scale > 11 ? SCALE : settings.scale;
     settings.plantVelocity = settings.plantVelocity == 0 ? 127 : settings.plantVelocity;
     settings.lightVelocity = settings.lightVelocity == 0 ? 127 : settings.lightVelocity;
@@ -64,7 +64,7 @@ void ReadSettings() {
     setBPM(settings.BPM);
     setLightBPM(settings.lightBPM);
     setFreqPower(settings.fibPower, settings.firstValue);
-    setFilterPercent(1 - settings.filterPercent);
+    setFilterPercent(settings.filterPercent);
     setScale(settings.scale);
     setPlantVelocity(settings.plantVelocity);
     setLightVelocity(settings.lightVelocity);
