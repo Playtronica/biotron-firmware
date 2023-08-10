@@ -4,6 +4,7 @@
 #include "settings.h"
 #include "hardware/flash.h"
 #include "global.h"
+#include "frequency_counter.h"
 
 Settings_t settings;
 bool init = false;
@@ -18,6 +19,7 @@ void SaveSettings() {
     settings.scale = getScale();
     settings.plantVelocity = getPlantVelocity();
     settings.lightVelocity = getLightVelocity();
+    settings.random_note = get_random_note_state();
     uint8_t* settingsAsBytes = (uint8_t*) &settings;
     int settingsSize = sizeof(settings);
 
@@ -68,5 +70,6 @@ void ReadSettings() {
     setScale(settings.scale);
     setPlantVelocity(settings.plantVelocity);
     setLightVelocity(settings.lightVelocity);
+    enable_random_note(settings.random_note);
     init = false;
 }

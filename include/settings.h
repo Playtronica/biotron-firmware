@@ -12,7 +12,7 @@ typedef struct {
     int scale;
     int plantVelocity;
     int lightVelocity;
-
+    bool random_note;
 } Settings_t;
 
 void SaveSettings();

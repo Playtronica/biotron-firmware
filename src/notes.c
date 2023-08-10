@@ -4,6 +4,7 @@
 #include <hardware/sync.h>
 #include "../include/notes.h"
 #include "global.h"
+#include "frequency_counter.h"
 
 
 uint32_t lastNotePlant = MIDDLE_NOTE;
@@ -342,6 +343,7 @@ void MidiSettings() {
                 setPlantVelocity(127);
                 setLightVelocity(127);
                 setLightBPM(LIGHT_BPM_DEF);
+                enable_random_note(true);
                 printf("[!] Return default settings\n");
                 break;
             case (6):
@@ -351,6 +353,15 @@ void MidiSettings() {
                 if (res[2] > 0) {
                     setLightBPM(res[2]);
                     printf("[!] Light BPM has been changed. Every %d Plant Note\n", res[2]);
+                }
+                break;
+            case(8):
+                if (res[2] != 0) {
+                    enable_random_note(true);
+                    printf("[!] Random Notes Active\n");
+                } else {
+                    enable_random_note(false);
+                    printf("[!] Random Notes Inactive\n");
                 }
                 break;
         }
@@ -377,6 +388,15 @@ void MidiSettings() {
                 setPlantVelocity(res[2]);
                 printf("[!] Plant Velocity has been changed. Velocity: %d\n", getPlantVelocity());
                 break;
+            case(15):
+                if (res[2] >= 63) {
+                    enable_random_note(true);
+                    printf("[!] Random Notes Active\n");
+                } else {
+                    enable_random_note(false);
+                    printf("[!] Random Notes Inactive\n");
+                }
+                break;
             /** @brief CC120 - Stop all notes */
             case(120):
                 MidiStop();
@@ -399,6 +419,15 @@ void MidiSettings() {
                 if (res[2] > 0) {
                     setLightBPM(res[2]);
                     printf("[!] Light BPM has been changed. Every %d Plant Note\n", res[2]);
+                }
+                break;
+            case(15):
+                if (res[2] >= 63) {
+                    enable_random_note(true);
+                    printf("[!] Random Notes Active\n");
+                } else {
+                    enable_random_note(false);
+                    printf("[!] Random Notes Inactive\n");
                 }
                 break;
             /** @brief CC120 - Stop all notes */
