@@ -185,7 +185,10 @@ The parameter is Light BPM - how many Plant notes must play, before new Light no
 (CC command number = 15)
 
 Normally, frequency has little randomness values. You can disable it.
-The parameter is Switch - if equal 0, turn off random, else turn on 
+
+The parameter is Switch:
+1) (0 - 62) - turn off
+2) (63 - 127) - turn on
 
 ### Stop all notes
 (CC command number = 120)
