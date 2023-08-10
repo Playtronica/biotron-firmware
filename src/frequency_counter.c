@@ -5,6 +5,7 @@
 #include "pico/time.h"
 #include "hardware/irq.h"
 #include "global.h"
+#include "settings.h"
 #include <stdlib.h>
 
 struct repeating_timer getFrequencyTimer;
@@ -13,7 +14,16 @@ uint32_t count = 0;
 uint32_t LastCount = 0;
 bool freq_ready = false;
 uint32_t realFreq = 0;
+bool random_k = true;
 
+void enable_random_note(bool flag) {
+    random_k = flag;
+    SaveSettings();
+}
+
+bool get_random_note_state() {
+    return random_k;
+}
 
 static void _on_pwm_wrap() {
     pwm_clear_irq(slice_num);
@@ -36,7 +46,7 @@ static uint32_t _pwm_read(uint sliceNum) {
 
 static bool _repeating_timer_callback_t(repeating_timer_t *rt) {
     freq_ready = true;
-    realFreq = _pwm_read(slice_num) * TIMER_MULTIPLIER + rand() % 10;
+    realFreq = _pwm_read(slice_num) * TIMER_MULTIPLIER + rand() % (random_k * 10);
     return true;
 }
 

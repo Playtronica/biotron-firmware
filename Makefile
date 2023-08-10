@@ -14,7 +14,7 @@ create_container: build_image
 
 build: create_container
 	mkdir -p output
-	docker exec $(IMAGE_NAME) bash -c "cd /build/output ; cmake .. ; make"
+	docker exec $(IMAGE_NAME) bash -c "cd /build/output ; cmake .. ; make;"
 	$(call stop_and_rm_container)
 
 build_image:

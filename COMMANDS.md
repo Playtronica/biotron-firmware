@@ -148,6 +148,13 @@ Change speed of the second channel (light sensor). Depends on BPM of first chann
 Has one parameter:
 1) Light BPM - how many Plant notes must play, before new Light note would be played. (from 0 to 127)
 
+### Set randomness of notes
+(Functional Number Byte = 8)
+
+Normally, frequency has little randomness values. You can disable it.
+Has one parameter:
+1) Switch - if equal 0, turn off random, else turn on
+
 ## CC commands
 Its more simplified type of commands than bytes commands. You can send it by terminal, 
 by more often they send automatically by sequencer. All of them have the same syntax.
@@ -173,6 +180,12 @@ The parameter is responsible for velocity (from 0 to 127)
 Change speed of the second channel (light sensor). Depends on BPM of first channel.
 
 The parameter is Light BPM - how many Plant notes must play, before new Light note would be played. (from 0 to 127)
+
+### Set randomness of notes
+(CC command number = 15)
+
+Normally, frequency has little randomness values. You can disable it.
+The parameter is Switch - if equal 0, turn off random, else turn on 
 
 ### Stop all notes
 (CC command number = 120)
