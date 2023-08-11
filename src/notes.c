@@ -5,6 +5,7 @@
 #include "../include/notes.h"
 #include "global.h"
 #include "frequency_counter.h"
+#include "settings.h"
 
 
 uint32_t lastNotePlant = MIDDLE_NOTE;

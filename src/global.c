@@ -252,6 +252,7 @@ uint32_t FilterFrequency(double newVal, double k) {
         filterValue = 0;
     }
     filterValue +=  (newVal - filterValue) * k;
+    if (!get_random_note_state()) (filterValue = filterValue / 10 * 10);
     return filterValue;
 }
 
