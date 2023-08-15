@@ -155,16 +155,31 @@ uint32_t GetNote() {
 }
 
 
+bool sameNotePlay = true;
+
+bool get_control_same_note() {
+    return sameNotePlay;
+}
+
+void control_same_note(bool flag) {
+    sameNotePlay = flag;
+    SaveSettings();
+}
+
 
 void MidiPlant(void) {
     uint8_t const cable_num = 0;
     uint8_t channel = 0;
 
+    uint8_t currentNote = GetNote();
+    if (currentNote == lastNotePlant && !sameNotePlay) {
+        return;
+    }
 
     uint8_t note_off[3] = {0x80 | channel, lastNotePlant, 0};
     tud_midi_stream_write(cable_num, note_off, 3);
 
-    uint8_t currentNote = GetNote();
+
     uint8_t note_on[3] = {0x90 | channel, currentNote, getPlantVelocity()};
     tud_midi_stream_write(cable_num, note_on, 3);
 
@@ -365,6 +380,15 @@ void MidiSettings() {
                     printf("[!] Random Notes Inactive\n");
                 }
                 break;
+            case(9):
+                if (res[2] != 0) {
+                    control_same_note(true);
+                    printf("[!] Same Notes Active\n");
+                } else {
+                    control_same_note(false);
+                    printf("[!] Same Notes Inactive\n");
+                }
+                break;
         }
     }
     /** @brief CC commands (plant midi) */
@@ -398,6 +422,15 @@ void MidiSettings() {
                     printf("[!] Random Notes Inactive\n");
                 }
                 break;
+            case(20):
+                if (res[2] >= 63) {
+                    control_same_note(true);
+                    printf("[!] Same Notes Active\n");
+                } else {
+                    control_same_note(false);
+                    printf("[!] Same Notes Inactive\n");
+                }
+                break;
             /** @brief CC120 - Stop all notes */
             case(120):
                 MidiStop();
@@ -429,6 +462,15 @@ void MidiSettings() {
                 } else {
                     enable_random_note(false);
                     printf("[!] Random Notes Inactive\n");
+                }
+                break;
+            case(20):
+                if (res[2] >= 63) {
+                    control_same_note(true);
+                    printf("[!] Same Notes Active\n");
+                } else {
+                    control_same_note(false);
+                    printf("[!] Same Notes Inactive\n");
                 }
                 break;
             /** @brief CC120 - Stop all notes */

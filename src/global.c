@@ -63,6 +63,7 @@ int getLightBPM() {
 struct repeating_timer midiTimer;
 bool _repeating_timer_callback(struct repeating_timer *t) {
     static uint8_t counter = 1;
+
     MidiPlant();
     if (counter++ >= lightBPM) {
         MidiLight();

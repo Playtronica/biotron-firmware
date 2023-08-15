@@ -151,9 +151,19 @@ Has one parameter:
 ### Set randomness of notes
 (Functional Number Byte = 8)
 
-Normally, frequency has little randomness values. You can disable it.
+Controls the game mode. If it is enabled, random is enabled, otherwise is disabled.
 Has one parameter:
-1) Switch - if equal 0, turn off random, else turn on
+1) 0 if it is disabled
+2) 1 if it is enabled
+
+
+### Disable same notes play
+(Function Number Byte = 9)
+
+Controls the game mode. If it is enabled, all the notes will be played, otherwise the same notes will be skipped.
+Has 1 switch parameter
+1) 0 if it is disabled
+2) 1 if it is enabled
 
 ## CC commands
 Its more simplified type of commands than bytes commands. You can send it by terminal, 
@@ -184,8 +194,16 @@ The parameter is Light BPM - how many Plant notes must play, before new Light no
 ### Set randomness of notes
 (CC command number = 15)
 
-Normally, frequency has little randomness values. You can disable it.
+Controls the game mode. If it is enabled, random is enabled, otherwise is disabled.
 
+The parameter is Switch:
+1) (0 - 62) - turn off
+2) (63 - 127) - turn on
+
+### Disable same notes play
+(CC command number = 20)
+
+Controls the game mode. If it is enabled, all the notes will be played, otherwise the same notes will be skipped.
 The parameter is Switch:
 1) (0 - 62) - turn off
 2) (63 - 127) - turn on

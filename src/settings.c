@@ -20,6 +20,7 @@ void SaveSettings() {
     settings.plantVelocity = getPlantVelocity();
     settings.lightVelocity = getLightVelocity();
     settings.random_note = get_random_note_state();
+    settings.same_note = get_control_same_note();
     uint8_t* settingsAsBytes = (uint8_t*) &settings;
     int settingsSize = sizeof(settings);
 
@@ -71,5 +72,6 @@ void ReadSettings() {
     setPlantVelocity(settings.plantVelocity);
     setLightVelocity(settings.lightVelocity);
     enable_random_note(settings.random_note);
+    control_same_note(settings.same_note);
     init = false;
 }

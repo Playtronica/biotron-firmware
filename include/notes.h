@@ -34,4 +34,8 @@ void MidiStop();
 /** @brief Settings for device (CC commands and Byte commands (F0 .. F7)) */
 void MidiSettings();
 
+void control_same_note(bool flag);
+
+bool get_control_same_note();
+
 #endif

@@ -13,6 +13,7 @@ typedef struct {
     int plantVelocity;
     int lightVelocity;
     bool random_note;
+    bool same_note;
 } Settings_t;
 
 void SaveSettings();

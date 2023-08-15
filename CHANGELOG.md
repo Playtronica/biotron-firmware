@@ -4,7 +4,12 @@
 
 ## Changed
 
-- Check led's indications. And maybe change it.
+Implement PLSDK
+
+## [1.1.0] - 2023-08-10
+
+### Added
+- A lot of new midi commands
 
 ## [1.0.0] - 2023-02-10
 
@@ -12,7 +17,7 @@
 - MIDI Commands. You can send MIDI commands to change some preferences.
 - Second MIDI virtual port. For settings, when the first port is busy.
 
-## Changed
+### Changed
 - New way to play notes. 
 
 ## [0.0.4] - 2022-01-13
