@@ -1,0 +1,31 @@
+name: versioning
+
+on:
+  push:
+    tags:
+      - "v*"
+    branches: 
+      - master
+
+jobs:
+  pre-release:
+    name: "Pre Realese"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: "Build firmaware"
+        run: |
+          make build
+          
+      - name: "Build & test"
+        run: |
+          echo "done!"
+      - uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          prerelease: true
+          files: |
+            output/*.uf2
+      
+      
+  
