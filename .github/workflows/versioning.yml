@@ -14,7 +14,7 @@ jobs:
 
     steps:
       - name: "log info"
-        run: echo | ls
+        run: ls ~
       - name: "Build firmaware"
         run: |
           make build
@@ -22,12 +22,12 @@ jobs:
       - name: "Build & test"
         run: |
           echo "done!"
-      - uses: "marvinpinto/action-automatic-releases@latest"
-        with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          prerelease: true
-          files: |
-            output/*.uf2
+      # - uses: "marvinpinto/action-automatic-releases@latest"
+      #   with:
+      #     repo_token: "${{ secrets.GITHUB_TOKEN }}"
+      #     prerelease: true
+      #     files: |
+      #       output/*.uf2
       
       
   
