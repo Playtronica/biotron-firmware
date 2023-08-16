@@ -18,9 +18,12 @@ jobs:
       - name: "Build Firmaware"
         run: make build
 
+      - name: Get New Tag
+        run: echo "NEW_TAG=$(git tag -l | grep v | tail -1 | awk -F. -v OFS=. '{$NF += 1 ; print}')" >> $GITHUB_ENV
+      
       - name: "Rename Firmware"
         run: cp output/*.uf2 ${{ github.event.repository.name }}.uf2
-          
+
       - name: "Build & test"
         run: |
           echo "done!"
@@ -28,7 +31,7 @@ jobs:
       - uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "${{ git tag -l | grep v | tail -1 | awk -F. -v OFS=. '{$NF += 1 ; print}' }}"
+          automatic_release_tag: "${{ env.NEW_TAG }}"
           prerelease: true
           files: |
             *.uf2
