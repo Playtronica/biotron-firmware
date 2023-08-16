@@ -13,11 +13,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: checkout repo
+        uses: actions/checkout@main
       - name: "log info"
-        run: ls ~
+        run: ls
       - name: "Build firmaware"
-        run: |
-          make build
+        run: make build
           
       - name: "Build & test"
         run: |
