@@ -28,7 +28,7 @@ jobs:
       - uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: git tag -l | grep v | tail -1 | awk -F. -v OFS=. '{$NF += 1 ; print}'
+          automatic_release_tag: "${{ git tag -l | grep v | tail -1 | awk -F. -v OFS=. '{$NF += 1 ; print}' }}"
           prerelease: true
           files: |
             *.uf2
