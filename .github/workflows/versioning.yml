@@ -18,6 +18,7 @@ jobs:
       - id: tag_create
         name: Get New Tag
         run: |
+          ls
           git tag -l
         
       - name: "Build Firmaware"
