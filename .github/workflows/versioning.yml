@@ -25,7 +25,7 @@ jobs:
         id: newtag
         run: |
           echo "TAG_NAME=${{ steps.previoustag.outputs.tag }}" | awk -F. -v OFS=. '{$NF += 1 ; print}' >> $GITHUB_OUTPUT
-          echo "${steps.newtag.outputs.TAG_NAME}"
+          echo "${{steps.newtag.outputs.TAG_NAME}}"
         
       - name: "Build Firmaware"
         run: make build
