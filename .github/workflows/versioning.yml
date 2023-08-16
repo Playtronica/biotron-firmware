@@ -22,8 +22,10 @@ jobs:
         uses: "WyriHaximus/github-action-get-previous-tag@v1"
 
       - name: Calculate new tag
+        id: newtag
         run: |
-          echo ${{ steps.previoustag.outputs.tag }} | awk -F. -v OFS=. '{$NF += 1 ; print}'
+          echo "TAG_NAME=${{ steps.previoustag.outputs.tag }}" | awk -F. -v OFS=. '{$NF += 1 ; print}' >> $GITHUB_OUTPUT
+          echo "${steps.previoustag.outputs.TAG_NAME}"
         
       - name: "Build Firmaware"
         run: make build
