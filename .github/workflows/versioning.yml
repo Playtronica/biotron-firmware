@@ -24,7 +24,7 @@ jobs:
       - name: Calculate new tag
         id: newtag
         run: |
-          echo "TAG_NAME=${{ steps.previoustag.outputs.tag }}" | awk -F. -v OFS=. '{$NF += 1 ; print}
+          echo "TAG_NAME=${{ steps.previoustag.outputs.tag }}" | awk -F. -v OFS=. '{$NF += 1 ; print}'
         
       - name: "Build Firmaware"
         run: make build
