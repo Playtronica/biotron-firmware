@@ -2,25 +2,25 @@ name: versioning
 
 on:
   push:
-    tags:
-      - "v*"
-    branches: 
-      - master
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
 
 jobs:
   pre-release:
-    name: "Pre Realese"
+    name: "Pre Release"
     runs-on: ubuntu-latest
 
     steps:
-      - name: checkout repo
+      - name: Сheckout Repo
         uses: actions/checkout@main
         
-      - name: "log info"
-        run: ls
-        
-      - name: "Build firmaware"
+      - name: "Build Firmaware"
         run: make build
+
+      - name: "Rename Firmware"
+        run: |
+          cp output/*.uf2 ${{ env.GITHUB_REPOSITORY }}.uf2
           
       - name: "Build & test"
         run: |
@@ -32,7 +32,7 @@ jobs:
           automatic_release_tag: "latest"
           prerelease: true
           files: |
-            output/*.uf2
+            *.uf2
       
       
   
