@@ -25,10 +25,11 @@ jobs:
         id: newtag
         run: |
           echo "TAG_NAME=${{ steps.previoustag.outputs.tag }}" | awk -F. -v OFS=. '{$NF += 1 ; print}' >> "$GITHUB_OUTPUT"
-          echo ${{ steps.newtag.outputs.TAG_NAME }}
           
       - name: "Build Firmaware"
         run: make build
+
+      - run: echo ${{ steps.newtag.outputs.TAG_NAME }}
         
       - name: "Rename Firmware"
         run: cp output/*.uf2 ${{ github.event.repository.name }}_${{ steps.previoustag.outputs.tag }}.uf2
