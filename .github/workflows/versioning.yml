@@ -14,6 +14,8 @@ jobs:
     steps:
       - name: Сheckout Repo
         uses: actions/checkout@main
+        with:
+          fetch-depth: 0
 
       - name: Get previous tag
         id: previoustag
