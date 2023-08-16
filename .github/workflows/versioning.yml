@@ -18,8 +18,7 @@ jobs:
       - id: tag_create
         name: Get New Tag
         run: |
-          echo "NEW_TAG=$(git tag -l | grep v | tail -1 | awk -F. -v OFS=. '{$NF += 1 ; print}')"
-          # echo "${{ steps.tag_create.outputs.NEW_TAG }}"
+          git tag -l
         
       - name: "Build Firmaware"
         run: make build
@@ -34,7 +33,7 @@ jobs:
       - uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "${{ env.NEW_TAG }}"
+          automatic_release_tag: "latest"
           prerelease: true
           files: |
             *.uf2
