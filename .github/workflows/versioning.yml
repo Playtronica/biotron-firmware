@@ -18,14 +18,14 @@ jobs:
       - id: tag_create
         name: Get New Tag
         run: |
-          echo "NEW_TAG=$(git tag -l | grep v | tail -1 | awk -F. -v OFS=. '{$NF += 1 ; print}')" >> $GITHUB_OUTPUT
-          echo "${{ steps.tag_create.outputs.NEW_TAG }}"
+          echo "NEW_TAG=$(git tag -l | grep v | tail -1 | awk -F. -v OFS=. '{$NF += 1 ; print}')"
+          # echo "${{ steps.tag_create.outputs.NEW_TAG }}"
         
       - name: "Build Firmaware"
         run: make build
         
       - name: "Rename Firmware"
-        run: cp output/*.uf2 ${{ github.event.repository.name }}.uf2
+        run: cp output/*.uf2 ${{ github.event.repository.name }}_${{steps.tag_create.outputs.NEW_TAG}}.uf2
 
       - name: "Build & test"
         run: |
