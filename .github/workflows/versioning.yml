@@ -23,7 +23,7 @@ jobs:
 
       - name: Calculate new tag
         run: |
-          ${{ steps.previoustag.outputs.tag }} 
+          echo ${{ steps.previoustag.outputs.tag }} || awk -F. -v OFS=. '{$NF += 1 ; print}'
         
       - name: "Build Firmaware"
         run: make build
