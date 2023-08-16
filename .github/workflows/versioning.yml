@@ -20,6 +20,10 @@ jobs:
       - name: Get previous tag
         id: previoustag
         uses: "WyriHaximus/github-action-get-previous-tag@v1"
+
+      - name: Calculate new tag
+      - run: |
+          ${{ steps.previoustag.outputs.tag }} 
         
       - name: "Build Firmaware"
         run: make build
@@ -34,7 +38,7 @@ jobs:
       - uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "latest"
+          automatic_release_tag: latest
           prerelease: true
           files: |
             *.uf2
