@@ -20,8 +20,8 @@ jobs:
 
       - name: "Rename Firmware"
         run: |
-          cp output/*.uf2 test.uf2
-          echo ${{ env.GITHUB_REPOSITORY }}
+          cp output/*.uf2 ${{ github.repository }}.uf2
+          echo ${{ github.repository }}
           
       - name: "Build & test"
         run: |
