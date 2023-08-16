@@ -14,13 +14,15 @@ jobs:
     steps:
       - name: Сheckout Repo
         uses: actions/checkout@main
+
+      - name: Get New Tag
+        run: |
+          echo "NEW_TAG=$(git tag -l | grep v | tail -1 | awk -F. -v OFS=. '{$NF += 1 ; print}')" >> $GITHUB_ENV
+          echo "${{ env.NEW_TAG }}"
         
       - name: "Build Firmaware"
         run: make build
-
-      - name: Get New Tag
-        run: echo "NEW_TAG=$(git tag -l | grep v | tail -1 | awk -F. -v OFS=. '{$NF += 1 ; print}')" >> $GITHUB_ENV
-      
+        
       - name: "Rename Firmware"
         run: cp output/*.uf2 ${{ github.event.repository.name }}.uf2
 
