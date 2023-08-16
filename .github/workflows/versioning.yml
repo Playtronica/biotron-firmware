@@ -15,17 +15,15 @@ jobs:
       - name: Сheckout Repo
         uses: actions/checkout@main
 
-      - id: tag_create
-        name: Get New Tag
-        run: |
-          ls
-          git tag -l
+      - name: Get previous tag
+        id: previoustag
+        uses: "WyriHaximus/github-action-get-previous-tag@v1"
         
       - name: "Build Firmaware"
         run: make build
         
       - name: "Rename Firmware"
-        run: cp output/*.uf2 ${{ github.event.repository.name }}_${{steps.tag_create.outputs.NEW_TAG}}.uf2
+        run: cp output/*.uf2 ${{ github.event.repository.name }}_${{ steps.previoustag.outputs.tag }}.uf2
 
       - name: "Build & test"
         run: |
