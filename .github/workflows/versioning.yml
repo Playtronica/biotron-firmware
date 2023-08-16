@@ -19,9 +19,7 @@ jobs:
         run: make build
 
       - name: "Rename Firmware"
-        run: |
-          cp output/*.uf2 ${{ github.event.repository.name }}.uf2
-          echo ${{ github.event.repository.name }}
+        run: cp output/*.uf2 ${{ github.event.repository.name }}.uf2
           
       - name: "Build & test"
         run: |
@@ -30,7 +28,7 @@ jobs:
       - uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "latest"
+          automatic_release_tag: git tag -l | grep v | tail -1 | awk -F. -v OFS=. '{$NF += 1 ; print}'
           prerelease: true
           files: |
             *.uf2
