@@ -13,6 +13,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: "log info"
+        run: |
+          ls
       - name: "Build firmaware"
         run: |
           make build
