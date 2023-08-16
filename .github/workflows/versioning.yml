@@ -15,6 +15,7 @@ jobs:
     steps:
       - name: "log info"
         run: |
+          echo "Hello World"
           echo | ls
       - name: "Build firmaware"
         run: |
