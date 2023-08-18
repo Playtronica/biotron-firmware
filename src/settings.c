@@ -21,6 +21,7 @@ void SaveSettings() {
     settings.lightVelocity = getLightVelocity();
     settings.random_note = get_random_note_state();
     settings.same_note = get_control_same_note();
+    settings.percent_note_off = get_note_off_speed_percent();
     uint8_t* settingsAsBytes = (uint8_t*) &settings;
     int settingsSize = sizeof(settings);
 
@@ -64,6 +65,7 @@ void ReadSettings() {
     settings.plantVelocity = settings.plantVelocity == 0 ? 127 : settings.plantVelocity;
     settings.lightVelocity = settings.lightVelocity == 0 ? 127 : settings.lightVelocity;
 
+
     setBPM(settings.BPM);
     setLightBPM(settings.lightBPM);
     setFreqPower(settings.fibPower, settings.firstValue);
@@ -73,5 +75,6 @@ void ReadSettings() {
     setLightVelocity(settings.lightVelocity);
     enable_random_note(settings.random_note);
     control_same_note(settings.same_note);
+    set_note_off_speed_percent(settings.percent_note_off);
     init = false;
 }

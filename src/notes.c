@@ -166,6 +166,25 @@ void control_same_note(bool flag) {
     SaveSettings();
 }
 
+struct repeating_timer plantNoteOffTimer;
+bool MidiPlantNoteOff(struct repeating_timer *t) {
+    uint8_t note_off[3] = {0x80 | 0, lastNotePlant, 0};
+    tud_midi_stream_write(0, note_off, 3);
+    cancel_repeating_timer(&plantNoteOffTimer);
+    return true;
+}
+
+uint8_t note_off_speed_percent = 100;
+void set_note_off_speed_percent(uint8_t val) {
+    val = val < 100 ? val : 100;
+    note_off_speed_percent = val;
+    SaveSettings();
+}
+
+uint8_t get_note_off_speed_percent() {
+    return note_off_speed_percent;
+}
+
 
 void MidiPlant(void) {
     uint8_t const cable_num = 0;
@@ -176,12 +195,11 @@ void MidiPlant(void) {
         return;
     }
 
-    uint8_t note_off[3] = {0x80 | channel, lastNotePlant, 0};
-    tud_midi_stream_write(cable_num, note_off, 3);
-
-
     uint8_t note_on[3] = {0x90 | channel, currentNote, getPlantVelocity()};
     tud_midi_stream_write(cable_num, note_on, 3);
+
+    add_repeating_timer_us(getBPM() / 100 * get_note_off_speed_percent(), MidiPlantNoteOff,
+                           NULL, &plantNoteOffTimer);
 
     lastNotePlant = currentNote;
 }
@@ -261,37 +279,37 @@ void MidiSettings() {
                 setBPM((int) (1000000.0 / (su / 60.0)));
                 printf("[!] BPM HAS CHANGED. BPM: %d, TIME: %d.\n", (int)su, (int)(1000000.0 / (su / 60.0)));
                 break;
-            /** @brief
-             * F0 B 1 x y F7 - Fibonacci command
-             *
-             * (x and y values divide by 100)
-             *
-             * @param x - fibPower (Max = 1)
-             * @param y - firstValue (Max = 1)
-             *
-             *
-             */
+                /** @brief
+                 * F0 B 1 x y F7 - Fibonacci command
+                 *
+                 * (x and y values divide by 100)
+                 *
+                 * @param x - fibPower (Max = 1)
+                 * @param y - firstValue (Max = 1)
+                 *
+                 *
+                 */
             case (1):
                 if (len != 4) break;
                 setFreqPower((double) res[2] / 100, (double) res[3] / 100);
                 printf("[!] FIBONACCI ALGORITHM HAS CHANGED. NOTE DISTANCE: %.2f, FIRST_VALUE: %.2f.\n",
                        getFibPower(), getFirstValue());
                 break;
-            /** @brief F0 B 2 x F7 - Filter in active state command
-             *
-             * Makes playing notes more smooth
-             * (x divide by 100)
-             *
-             * @param x - filter power (Max = 0,99)
-             * */
+                /** @brief F0 B 2 x F7 - Filter in active state command
+                 *
+                 * Makes playing notes more smooth
+                 * (x divide by 100)
+                 *
+                 * @param x - filter power (Max = 0,99)
+                 * */
             case (2):
                 setFilterPercent((double) (res[2]) / 100);
                 printf("[!] FILTER VALUE HAS CHANGED. FILTER VALUE: %.2f.\n", getFilterPercent());
                 break;
-            /** @brief F0 B 2 x F7 - Choose scale command
-             *
-             * @param x - num of scale
-             */
+                /** @brief F0 B 2 x F7 - Choose scale command
+                 *
+                 * @param x - num of scale
+                 */
             case (3):
                 if (res[2] >= 0 && res[2] < 12) {
                     setScale(res[2]);
@@ -337,11 +355,11 @@ void MidiSettings() {
                     printf("[!] SCALE HAS CHANGED. CURRENT SCALE IS %s.\n", octaveName);
                 }
                 break;
-            /** @brief F0 B 1 x y F7 - Change velocity command
-             *
-             * @param x - if equals 1, change plant midi velocity, else if equals = 2 change light midi velocity
-             * @param y - velocity (Max = 127)
-             */
+                /** @brief F0 B 1 x y F7 - Change velocity command
+                 *
+                 * @param x - if equals 1, change plant midi velocity, else if equals = 2 change light midi velocity
+                 * @param y - velocity (Max = 127)
+                 */
             case(4):
                 if (res[2] == 1) {
                     setPlantVelocity(res[3]);
@@ -360,6 +378,8 @@ void MidiSettings() {
                 setLightVelocity(127);
                 setLightBPM(LIGHT_BPM_DEF);
                 enable_random_note(true);
+                control_same_note(true);
+                set_note_off_speed_percent(100);
                 printf("[!] Return default settings\n");
                 break;
             case (6):
@@ -389,9 +409,13 @@ void MidiSettings() {
                     printf("[!] Same Notes Inactive\n");
                 }
                 break;
+            case(10):
+                set_note_off_speed_percent(res[2]);
+                printf("[!] Note Off time has changed. %d\n", get_note_off_speed_percent());
+                break;
         }
     }
-    /** @brief CC commands (plant midi) */
+        /** @brief CC commands (plant midi) */
     else if (res[0] == 176) {
         switch (res[1]) {
             /** @brief CC3 x - Filter in active state command
@@ -405,10 +429,10 @@ void MidiSettings() {
                 setFilterPercent((double)(res[2]) / 127);
                 printf("[!] FILTER VALUE HAS CHANGED. FILTER VALUE: %.2f.\n", (double)(res[2]) / 127);
                 break;
-            /** @brief CC9 x - Change velocity command
-            *
-            * @param x - velocity (Max = 127)
-             */
+                /** @brief CC9 x - Change velocity command
+                *
+                * @param x - velocity (Max = 127)
+                 */
             case(9):
                 setPlantVelocity(res[2]);
                 printf("[!] Plant Velocity has been changed. Velocity: %d\n", getPlantVelocity());
@@ -431,14 +455,18 @@ void MidiSettings() {
                     printf("[!] Same Notes Inactive\n");
                 }
                 break;
-            /** @brief CC120 - Stop all notes */
+            case(21):
+                set_note_off_speed_percent(res[2] / 127 * 100);
+                printf("[!] Note Off time has changed. %d\n", get_note_off_speed_percent());
+                break;
+                /** @brief CC120 - Stop all notes */
             case(120):
                 MidiStop();
                 printf("[!] All NOTES OFF\n");
                 break;
         }
     }
-    /** @brief CC commands (light midi) */
+        /** @brief CC commands (light midi) */
     else if (res[0] == 177) {
         switch (res[1]) {
             /** @brief CC9 x - Change velocity command
@@ -473,7 +501,11 @@ void MidiSettings() {
                     printf("[!] Same Notes Inactive\n");
                 }
                 break;
-            /** @brief CC120 - Stop all notes */
+            case(21):
+                set_note_off_speed_percent(res[2] / 127 * 100);
+                printf("[!] Note Off time has changed. %d\n", get_note_off_speed_percent());
+                break;
+                /** @brief CC120 - Stop all notes */
             case(120):
                 MidiStop();
                 printf("[!] All NOTES OFF\n");
