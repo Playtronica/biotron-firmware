@@ -84,6 +84,7 @@ void setBPM(int newTime) {
         cancel_repeating_timer(&midiTimer);
         add_repeating_timer_us(time, _repeating_timer_callback, NULL, &midiTimer);
     }
+    printf("Current bpm: %d\n", (int)((double)1000000 / (double)getBPM() * (double)60));
     SaveSettings();
 }
 
