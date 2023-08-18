@@ -14,6 +14,7 @@ typedef struct {
     int lightVelocity;
     bool random_note;
     bool same_note;
+    uint8_t percent_note_off;
 } Settings_t;
 
 void SaveSettings();

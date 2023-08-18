@@ -6,6 +6,15 @@
 
 Implement PLSDK
 
+
+## [1.1.1] - 2023-08-18
+
+### Added
+- New midi function. Turn off notes by percent of plant BPM
+
+### Changed
+- Changed midi function - default settings.
+
 ## [1.1.0] - 2023-08-10
 
 ### Added

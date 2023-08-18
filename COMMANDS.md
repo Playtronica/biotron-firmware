@@ -79,7 +79,7 @@ Sum of the parameters -> bps. **(Warning. With very big value, device can crash)
 ### Change sensitivity
 (Function Number Bite = 1)
 
-Function that create longer distance between notes. Working by fiboncci algorithm
+Function that create longer distance between notes. Working by fibonacci algorithm
 
 Has two parameters:
 1) First is influence on main algorithm (from 0 to 100%). 
@@ -165,6 +165,14 @@ Has 1 switch parameter
 1) 0 if it is disabled
 2) 1 if it is enabled
 
+### Set note off control
+(Function Number Byte = 10)
+
+Controls time to note off plant note. If it is lower 100, last notes will be turned off faster, then next note.
+Has 1 parameter
+
+1) Percent of current plant BPM. (from 1 to 100)
+
 ## CC commands
 Its more simplified type of commands than bytes commands. You can send it by terminal, 
 by more often they send automatically by sequencer. All of them have the same syntax.
@@ -207,6 +215,12 @@ Controls the game mode. If it is enabled, all the notes will be played, otherwis
 The parameter is Switch:
 1) (0 - 62) - turn off
 2) (63 - 127) - turn on
+
+### Set note off control
+(CC command number = 21)
+
+Controls time to note off plant note. If it is lower 100, last notes will be turned off faster, then next note.
+The parameter is percent of current plant BPM.
 
 ### Stop all notes
 (CC command number = 120)
