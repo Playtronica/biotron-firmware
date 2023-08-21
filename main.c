@@ -4,6 +4,7 @@
 #include "global.h"
 #include "pico/stdlib.h"
 #include "pico.h"
+#include "cap_buttons.h"
 
 
 int main(void)
@@ -13,6 +14,7 @@ int main(void)
 
     Setup();
     Intro();
+
 
     while (true)
     {
@@ -24,6 +26,7 @@ int main(void)
 
         MidiSettings();
         LedStage();
+        buttons_task();
         sleep_ms(1);
     }
 
