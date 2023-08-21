@@ -82,6 +82,7 @@ void setBPM(int newTime) {
     time = newTime;
     /** if status is active, restart timer */
     if (status == Active) {
+        resetPlantNoteOff();
         cancel_repeating_timer(&midiTimer);
         add_repeating_timer_us(time, _repeating_timer_callback, NULL, &midiTimer);
     }
