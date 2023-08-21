@@ -7,6 +7,7 @@
 #include "notes.h"
 #include "frequency_counter.h"
 #include "settings.h"
+#include "cap_buttons.h"
 
 
 enum Status status;
@@ -139,6 +140,39 @@ uint8_t getLightVelocity() {
     return lightVelocity;
 }
 
+struct repeating_timer tap_tempo_timer;
+static uint64_t middle_tap_tempo = 0;
+static int counter_tap_tempo = -1;
+
+bool calculate_bpm_by_tap_tempo(struct repeating_timer *t) {
+    if (counter_tap_tempo >= 3) {
+        setBPM(middle_tap_tempo / counter_tap_tempo);
+        printf("Success\n");
+    }
+    counter_tap_tempo = -1;
+    cancel_repeating_timer(&tap_tempo_timer);
+    return true;
+}
+
+
+void tap_tempo() {
+    printf("3\n");
+    static uint64_t last = 0;
+    if (counter_tap_tempo == -1) {
+        middle_tap_tempo = 0;
+        last = time_us_64();
+        counter_tap_tempo++;
+        add_repeating_timer_ms(2000, calculate_bpm_by_tap_tempo, NULL, &tap_tempo_timer);
+        return;
+    }
+    middle_tap_tempo += time_us_64() - last;
+    last = time_us_64();
+    counter_tap_tempo++;
+    cancel_repeating_timer(&tap_tempo_timer);
+    add_repeating_timer_ms(2000, calculate_bpm_by_tap_tempo, NULL, &tap_tempo_timer);
+}
+
+
 pwm_config config;
 void Setup() {
     adc_init();
@@ -180,6 +214,9 @@ void Setup() {
     pwm_init(pwm_gpio_to_slice_num(SECOND_GROUP_GREEN_LED_1), &config, true);
     pwm_init(pwm_gpio_to_slice_num(SECOND_GROUP_GREEN_LED_2), &config, true);
     pwm_init(pwm_gpio_to_slice_num(SECOND_GROUP_GREEN_LED_3), &config, true);
+
+    buttons_add_button(8, tap_tempo, NULL, NULL);
+    buttons_init(5);
 
     ReadSettings();
     SaveSettings();
