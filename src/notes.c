@@ -174,6 +174,12 @@ bool MidiPlantNoteOff(struct repeating_timer *t) {
     return true;
 }
 
+
+
+void resetPlantNoteOff() {
+    cancel_repeating_timer(&plantNoteOffTimer);
+}
+
 uint8_t note_off_speed_percent = 100;
 void set_note_off_speed_percent(uint8_t val) {
     val = val < 100 ? val : 100;
@@ -437,6 +443,11 @@ void MidiSettings() {
                 setPlantVelocity(res[2]);
                 printf("[!] Plant Velocity has been changed. Velocity: %d\n", getPlantVelocity());
                 break;
+            case(14):
+                setBPM((int) (1000000.0 / ((res[2] * 5) / 60.0)));
+                printf("[!] BPM HAS CHANGED. BPM: %d, TIME: %d.\n", (int)res[2] * 5,
+                       (int)(1000000.0 / ((res[2] * 10) / 60.0)));
+                break;
             case(15):
                 if (res[2] >= 63) {
                     enable_random_note(true);
@@ -460,6 +471,59 @@ void MidiSettings() {
                 printf("[!] Note Off time has changed. %d\n", get_note_off_speed_percent());
                 break;
                 /** @brief CC120 - Stop all notes */
+            case(22):
+                setFreqPower((double )res[2] / 127, getFirstValue());
+                printf("[!] FIBONACCI ALGORITHM HAS CHANGED. NOTE DISTANCE: %.2f, FIRST_VALUE: %.2f.\n",
+                       getFibPower(), getFirstValue());
+                break;
+            case(23):
+                setFreqPower(getFibPower(), (double) res[2] / 127);
+                printf("[!] FIBONACCI ALGORITHM HAS CHANGED. NOTE DISTANCE: %.2f, FIRST_VALUE: %.2f.\n",
+                       getFibPower(), getFirstValue());
+                break;
+            case(24):
+                setScale(res[2] / 10.5);
+                char *octaveName = "";
+                switch (getScale()) {
+                    case SCALE_CHROM:
+                        octaveName = "CHROM";
+                        break;
+                    case SCALE_DIMINISHED:
+                        octaveName = "DIMINISHED";
+                        break;
+                    case SCALE_DORIAN:
+                        octaveName = "DORIAN";
+                        break;
+                    case SCALE_LYDIAN:
+                        octaveName = "LYDIAN";
+                        break;
+                    case SCALE_MAJBLUES:
+                        octaveName = "MAJBLUES";
+                        break;
+                    case SCALE_MAJOR:
+                        octaveName = "MAJOR";
+                        break;
+                    case SCALE_MAJPEN:
+                        octaveName = "MAJPEN";
+                        break;
+                    case SCALE_MINBLUES:
+                        octaveName = "MINBLUES";
+                        break;
+                    case SCALE_MINOR:
+                        octaveName = "MINOR";
+                        break;
+                    case SCALE_MINPEN:
+                        octaveName = "MINPEN";
+                        break;
+                    case SCALE_MIXOLYDIAN:
+                        octaveName = "MIXOLYDIAN";
+                        break;
+                    case SCALE_WHOLETONE:
+                        octaveName = "WHOLETONE";
+                        break;
+                }
+                printf("[!] SCALE HAS CHANGED. CURRENT SCALE IS %s.\n", octaveName);
+                break;
             case(120):
                 MidiStop();
                 printf("[!] All NOTES OFF\n");
@@ -506,6 +570,59 @@ void MidiSettings() {
                 printf("[!] Note Off time has changed. %d\n", get_note_off_speed_percent());
                 break;
                 /** @brief CC120 - Stop all notes */
+            case(22):
+                setFreqPower((double )res[2] / 127, getFirstValue());
+                printf("[!] FIBONACCI ALGORITHM HAS CHANGED. NOTE DISTANCE: %.2f, FIRST_VALUE: %.2f.\n",
+                       getFibPower(), getFirstValue());
+                break;
+            case(23):
+                setFreqPower(getFibPower(), (double) res[2] / 127);
+                printf("[!] FIBONACCI ALGORITHM HAS CHANGED. NOTE DISTANCE: %.2f, FIRST_VALUE: %.2f.\n",
+                       getFibPower(), getFirstValue());
+                break;
+            case(24):
+                setScale(res[2] / 10.5);
+                char *octaveName = "";
+                switch (getScale()) {
+                    case SCALE_CHROM:
+                        octaveName = "CHROM";
+                        break;
+                    case SCALE_DIMINISHED:
+                        octaveName = "DIMINISHED";
+                        break;
+                    case SCALE_DORIAN:
+                        octaveName = "DORIAN";
+                        break;
+                    case SCALE_LYDIAN:
+                        octaveName = "LYDIAN";
+                        break;
+                    case SCALE_MAJBLUES:
+                        octaveName = "MAJBLUES";
+                        break;
+                    case SCALE_MAJOR:
+                        octaveName = "MAJOR";
+                        break;
+                    case SCALE_MAJPEN:
+                        octaveName = "MAJPEN";
+                        break;
+                    case SCALE_MINBLUES:
+                        octaveName = "MINBLUES";
+                        break;
+                    case SCALE_MINOR:
+                        octaveName = "MINOR";
+                        break;
+                    case SCALE_MINPEN:
+                        octaveName = "MINPEN";
+                        break;
+                    case SCALE_MIXOLYDIAN:
+                        octaveName = "MIXOLYDIAN";
+                        break;
+                    case SCALE_WHOLETONE:
+                        octaveName = "WHOLETONE";
+                        break;
+                }
+                printf("[!] SCALE HAS CHANGED. CURRENT SCALE IS %s.\n", octaveName);
+                break;
             case(120):
                 MidiStop();
                 printf("[!] All NOTES OFF\n");

@@ -6,6 +6,18 @@
 
 Implement PLSDK
 
+## [1.1.3] - 2023-08-21
+
+### Added
+- All function from Sys ex have been copied to CC.
+
+### Changed
+- Fixed problem with changing BPM
+
+## [1.1.2] - 2023-08-21
+
+### Added
+- Tap Tempo function. When user taps on captive button (gpio 8), device will count new BPM
 
 ## [1.1.1] - 2023-08-18
 

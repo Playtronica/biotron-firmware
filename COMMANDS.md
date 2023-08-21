@@ -193,6 +193,13 @@ Change velocity of current channel
 
 The parameter is responsible for velocity (from 0 to 127)
 
+### Change BPM of the plant (only for first channel)
+(CC command number = 14)
+
+Change BPM of Biotron.
+
+The parameter is BPM multiplied by 5
+
 ### Change BPM of the light sensor (only for second channel)
 (CC command number = 14)
 Change speed of the second channel (light sensor). Depends on BPM of first channel.
@@ -221,6 +228,27 @@ The parameter is Switch:
 
 Controls time to note off plant note. If it is lower 100, last notes will be turned off faster, then next note.
 The parameter is percent of current plant BPM.
+
+
+### Change sensitivity
+(CC command numbers = 22, 23)
+
+Function that create longer distance between notes. Working by fibonacci algorithm
+
+Has two cc commands with their parameter:
+1) CC22 - First is influence on main algorithm (from 0 to 100%).
+2) CC23 - Second is first value of fibonacci (from 0 to 100, but it converts in 0 to 1).
+
+
+### Change scale
+(CC command number = 24)
+
+Changes scale.
+
+Has one parameter.
+The parameter is responsible for scale.
+Formula is x / 10.5 = y, where x is parameter and y is number of scale 
+
 
 ### Stop all notes
 (CC command number = 120)

@@ -27,7 +27,7 @@ uint8_t get_note_off_speed_percent();
 
 /** @brief MIDI from plant (Channel 1) */
 void MidiPlant(void);
-
+void resetPlantNoteOff();
 /** @brief MIDI from light (Channel 2) */
 void MidiLight(void);
 
