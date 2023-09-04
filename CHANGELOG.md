@@ -6,6 +6,16 @@
 
 Implement PLSDK
 
+## [1.1.4] - 2023-09-04
+
+### Added
+1) Bpm clock mode
+2) Send CC commands with notes
+3) Mute mode
+
+### Changed
+1) Tap tempo disabled and replaced by Mute mode
+
 ## [1.1.3] - 2023-08-21
 
 ### Added

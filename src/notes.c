@@ -175,7 +175,6 @@ bool MidiPlantNoteOff(struct repeating_timer *t) {
 }
 
 
-
 void resetPlantNoteOff() {
     cancel_repeating_timer(&plantNoteOffTimer);
 }
@@ -191,40 +190,69 @@ uint8_t get_note_off_speed_percent() {
     return note_off_speed_percent;
 }
 
+static uint16_t clk = 0;
+static uint64_t last_timer = 0;
+static uint64_t last_diff = 0;
+void MidiClock() {
+    clk++;
+    if (clk != 25) return;
+    clk = 1;
+    if (get_status() != BPMClockActive) return;
+    last_diff = time_us_64() - last_timer;
+    last_timer = time_us_64();
+    play_music();
+}
+
+
 
 void MidiPlant(void) {
+
     uint8_t const cable_num = 0;
     uint8_t channel = 0;
 
     uint8_t currentNote = GetNote();
-    if (currentNote == lastNotePlant && !sameNotePlay) {
-        return;
+    if (!get_mute_mode()) {
+        if (currentNote == lastNotePlant && !sameNotePlay) {
+            return;
+        }
+
+        if (get_status() == BPMClockActive) {
+            uint8_t note_off[3] = {0x80 | 0, lastNotePlant, 0};
+            tud_midi_stream_write(0, note_off, 3);
+        }
+
+        uint8_t note_on[3] = {0x90 | channel, currentNote, getPlantVelocity()};
+        tud_midi_stream_write(cable_num, note_on, 3);
+
+
+        if (get_status() == Active) {
+            add_repeating_timer_us(getBPM() / 100 * get_note_off_speed_percent(), MidiPlantNoteOff,
+                                   NULL, &plantNoteOffTimer);
+        }
     }
+//    printf("\nNote perc %d %d\n", last_diff, get_note_off_speed_percent());
 
-    uint8_t note_on[3] = {0x90 | channel, currentNote, getPlantVelocity()};
-    tud_midi_stream_write(cable_num, note_on, 3);
-
-    add_repeating_timer_us(getBPM() / 100 * get_note_off_speed_percent(), MidiPlantNoteOff,
-                           NULL, &plantNoteOffTimer);
+    uint8_t note_cc[3] = {0xB0 | channel, 90, currentNote};
+    tud_midi_stream_write(cable_num, note_cc, 3);
 
     lastNotePlant = currentNote;
 }
-
 
 
 void MidiLight(void) {
     uint8_t const cable_num = 0;
     uint8_t channel = 1;
 
-
-    uint8_t note_off[3] = {0x80 | channel, lastNoteLight, 0};
-    tud_midi_stream_write(cable_num, note_off, 3);
-
     uint8_t currentNote = (MAX_OF_LIGHT - adc_read()) / (MAX_OF_LIGHT / 24) + 24;
 
-    uint8_t note_on[3] = {0x90 | channel, currentNote, getLightVelocity()};
-    tud_midi_stream_write(cable_num, note_on, 3);
+    if (!get_mute_mode()) {
+        uint8_t note_off[3] = {0x80 | channel, lastNoteLight, 0};
+        tud_midi_stream_write(cable_num, note_off, 3);
 
+
+        uint8_t note_on[3] = {0x90 | channel, currentNote, getLightVelocity()};
+        tud_midi_stream_write(cable_num, note_on, 3);
+    }
     lastNoteLight = currentNote;
 }
 
@@ -243,10 +271,12 @@ void MidiStop() {
 }
 
 
+
 void MidiSettings() {
     uint8_t buff[4];
     uint8_t res[100];
     uint8_t len = 0;
+    static uint8_t last_byte = 0;
     /** @brief Read bytes
      *
      *
@@ -257,11 +287,34 @@ void MidiSettings() {
         for (int i = 1; i < 4; ++i) {
             if (buff[i] == 240) continue;
             if (buff[i] == 247) break;
+            if (buff[i] == 250) {
+                last_byte = 250;
+                break;
+            }
+            if (buff[i] == 252) {
+                BPM_clock_disable();
+                cancel_repeating_timer(&plantNoteOffTimer);
+                last_byte = 252;
+                break;
+            }
+            if (buff[i] == 248) {
+                if (last_byte == 250) {
+                    BPM_clock_active();
+                    last_timer = time_us_64();
+                    cancel_repeating_timer(&plantNoteOffTimer);
+                    clk = 0;
+                }
+                MidiClock();
+                last_byte = 248;
+                break;
+            }
             res[len++] = buff[i];
-            printf("%d ", buff[i]);
+
+//            printf("%d ", buff[i]);
         }
-        printf("\n");
+//        printf("\n");
     }
+
 
     if (len == 0) {
         return;
