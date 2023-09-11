@@ -113,6 +113,7 @@ int GetFrequencyDiff() {
  *
  * @return Current note
  */
+
 uint32_t GetNote() {
     int counter = GetFrequencyDiff();
     NotesScale_t _scale = scales[getScale()];
@@ -204,6 +205,26 @@ void MidiClock() {
 }
 
 
+uint8_t getCC(uint8_t currentNote) {
+    static int lastCC = 127;
+    uint8_t buff = abs(MIDDLE_NOTE - currentNote);
+    uint8_t target_CC;
+    if (currentNote > MIDDLE_NOTE) {
+        target_CC = (1 - ((double )buff / (HIGHEST_NOTE - MIDDLE_NOTE))) * 127;
+    }
+    else {
+        target_CC = (1 - ((double )buff / (MIDDLE_NOTE - LOWEST_NOTE))) * 127;
+    }
+
+    if (target_CC > lastCC) {
+        lastCC += (target_CC - lastCC) / 2;
+    }
+    else {
+        lastCC -= (lastCC - target_CC) / 2;
+    }
+
+    return lastCC;
+}
 
 void MidiPlant(void) {
 
@@ -232,7 +253,7 @@ void MidiPlant(void) {
     }
 //    printf("\nNote perc %d %d\n", last_diff, get_note_off_speed_percent());
 
-    uint8_t note_cc[3] = {0xB0 | channel, 90, currentNote};
+    uint8_t note_cc[3] = {0xB0 | channel, 90, getCC(currentNote)};
     tud_midi_stream_write(cable_num, note_cc, 3);
 
     lastNotePlant = currentNote;
