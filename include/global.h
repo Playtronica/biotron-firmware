@@ -101,8 +101,15 @@
 enum Status {
     Sleep,
     Stabilization,
-    Active
+    Active,
+    BPMClockActive
 };
+
+void play_music();
+
+enum Status get_status();
+void BPM_clock_active();
+void BPM_clock_disable();
 
 void setScale(int id);
 int getScale();
@@ -119,6 +126,7 @@ int getBPM();
 void setLightBPM(uint32_t newBPM);
 int getLightBPM();
 
+bool get_mute_mode();
 
 void setFreqPower(double power, double value);
 double getFibPower();
