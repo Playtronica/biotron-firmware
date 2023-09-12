@@ -6,6 +6,11 @@
 
 Implement PLSDK
 
+## [1.1.5] - 2023-09-12
+
+### Changed
+1) Logic of function "Same Note"
+
 ## [1.1.4] - 2023-09-04
 
 ### Added
