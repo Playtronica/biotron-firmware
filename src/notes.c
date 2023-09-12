@@ -156,14 +156,14 @@ uint32_t GetNote() {
 }
 
 
-bool sameNotePlay = true;
+int sameNotePlay = 0;
 
-bool get_control_same_note() {
+uint8_t get_control_same_note() {
     return sameNotePlay;
 }
 
-void control_same_note(bool flag) {
-    sameNotePlay = flag;
+void control_same_note(uint8_t value) {
+    sameNotePlay = value;
     SaveSettings();
 }
 
@@ -233,7 +233,7 @@ void MidiPlant(void) {
 
     uint8_t currentNote = GetNote();
     if (!get_mute_mode()) {
-        if (currentNote == lastNotePlant && !sameNotePlay) {
+        if (abs((int)currentNote - (int)lastNotePlant) < sameNotePlay) {
             return;
         }
 
@@ -458,7 +458,7 @@ void MidiSettings() {
                 setLightVelocity(127);
                 setLightBPM(LIGHT_BPM_DEF);
                 enable_random_note(true);
-                control_same_note(true);
+                control_same_note(0);
                 set_note_off_speed_percent(100);
                 printf("[!] Return default settings\n");
                 break;
@@ -481,12 +481,12 @@ void MidiSettings() {
                 }
                 break;
             case(9):
-                if (res[2] != 0) {
-                    control_same_note(true);
+                if (res[2] == 0) {
+                    control_same_note(res[2]);
                     printf("[!] Same Notes Active\n");
                 } else {
-                    control_same_note(false);
-                    printf("[!] Same Notes Inactive\n");
+                    control_same_note(res[2]);
+                    printf("[!] Same Notes Inactive, %d\n", res[2]);
                 }
                 break;
             case(10):
@@ -532,12 +532,12 @@ void MidiSettings() {
                 }
                 break;
             case(20):
-                if (res[2] >= 63) {
-                    control_same_note(true);
+                if (res[2] * 127 / 1000 <= 0) {
+                    control_same_note(0);
                     printf("[!] Same Notes Active\n");
                 } else {
-                    control_same_note(false);
-                    printf("[!] Same Notes Inactive\n");
+                    control_same_note(res[2] * 127 / 1000 <= 0);
+                    printf("[!] Same Notes Inactive, %d\n", res[2] * 127 / 1000);
                 }
                 break;
             case(21):
@@ -631,12 +631,12 @@ void MidiSettings() {
                 }
                 break;
             case(20):
-                if (res[2] >= 63) {
-                    control_same_note(true);
+                if (res[2] * 127 / 1000 <= 0) {
+                    control_same_note(0);
                     printf("[!] Same Notes Active\n");
                 } else {
-                    control_same_note(false);
-                    printf("[!] Same Notes Inactive\n");
+                    control_same_note(res[2] * 127 / 1000 <= 0);
+                    printf("[!] Same Notes Inactive, %d\n", res[2] * 127 / 1000);
                 }
                 break;
             case(21):
