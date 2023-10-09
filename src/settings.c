@@ -11,6 +11,7 @@ bool init = false;
 
 void SaveSettings() {
     if (init) return;
+    settings.settingsIsNull = false;
     settings.BPM = getBPM();
     settings.lightBPM = getLightBPM();
     settings.fibPower = getFibPower();
@@ -22,6 +23,8 @@ void SaveSettings() {
     settings.random_note = get_random_note_state();
     settings.same_note = get_control_same_note();
     settings.percent_note_off = get_note_off_speed_percent();
+    settings.light_note_min = get_light_min_notes();
+    settings.light_note_max = get_light_max_notes();
     uint8_t* settingsAsBytes = (uint8_t*) &settings;
     int settingsSize = sizeof(settings);
 
@@ -38,41 +41,24 @@ void SaveSettings() {
 
 void ReadSettings() {
     const uint8_t* flash_target_contents = (const uint8_t *) (XIP_BASE + FLASH_TARGET_OFFSET);
-    //int settingsSize = sizeof(settings);
     memcpy(&settings, flash_target_contents, sizeof(settings));
 
-    for (uint8_t i = 0; i < 8; i++)
-    {
-        unsigned char c = ((char*)flash_target_contents)[i] ;
-        printf ("%02x ", c) ;
+    if (settings.settingsIsNull) {
+        set_default();
     }
-    printf("\n");
-    uint8_t* settingsAsBytes = (uint8_t*) &settings;
-    for (uint8_t i = 0; i < 8; i++)
-    {
-        unsigned char c = ((char*)settingsAsBytes)[i] ;
-        printf ("%02x ", c) ;
-    }
-    printf("\n");
-
     init = true;
-    settings.BPM = settings.BPM <= 0 ? TIMER_MIDI_US : settings.BPM;
-    settings.lightBPM = settings.lightBPM <= 0 ? LIGHT_BPM_DEF : settings.lightBPM;
-    settings.fibPower = settings.fibPower == 0 ? DEF_FIB_POW : settings.fibPower;
-    settings.firstValue = settings.firstValue == 0 ? DEF_FIB_FIRST : settings.firstValue;
-    settings.filterPercent = settings.filterPercent == 0 ? DEF_FILTER_PERCENT : 1 - settings.filterPercent;
-    settings.scale = settings.scale < 0 || settings.scale > 11 ? SCALE : settings.scale;
-
 
     setBPM(settings.BPM);
     setLightBPM(settings.lightBPM);
     setFreqPower(settings.fibPower, settings.firstValue);
-    setFilterPercent(settings.filterPercent);
+    setFilterPercent(1 - settings.filterPercent);
     setScale(settings.scale);
     setPlantVelocity(settings.plantVelocity);
     setLightVelocity(settings.lightVelocity);
     enable_random_note(settings.random_note);
     control_same_note(settings.same_note);
     set_note_off_speed_percent(settings.percent_note_off);
+    set_light_min_notes(settings.light_note_min);
+    set_light_max_notes(settings.light_note_max);
     init = false;
 }

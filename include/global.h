@@ -97,6 +97,9 @@
 #define SCALE 0
 #endif
 
+#define LIGHT_NOTE_MIN_DEFAULT 24
+#define LIGHT_NOTE_MAX_DEFAULT 48
+
 /** @brief Enum of possible device states */
 enum Status {
     Sleep,

@@ -22,6 +22,7 @@ typedef enum{
 uint32_t getLastNotePlant();
 uint32_t getLastNoteLight();
 
+
 void set_note_off_speed_percent(uint8_t val);
 uint8_t get_note_off_speed_percent();
 
@@ -29,6 +30,11 @@ uint8_t get_note_off_speed_percent();
 void MidiPlant(void);
 void resetPlantNoteOff();
 /** @brief MIDI from light (Channel 2) */
+void set_light_notes_count(uint8_t count);
+void set_light_min_notes(uint8_t count);
+uint8_t get_light_min_notes();
+void set_light_max_notes(uint8_t count);
+uint8_t get_light_max_notes();
 void MidiLight(void);
 
 /** @brief Stop all notes */
@@ -40,5 +46,7 @@ void MidiSettings();
 void control_same_note(uint8_t value);
 
 uint8_t get_control_same_note();
+
+void set_default();
 
 #endif
