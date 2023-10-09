@@ -4,6 +4,7 @@
 #define FLASH_TARGET_OFFSET (512 * 1024)
 
 typedef struct {
+    bool settingsIsNull;
     int BPM;
     int lightBPM;
     double fibPower;
@@ -13,8 +14,10 @@ typedef struct {
     int plantVelocity;
     int lightVelocity;
     bool random_note;
-    uint8_t same_note;
-    uint8_t percent_note_off;
+    int same_note;
+    int percent_note_off;
+    int light_note_min;
+    int light_note_max;
 } Settings_t;
 
 void SaveSettings();

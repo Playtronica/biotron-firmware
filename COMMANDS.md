@@ -77,16 +77,17 @@ Can have infinite parameters.
 Sum of the parameters -> bps. **(Warning. With very big value, device can crash)**.
 
 ### Change sensitivity
-(Function Number Bite = 1)
+(Function Number Bite = 1, 2)
 
 Function that create longer distance between notes. Working by fibonacci algorithm
 
-Has two parameters:
-1) First is influence on main algorithm (from 0 to 100%). 
-2) Second is first value of fibonacci (from 0 to 100, but it converts in 0 to 1).
+Has two SysEx commands with their parameter:
+1) 1 - First is influence on main algorithm (from 0 to 100%).
+2) 2 - Second is first value of fibonacci (from 0 to 100, but it converts in 0 to 1).
+
 
 ### Change smoothness
-(Function Number Bite = 2)
+(Function Number Bite = 3)
 
 It changes the smoothness of note changes.
 
@@ -94,7 +95,7 @@ Has one parameter.
 The parameter is responsible for smoothness (from 0 to 99%)
 
 ### Change scale
-(Function Number Bite = 3)
+(Function Number Bite = 4)
 
 Changes scale.
 
@@ -117,31 +118,36 @@ The parameter is responsible for scale. (from 0 to 11)
 | B    | DIMINISHED |
 
 
-### Change velocity
-(Function Number Bite = 4)
+### Change plant velocity
+(Function Number Bite = 5)
 
-Change velocity of one channel
+Change velocity of plant channel
 
-Has two parameters:
-1) Channel (if equal 1 change plant velocity, else if equal 2 change light velocity)
-2) Velocity (from 0 to 127)
+Parameter: Velocity (from 0 to 127)
+
+### Change light velocity
+(Function Number Bite = 6)
+
+Change velocity of light channel
+
+Parameter: Velocity (from 0 to 127)
 
 ### Return default settings
-(Function Number Bite = 5)
+(Function Number Bite = 7)
 
 Return initial settings.
 
 Don't need any parameters
 
 ### Log current settings
-(Function Number Bite = 6)
+(Function Number Bite = 8)
 
 Display all settings in serial.
 
 Don't need any parameters
 
 ### Change BPM of the light sensor
-(Function Number Bite = 7)
+(Function Number Bite = 9)
 
 Change speed of the second channel (light sensor). Depends on BPM of first channel.
 
@@ -149,16 +155,15 @@ Has one parameter:
 1) Light BPM - how many Plant notes must play, before new Light note would be played. (from 0 to 127)
 
 ### Set randomness of notes
-(Functional Number Byte = 8)
+(Functional Number Byte = 10)
 
 Controls the game mode. If it is enabled, random is enabled, otherwise is disabled.
 Has one parameter:
 1) 0 if it is disabled
 2) 1 if it is enabled
 
-
 ### Disable same notes play
-(Function Number Byte = 9)
+(Function Number Byte = 11)
 
 Controls the game mode. If it is enabled, all the notes will be played, otherwise the same notes will be skipped.
 Has 1 switch parameter
@@ -166,12 +171,24 @@ Has 1 switch parameter
 2) 1 if it is enabled
 
 ### Set note off control
-(Function Number Byte = 10)
+(Function Number Byte = 12)
 
 Controls time to note off plant note. If it is lower 100, last notes will be turned off faster, then next note.
 Has 1 parameter
 
 1) Percent of current plant BPM. (from 1 to 100)
+
+### Set minimum of light note range
+(Function Number Byte = 13)
+
+Changes the lowest possible note by light channel
+Parameter: Lowest Note
+
+### Set maximum of light note range
+(Function Number Byte = 14)
+
+Changes the highest possible note by light channel
+Parameter: Lowest Note
 
 ## CC commands
 Its more simplified type of commands than bytes commands. You can send it by terminal, 

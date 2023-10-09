@@ -6,6 +6,15 @@
 
 Implement PLSDK
 
+## [1.2.0] - 2023-09-12
+
+### Added
+1) New Commands about light note range
+
+### Change
+1) Algorithm of save preferences has been changed
+2) Some MIDI commands has been split
+
 ## [1.1.5] - 2023-09-12
 
 ### Changed
