@@ -11,18 +11,30 @@
 
     #define GROUP_BlUE_LED_CENTER 1
     #define GROUP_BlUE_LED_LEFT 0
-    #define GROUP_BlUE_LED_RIGHT 16
+    #define GROUP_BlUE_LED_RIGHT 2
 
-    #define FIRST_GROUP_GREEN_LED_1 2
+    #define FIRST_GROUP_GREEN_LED_1 9
     #define FIRST_GROUP_GREEN_LED_2 3
     #define FIRST_GROUP_GREEN_LED_3 4
 
-    #define SECOND_GROUP_GREEN_LED_1 9
+    #define SECOND_GROUP_GREEN_LED_1 12
     #define SECOND_GROUP_GREEN_LED_2 10
     #define SECOND_GROUP_GREEN_LED_3 11
 
-    #define MAX_LIGHT 60000
-    #define MIN_LIGHT 7000
+//    #define GROUP_BlUE_LED_CENTER 1
+//    #define GROUP_BlUE_LED_LEFT 0
+//    #define GROUP_BlUE_LED_RIGHT 16
+//
+//    #define FIRST_GROUP_GREEN_LED_1 2
+//    #define FIRST_GROUP_GREEN_LED_2 3
+//    #define FIRST_GROUP_GREEN_LED_3 4
+//
+//    #define SECOND_GROUP_GREEN_LED_1 9
+//    #define SECOND_GROUP_GREEN_LED_2 10
+//    #define SECOND_GROUP_GREEN_LED_3 11
+
+    #define MAX_LIGHT ((1 << 16) - 100)
+    #define MIN_LIGHT 10
     #define NOTE_STRONG 414
 #else
     #define PLANT_PIN  1
@@ -107,6 +119,9 @@ enum Status {
     Active,
     BPMClockActive
 };
+
+void led_core();
+enum Status getStatus();
 
 void play_music();
 

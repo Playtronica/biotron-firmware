@@ -5,7 +5,9 @@
 #include "pico/stdlib.h"
 #include "pico.h"
 #include "cap_buttons.h"
+#include "pico/multicore.h"
 
+uint32_t interrupts;
 
 int main(void)
 {
@@ -13,21 +15,26 @@ int main(void)
     tusb_init();
 
     Setup();
+    multicore_launch_core1(led_core);
     Intro();
 
-
+    uint16_t i = 0;
     while (true)
     {
         tud_task();
-        gpio_put(TEST_LED, 1);
         if (isReady()) {
             MainStage();
         }
 
-        MidiSettings();
+
+        if (i % 100 == 0) {
+            buttons_task();
+        }
+        else {
+            MidiSettings();
+        }
         LedStage();
-        buttons_task();
+        i++;
         sleep_ms(1);
     }
-
 }
