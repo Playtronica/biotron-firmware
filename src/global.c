@@ -143,26 +143,52 @@ int getScale() {
     return scale;
 }
 
-uint8_t plantVelocity = 127;
-void setPlantVelocity(uint8_t velocity) {
-    if (velocity > 127) return;
-    plantVelocity = velocity;
+bool plantVelocityRandom = false;
+uint8_t minPlantVelocity = 0;
+uint8_t maxPlantVelocity = 127;
+void setPlantVelocity(uint8_t min_velocity, uint8_t max_velocity, bool isRandom) {
+    if (max_velocity > 127) return;
+    if (max_velocity < min_velocity) return;
+    maxPlantVelocity = max_velocity;
+    minPlantVelocity = min_velocity;
+    plantVelocityRandom = isRandom;
 //    SaveSettings();
 }
 
-uint8_t getPlantVelocity() {
-    return plantVelocity;
+uint8_t getMaxPlantVelocity() {
+    return maxPlantVelocity;
 }
 
-uint8_t lightVelocity = 127;
-void setLightVelocity(uint8_t velocity) {
-    if (velocity > 127) return;
-    lightVelocity = velocity;
+uint8_t getMinPlantVelocity() {
+    return minPlantVelocity;
+}
+
+bool getRandomPlantVelocity() {
+    return plantVelocityRandom;
+}
+
+bool lightVelocityRandom = false;
+uint8_t maxLightVelocity = 0;
+uint8_t minLightVelocity = 127;
+void setLightVelocity(uint8_t min_velocity, uint8_t max_velocity, bool isRandom) {
+    if (max_velocity > 127) return;
+    if (max_velocity < min_velocity) return;
+    maxLightVelocity = max_velocity;
+    minLightVelocity = min_velocity;
+    lightVelocityRandom = isRandom;
 //    SaveSettings();
 }
 
-uint8_t getLightVelocity() {
-    return lightVelocity;
+uint8_t getMaxLightVelocity() {
+    return maxLightVelocity;
+}
+
+uint8_t getMinLightVelocity() {
+    return minLightVelocity;
+}
+
+bool getRandomLightVelocity() {
+    return lightVelocityRandom;
 }
 
 struct repeating_timer tap_tempo_timer;
@@ -300,7 +326,8 @@ void PrintInfo() {
      printf("LIGHT NOTE EVERY %d PLANT NOTE\n", getLightBPM());
      printf("FILTER VALUE: %.2f\n", getFilterPercent());
      printf("SCALE: %d\n", getScale());
-     printf("PlantVelocity: %d, LightVelocity: %d\n", getPlantVelocity(), getLightVelocity());
+     printf("MinPlantVelocity: %d, MaxPlantVelocity: %d, isRandom: %b\n", getMinPlantVelocity(), getMaxPlantVelocity(), getRandomPlantVelocity());
+     printf("MinLightVelocity: %d, MaxLightVelocity: %d, isRandom: %b\n", getMinLightVelocity(), getMaxLightVelocity(), getRandomLightVelocity());
      printf("Random note is %s", get_random_note_state() ? "enabled\n" : "disabled\n");
      printf("Same note: %d\n", get_control_same_note());
      printf("Note off percent: %d\n", get_note_off_speed_percent());

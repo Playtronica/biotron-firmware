@@ -243,7 +243,11 @@ void MidiPlant(void) {
             tud_midi_stream_write(0, note_off, 3);
         }
 
-        uint8_t note_on[3] = {0x90 | channel, currentNote, getPlantVelocity()};
+        uint8_t note_on[3] = {0x90 | channel, currentNote, getMaxPlantVelocity()};
+        if (getRandomPlantVelocity()) {
+            note_on[2] = rand() % (getMaxPlantVelocity() + 1 - getMinPlantVelocity()) + getMinPlantVelocity();
+        }
+
         tud_midi_stream_write(cable_num, note_on, 3);
 
 
@@ -287,8 +291,8 @@ void set_default() {
     setFreqPower(DEF_FIB_POW, DEF_FIB_FIRST);
     setFilterPercent(DEF_FILTER_PERCENT);
     setScale(SCALE);
-    setPlantVelocity(75);
-    setLightVelocity(75);
+    setPlantVelocity(0, 75, false);
+    setLightVelocity(0, 75, false);
     setLightBPM(LIGHT_BPM_DEF);
     enable_random_note(true);
     control_same_note(0);
@@ -315,7 +319,10 @@ void MidiLight(void) {
         tud_midi_stream_write(cable_num, note_off, 3);
 
 
-        uint8_t note_on[3] = {0x90 | channel, currentNote, getLightVelocity()};
+        uint8_t note_on[3] = {0x90 | channel, currentNote, getMaxLightVelocity()};
+        if (getRandomLightVelocity()) {
+            note_on[2] = rand() % (getMaxLightVelocity() + 1 - getMinPlantVelocity()) + getMinLightVelocity();
+        }
         tud_midi_stream_write(cable_num, note_on, 3);
     }
     lastNoteLight = currentNote;
@@ -444,12 +451,12 @@ void MidiSettings() {
                 tud_task();
                 break;
             case(5):
-                setPlantVelocity(res[3]);
+                setPlantVelocity(getMinPlantVelocity(), res[3], getRandomPlantVelocity());
                 // printf("[!] Plant Velocity has been changed. Velocity: %d\n", getPlantVelocity());
                 tud_task();
                 break;
             case(6):
-                setLightVelocity(res[3]);
+                setLightVelocity(getMinLightVelocity(), res[3], getRandomLightVelocity());
                 // printf("[!] Light Velocity has been changed. Velocity: %d\n", getLightVelocity());
                 tud_task();
                 break;
@@ -501,6 +508,18 @@ void MidiSettings() {
                 set_light_max_notes(res[3]);
                 tud_task();
                 break;
+            case(15):
+                setPlantVelocity(res[3], getMaxPlantVelocity(), getRandomPlantVelocity());
+                break;
+            case(16):
+                setPlantVelocity(getMinPlantVelocity(), getMaxPlantVelocity(), res[3] > 0);
+                break;
+            case(17):
+                setLightVelocity(res[3], getMaxLightVelocity(), getRandomLightVelocity());
+                break;
+            case(18):
+                setLightVelocity(getMinLightVelocity(), getMaxLightVelocity(), res[3] > 0);
+                break;
         }
     }
         /** @brief CC commands (plant midi) */
@@ -522,7 +541,7 @@ void MidiSettings() {
                 * @param x - velocity (Max = 127)
                  */
             case(9):
-                setPlantVelocity(res[2]);
+                setPlantVelocity(getMinPlantVelocity(), res[2], getRandomPlantVelocity());
                 // printf("[!] Plant Velocity has been changed. Velocity: %d\n", getPlantVelocity());
                 break;
             case(14):
@@ -567,6 +586,12 @@ void MidiSettings() {
                 setScale(res[2] / 10.5);
                 // printf("[!] SCALE HAS CHANGED. CURRENT SCALE IS %s.\n", octaveName);
                 break;
+            case(25):
+                setPlantVelocity(res[2], getMaxPlantVelocity(), getRandomPlantVelocity());
+                break;
+            case(26):
+                setPlantVelocity(getMinPlantVelocity(), getMaxPlantVelocity(), res[2] > 63);
+                break;
             case(120):
                 MidiStop();
                 // printf("[!] All NOTES OFF\n");
@@ -581,7 +606,7 @@ void MidiSettings() {
             * @param x - velocity (Max = 127)
              */
             case(9):
-                setLightVelocity(res[2]);
+                setLightVelocity(getMinLightVelocity(), res[2], getRandomLightVelocity());
                 // printf("[!] Light Velocity has been changed. Velocity: %d\n", getLightVelocity());
                 break;
             case(14):
@@ -665,6 +690,12 @@ void MidiSettings() {
 //                        break;
 //                }
                 // printf("[!] SCALE HAS CHANGED. CURRENT SCALE IS %s.\n", octaveName);
+                break;
+            case(25):
+                setLightVelocity(res[2], getMaxLightVelocity(), getRandomLightVelocity());
+                break;
+            case(26):
+                setLightVelocity(getMinLightVelocity(), getMaxLightVelocity(), res[2] > 63);
                 break;
             case(120):
                 MidiStop();

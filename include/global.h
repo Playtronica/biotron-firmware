@@ -132,11 +132,15 @@ void BPM_clock_disable();
 void setScale(int id);
 int getScale();
 
-void setPlantVelocity(uint8_t velocity);
-uint8_t getPlantVelocity();
+void setPlantVelocity(uint8_t min_velocity, uint8_t max_velocity, bool isRandom);
+uint8_t getMaxPlantVelocity();
+uint8_t getMinPlantVelocity();
+bool getRandomPlantVelocity();
 
-void setLightVelocity(uint8_t velocity);
-uint8_t getLightVelocity();
+void setLightVelocity(uint8_t min_velocity, uint8_t max_velocity, bool isRandom);
+uint8_t getMaxLightVelocity();
+uint8_t getMinLightVelocity();
+bool getRandomLightVelocity();
 
 /** @brief change BPM in us (if device is Active reload timer) */
 void setBPM(int newTime);
