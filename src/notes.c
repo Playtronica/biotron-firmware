@@ -321,7 +321,7 @@ void MidiLight(void) {
 
         uint8_t note_on[3] = {0x90 | channel, currentNote, getMaxLightVelocity()};
         if (getRandomLightVelocity()) {
-            note_on[2] = rand() % (getMaxLightVelocity() + 1 - getMinPlantVelocity()) + getMinLightVelocity();
+            note_on[2] = rand() % (getMaxLightVelocity() + 1 - getMinLightVelocity()) + getMinLightVelocity();
         }
         tud_midi_stream_write(cable_num, note_on, 3);
     }
@@ -650,46 +650,6 @@ void MidiSettings() {
                 break;
             case(24):
                 setScale(res[2] / 10.5);
-//                char *octaveName = "";
-//                switch (getScale()) {
-//                    case SCALE_CHROM:
-//                        octaveName = "CHROM";
-//                        break;
-//                    case SCALE_DIMINISHED:
-//                        octaveName = "DIMINISHED";
-//                        break;
-//                    case SCALE_DORIAN:
-//                        octaveName = "DORIAN";
-//                        break;
-//                    case SCALE_LYDIAN:
-//                        octaveName = "LYDIAN";
-//                        break;
-//                    case SCALE_MAJBLUES:
-//                        octaveName = "MAJBLUES";
-//                        break;
-//                    case SCALE_MAJOR:
-//                        octaveName = "MAJOR";
-//                        break;
-//                    case SCALE_MAJPEN:
-//                        octaveName = "MAJPEN";
-//                        break;
-//                    case SCALE_MINBLUES:
-//                        octaveName = "MINBLUES";
-//                        break;
-//                    case SCALE_MINOR:
-//                        octaveName = "MINOR";
-//                        break;
-//                    case SCALE_MINPEN:
-//                        octaveName = "MINPEN";
-//                        break;
-//                    case SCALE_MIXOLYDIAN:
-//                        octaveName = "MIXOLYDIAN";
-//                        break;
-//                    case SCALE_WHOLETONE:
-//                        octaveName = "WHOLETONE";
-//                        break;
-//                }
-                // printf("[!] SCALE HAS CHANGED. CURRENT SCALE IS %s.\n", octaveName);
                 break;
             case(25):
                 setLightVelocity(res[2], getMaxLightVelocity(), getRandomLightVelocity());
@@ -702,8 +662,8 @@ void MidiSettings() {
                 // printf("[!] All NOTES OFF\n");
                 break;
         }
-//
     }
+    SaveSettings();
 }
 
 

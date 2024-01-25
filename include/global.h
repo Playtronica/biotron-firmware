@@ -4,11 +4,23 @@
 /** @brief Led Pins */
 #include "notes.h"
 
-#define DEBUG_LED_BUILD
 
-#ifdef DEBUG_LED_BUILD
-    #define PLANT_PIN  13
+#define PLANT_PIN  13
 
+//#define INVERT_LED
+#ifdef INVERT_LED
+    #define GROUP_BlUE_LED_CENTER 1
+    #define GROUP_BlUE_LED_LEFT 0
+    #define GROUP_BlUE_LED_RIGHT 16
+
+    #define FIRST_GROUP_GREEN_LED_1 2
+    #define FIRST_GROUP_GREEN_LED_2 3
+    #define FIRST_GROUP_GREEN_LED_3 4
+
+    #define SECOND_GROUP_GREEN_LED_1 9
+    #define SECOND_GROUP_GREEN_LED_2 10
+    #define SECOND_GROUP_GREEN_LED_3 11
+#else
     #define GROUP_BlUE_LED_CENTER 1
     #define GROUP_BlUE_LED_LEFT 0
     #define GROUP_BlUE_LED_RIGHT 2
@@ -17,43 +29,15 @@
     #define FIRST_GROUP_GREEN_LED_2 3
     #define FIRST_GROUP_GREEN_LED_3 4
 
-    #define SECOND_GROUP_GREEN_LED_1 12
+    #define SECOND_GROUP_GREEN_LED_1 14
     #define SECOND_GROUP_GREEN_LED_2 10
     #define SECOND_GROUP_GREEN_LED_3 11
-
-//    #define GROUP_BlUE_LED_CENTER 1
-//    #define GROUP_BlUE_LED_LEFT 0
-//    #define GROUP_BlUE_LED_RIGHT 16
-//
-//    #define FIRST_GROUP_GREEN_LED_1 2
-//    #define FIRST_GROUP_GREEN_LED_2 3
-//    #define FIRST_GROUP_GREEN_LED_3 4
-//
-//    #define SECOND_GROUP_GREEN_LED_1 9
-//    #define SECOND_GROUP_GREEN_LED_2 10
-//    #define SECOND_GROUP_GREEN_LED_3 11
-
-    #define MAX_LIGHT ((1 << 16) - 100)
-    #define MIN_LIGHT 10
-    #define NOTE_STRONG 414
-#else
-    #define PLANT_PIN  1
-    #define GROUP_BlUE_LED_CENTER 4
-    #define GROUP_BlUE_LED_LEFT 4
-    #define GROUP_BlUE_LED_RIGHT 4
-
-    #define FIRST_GROUP_GREEN_LED_1 2
-    #define FIRST_GROUP_GREEN_LED_2 2
-    #define FIRST_GROUP_GREEN_LED_3 2
-
-    #define SECOND_GROUP_GREEN_LED_1 3
-    #define SECOND_GROUP_GREEN_LED_2 3
-    #define SECOND_GROUP_GREEN_LED_3 3
-
-    #define MAX_LIGHT 40000
-    #define MIN_LIGHT 10000
-    #define NOTE_STRONG 414
 #endif
+
+
+#define MAX_LIGHT ((1 << 16) - 100)
+#define MIN_LIGHT 10
+#define NOTE_STRONG 414
 #define TEST_LED 25
 
 /** @brief Pins for getting data for music */

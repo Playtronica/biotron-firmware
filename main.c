@@ -15,7 +15,6 @@ int main(void)
     tusb_init();
 
     Setup();
-    multicore_launch_core1(led_core);
     Intro();
 
     uint16_t i = 0;
