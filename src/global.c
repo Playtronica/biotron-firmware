@@ -398,7 +398,7 @@ void BPM_clock_active() {
         cancel_repeating_timer(&midiTimer);
         status = BPMClockActive;
     }
-    // printf("BPM Clock Active\n");
+     printf("BPM Clock Active\n");
     currentActiveStatus = BPMClockActive;
 }
 
@@ -407,7 +407,7 @@ void BPM_clock_disable() {
         add_repeating_timer_us(time, _repeating_timer_callback, NULL, &midiTimer);
         status = Active;
     }
-    // printf("BPM Clock Disable\n");
+    printf("BPM Clock Disable\n");
     currentActiveStatus = Active;
 }
 

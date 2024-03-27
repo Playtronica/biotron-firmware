@@ -234,7 +234,7 @@ char const* string_desc_arr [] =
         (const char[]) { 0x09, 0x04 },  // 0: is supported language is English (0x0409)
         "Playtronica",                          // 1: Manufacturer
         "Biotron",                              // 2: Product
-        "123456",                               // 3: Serials, should use chip ID
+        "Bio5",                               // 3: Serials, should use chip ID
         "TinyUSB CDC"                           // 4: CDC Interface
         };
 
