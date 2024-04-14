@@ -96,6 +96,11 @@
 #define LIGHT_NOTE_MIN_DEFAULT 24
 #define LIGHT_NOTE_MAX_DEFAULT 48
 
+#define BUTTON_FINGER 8
+#define BUTTON_BOTTOM 7
+#define BUTTON_TOP 6
+
+
 /** @brief Enum of possible device states */
 enum Status {
     Sleep,

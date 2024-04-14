@@ -26,7 +26,7 @@ int main(void)
         }
 
 
-        if (i % 500 == 0) {
+        if (i % 50 == 0) {
             buttons_task();
         }
         else {

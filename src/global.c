@@ -129,7 +129,7 @@ double getFirstValue() {
 
 ScaleNums_t scale = SCALE;
 void setScale(int id) {
-    scale = id;
+    scale = id % 12;
 //    SaveSettings();
 }
 int getScale() {
@@ -227,6 +227,19 @@ void change_mute_mode() {
     printf("Mute mode: %d\n", mute_mode);
 }
 
+void change_same_mode() {
+    bool res = get_control_same_note() > 0 ? 0 : 1;
+    control_same_note(res);
+    SaveSettings();
+    printf("Same mode %d\n", res);
+}
+
+void change_scale() {
+    uint8_t res = (getScale() + 1) % 12;
+    setScale(res);
+    SaveSettings();
+    printf("Change Scale %d\n", res);
+}
 
 bool get_mute_mode() {
     return mute_mode;
@@ -279,7 +292,9 @@ void Setup() {
     pwm_init(pwm_gpio_to_slice_num(SECOND_GROUP_GREEN_LED_2), &config, true);
     pwm_init(pwm_gpio_to_slice_num(SECOND_GROUP_GREEN_LED_3), &config, true);
 
-    buttons_add_button(8, change_mute_mode, NULL, NULL);
+    buttons_add_button(BUTTON_FINGER, change_mute_mode, NULL, NULL);
+    buttons_add_button(BUTTON_BOTTOM, change_same_mode, NULL, NULL);
+    buttons_add_button(BUTTON_TOP, change_scale, NULL, NULL);
 
     buttons_init(5);
 
