@@ -426,9 +426,13 @@ void BPM_clock_disable() {
     currentActiveStatus = Active;
 }
 
-uint8_t counterValues = 0;
+
 void MainStage() {
+    static uint8_t counterValues = 0;
+    static uint8_t stab_song[] = {36, 40, 43, 48};
+    static uint8_t stab_song_step = 0;
     freq = getRealFreq();
+
 //    freq = rand() % 32000 + 60;
 
     switch (status) {
@@ -449,6 +453,9 @@ void MainStage() {
             if (counterValues >= STABILIZATION_TIME) {
                 counterValues = 0;
                 status = Stabilization;
+                uint8_t note_on[3] = {0x90 | 0, stab_song[stab_song_step], 90};
+                tud_midi_stream_write(0, note_on, 3);
+                stab_song_step++;
                 printf("[+] Change status: Sleep -> Stab\n");
             }
             break;
@@ -477,7 +484,11 @@ void MainStage() {
                 averageFreqChanges = 0;
                 status = Sleep;
                 FilterFrequency(0, 0);
-                 printf("[+] Change status: Stab -> Sleep\n");
+                uint8_t note_off[3] = {0x80 | 0, stab_song[stab_song_step - 1], 0};
+                tud_midi_stream_write(0, note_off, 3);
+                stab_song_step = 0;
+                printf("[+] Change status: Stab -> Sleep\n");
+                return;
             }
 
             if (counterValues > AVERAGE_TIME) {
@@ -489,7 +500,19 @@ void MainStage() {
                     add_repeating_timer_us(time, _repeating_timer_callback, NULL, &midiTimer);
                 }
                 status = currentActiveStatus;
-                 printf("[+] Change status: Stab -> Active\n");
+                uint8_t note_off[3] = {0x80 | 0, stab_song[stab_song_step - 1], 0};
+                tud_midi_stream_write(0, note_off, 3);
+                stab_song_step = 0;
+                printf("[+] Change status: Stab -> Active\n");
+            }
+            else {
+                if (counterValues >= (AVERAGE_TIME / 3) * stab_song_step && stab_song_step < 4) {
+                    uint8_t note_off[3] = {0x80 | 0, stab_song[stab_song_step - 1], 0};
+                    tud_midi_stream_write(0, note_off, 3);
+                    uint8_t note_on[3] = {0x90 | 0, stab_song[stab_song_step], 90};
+                    tud_midi_stream_write(0, note_on, 3);
+                    stab_song_step++;
+                }
             }
             break;
          /** @brief Active mode
@@ -519,6 +542,7 @@ void MainStage() {
                 FilterFrequency(0, 0);
                 MidiStop();
                 printf("[+] Change status: Active -> Sleep\n");
+                return;
             }
 
 
