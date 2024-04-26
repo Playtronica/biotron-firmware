@@ -73,8 +73,7 @@ void play_music() {
         time_log = time_us_64();
     }
     if (time_us_64() - time_log > 100000) {
-        printf("{\"AverageFreq\": %d, \"Freq\": %d, \"PlantNote\": %d, \"LightNote\": %d }\n",
-               averageFreq, freq, getLastNotePlant(), getLastNoteLight());
+        printf("$%d;\n", freq-40000);
         time_log = time_us_64();
     }
 }
