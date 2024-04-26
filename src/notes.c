@@ -312,7 +312,8 @@ void MidiLight(void) {
         set_light_min_notes(buff);
     }
 
-    uint8_t currentNote = (MAX_OF_LIGHT - adc_read()) / (MAX_OF_LIGHT / (light_notes_max - light_notes_min)) + light_notes_min;
+    uint16_t buff = MIN(adc_read(), MAX_OF_LIGHT);
+    uint8_t currentNote = (MAX_OF_LIGHT - buff) / (MAX_OF_LIGHT / (light_notes_max - light_notes_min)) + light_notes_min;
 
     if (!get_mute_mode()) {
         uint8_t note_off[3] = {0x80 | channel, lastNoteLight, 0};
