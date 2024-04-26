@@ -11,8 +11,12 @@ typedef struct {
     double firstValue;
     double filterPercent;
     int scale;
-    int plantVelocity;
-    int lightVelocity;
+    bool isRandomPlantVelocity;
+    int minPlantVelocity;
+    int maxPlantVelocity;
+    bool isRandomLightVelocity;
+    int minLightVelocity;
+    int maxLightVelocity;
     bool random_note;
     int same_note;
     int percent_note_off;
