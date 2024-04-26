@@ -4,11 +4,11 @@
 /** @brief Led Pins */
 #include "notes.h"
 
-#define DEBUG_LED_BUILD
 
-#ifdef DEBUG_LED_BUILD
-    #define PLANT_PIN  13
+#define PLANT_PIN  13
 
+//#define INVERT_LED
+#ifdef INVERT_LED
     #define GROUP_BlUE_LED_CENTER 1
     #define GROUP_BlUE_LED_LEFT 0
     #define GROUP_BlUE_LED_RIGHT 16
@@ -20,28 +20,24 @@
     #define SECOND_GROUP_GREEN_LED_1 9
     #define SECOND_GROUP_GREEN_LED_2 10
     #define SECOND_GROUP_GREEN_LED_3 11
-
-    #define MAX_LIGHT 60000
-    #define MIN_LIGHT 7000
-    #define NOTE_STRONG 414
 #else
-    #define PLANT_PIN  1
-    #define GROUP_BlUE_LED_CENTER 4
-    #define GROUP_BlUE_LED_LEFT 4
-    #define GROUP_BlUE_LED_RIGHT 4
+    #define GROUP_BlUE_LED_CENTER 1
+    #define GROUP_BlUE_LED_LEFT 0
+    #define GROUP_BlUE_LED_RIGHT 2
 
-    #define FIRST_GROUP_GREEN_LED_1 2
-    #define FIRST_GROUP_GREEN_LED_2 2
-    #define FIRST_GROUP_GREEN_LED_3 2
+    #define FIRST_GROUP_GREEN_LED_1 9
+    #define FIRST_GROUP_GREEN_LED_2 3
+    #define FIRST_GROUP_GREEN_LED_3 4
 
-    #define SECOND_GROUP_GREEN_LED_1 3
-    #define SECOND_GROUP_GREEN_LED_2 3
-    #define SECOND_GROUP_GREEN_LED_3 3
-
-    #define MAX_LIGHT 40000
-    #define MIN_LIGHT 10000
-    #define NOTE_STRONG 414
+    #define SECOND_GROUP_GREEN_LED_1 14
+    #define SECOND_GROUP_GREEN_LED_2 10
+    #define SECOND_GROUP_GREEN_LED_3 11
 #endif
+
+
+#define MAX_LIGHT ((1 << 16) - 100)
+#define MIN_LIGHT 10
+#define NOTE_STRONG 414
 #define TEST_LED 25
 
 /** @brief Pins for getting data for music */
@@ -100,6 +96,11 @@
 #define LIGHT_NOTE_MIN_DEFAULT 24
 #define LIGHT_NOTE_MAX_DEFAULT 48
 
+#define BUTTON_FINGER 8
+#define BUTTON_BOTTOM 7
+#define BUTTON_TOP 6
+
+
 /** @brief Enum of possible device states */
 enum Status {
     Sleep,
@@ -107,6 +108,9 @@ enum Status {
     Active,
     BPMClockActive
 };
+
+void led_core();
+enum Status getStatus();
 
 void play_music();
 
@@ -117,11 +121,15 @@ void BPM_clock_disable();
 void setScale(int id);
 int getScale();
 
-void setPlantVelocity(uint8_t velocity);
-uint8_t getPlantVelocity();
+void setPlantVelocity(uint8_t min_velocity, uint8_t max_velocity, bool isRandom);
+uint8_t getMaxPlantVelocity();
+uint8_t getMinPlantVelocity();
+bool getRandomPlantVelocity();
 
-void setLightVelocity(uint8_t velocity);
-uint8_t getLightVelocity();
+void setLightVelocity(uint8_t min_velocity, uint8_t max_velocity, bool isRandom);
+uint8_t getMaxLightVelocity();
+uint8_t getMinLightVelocity();
+bool getRandomLightVelocity();
 
 /** @brief change BPM in us (if device is Active reload timer) */
 void setBPM(int newTime);

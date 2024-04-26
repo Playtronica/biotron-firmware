@@ -99,7 +99,7 @@ void buttons_init(uint8_t pulse_pin){
     gpio_set_dir(pulse_pin, GPIO_OUT);
 
     for(int i = 0; i < _num_of_registered_buttons; i++ ){
-        printf("Init button %d\n", _buttons[i].gpio);
+        // printf("Init button %d\n", _buttons[i].gpio);
         gpio_init(_buttons[i].gpio);
         gpio_set_dir(_buttons[i].gpio, GPIO_IN);
         gpio_disable_pulls(_buttons[i].gpio);
@@ -147,7 +147,7 @@ void _buttons_int_cb(uint gpio, uint32_t event){
 }
 
 void _check_button(ButtonState_t * button){
-    //printf("Check GPIO %d\nPress interval is %d\n", button->gpio, button->interval);
+    //// printf("Check GPIO %d\nPress interval is %d\n", button->gpio, button->interval);
     if(button->interval > _minPressInterval || button->interval == 0){
         if(button->isPressed){
             button->on_hold();

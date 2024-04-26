@@ -6,7 +6,7 @@
 #include "global.h"
 #include "frequency_counter.h"
 #include "settings.h"
-
+#include "tusb.h"
 
 uint32_t lastNotePlant = MIDDLE_NOTE;
 uint32_t lastNoteLight;
@@ -164,7 +164,7 @@ uint8_t get_control_same_note() {
 
 void control_same_note(uint8_t value) {
     sameNotePlay = value;
-    SaveSettings();
+//    SaveSettings();
 }
 
 struct repeating_timer plantNoteOffTimer;
@@ -184,7 +184,7 @@ uint8_t note_off_speed_percent = 100;
 void set_note_off_speed_percent(uint8_t val) {
     val = val < 100 ? val : 100;
     note_off_speed_percent = val;
-    SaveSettings();
+//    SaveSettings();
 }
 
 uint8_t get_note_off_speed_percent() {
@@ -232,6 +232,7 @@ void MidiPlant(void) {
     uint8_t channel = 0;
 
     uint8_t currentNote = GetNote();
+
     if (!get_mute_mode()) {
         if (abs((int)currentNote - (int)lastNotePlant) < sameNotePlay) {
             return;
@@ -242,7 +243,11 @@ void MidiPlant(void) {
             tud_midi_stream_write(0, note_off, 3);
         }
 
-        uint8_t note_on[3] = {0x90 | channel, currentNote, getPlantVelocity()};
+        uint8_t note_on[3] = {0x90 | channel, currentNote, getMaxPlantVelocity()};
+        if (getRandomPlantVelocity()) {
+            note_on[2] = rand() % (getMaxPlantVelocity() + 1 - getMinPlantVelocity()) + getMinPlantVelocity();
+        }
+
         tud_midi_stream_write(cable_num, note_on, 3);
 
 
@@ -251,7 +256,7 @@ void MidiPlant(void) {
                                    NULL, &plantNoteOffTimer);
         }
     }
-//    printf("\nNote perc %d %d\n", last_diff, get_note_off_speed_percent());
+//    // printf("\nNote perc %d %d\n", last_diff, get_note_off_speed_percent());
 
     uint8_t note_cc[3] = {0xB0 | channel, 90, getCC(currentNote)};
     tud_midi_stream_write(cable_num, note_cc, 3);
@@ -263,8 +268,8 @@ uint8_t light_notes_min = LIGHT_NOTE_MIN_DEFAULT;
 uint8_t light_notes_max = LIGHT_NOTE_MAX_DEFAULT;
 void set_light_min_notes(uint8_t count) {
     light_notes_min = count;
-    printf("[!] Set light notes min: %d\n", light_notes_min);
-    SaveSettings();
+    // printf("[!] Set light notes min: %d\n", light_notes_min);
+//    SaveSettings();
 }
 
 uint8_t get_light_min_notes() {
@@ -273,8 +278,8 @@ uint8_t get_light_min_notes() {
 
 void set_light_max_notes(uint8_t count) {
     light_notes_max = count;
-    printf("[!] Set light notes max: %d\n", light_notes_max);
-    SaveSettings();
+    // printf("[!] Set light notes max: %d\n", light_notes_max);
+//    SaveSettings();
 }
 
 uint8_t get_light_max_notes() {
@@ -286,15 +291,15 @@ void set_default() {
     setFreqPower(DEF_FIB_POW, DEF_FIB_FIRST);
     setFilterPercent(DEF_FILTER_PERCENT);
     setScale(SCALE);
-    setPlantVelocity(127);
-    setLightVelocity(127);
+    setPlantVelocity(0, 75, false);
+    setLightVelocity(0, 75, false);
     setLightBPM(LIGHT_BPM_DEF);
     enable_random_note(true);
     control_same_note(0);
     set_note_off_speed_percent(100);
     set_light_min_notes(LIGHT_NOTE_MIN_DEFAULT);
     set_light_max_notes(LIGHT_NOTE_MAX_DEFAULT);
-    printf("[!] Return default settings\n");
+    // printf("[!] Return default settings\n");
 }
 
 void MidiLight(void) {
@@ -314,7 +319,10 @@ void MidiLight(void) {
         tud_midi_stream_write(cable_num, note_off, 3);
 
 
-        uint8_t note_on[3] = {0x90 | channel, currentNote, getLightVelocity()};
+        uint8_t note_on[3] = {0x90 | channel, currentNote, getMaxLightVelocity()};
+        if (getRandomLightVelocity()) {
+            note_on[2] = rand() % (getMaxLightVelocity() + 1 - getMinLightVelocity()) + getMinLightVelocity();
+        }
         tud_midi_stream_write(cable_num, note_on, 3);
     }
     lastNoteLight = currentNote;
@@ -337,8 +345,7 @@ void MidiStop() {
 
 
 void MidiSettings() {
-    uint8_t buff[4];
-    uint8_t res[100];
+    uint8_t res[1000];
     uint8_t len = 0;
     static uint8_t last_byte = 0;
     /** @brief Read bytes
@@ -347,60 +354,55 @@ void MidiSettings() {
      * @paragraph 240 - it is F0 (Start byte),
      * @paragraph 247 - it is F7 (End byte)
      */
-    while (tud_midi_packet_read(buff)) {
-        for (int i = 1; i < 4; ++i) {
-            if (buff[i] == 240) continue;
-            if (buff[i] == 247) break;
-            if (buff[i] == 250) {
-                last_byte = 250;
-                break;
-            }
-            if (buff[i] == 252) {
-                BPM_clock_disable();
-                cancel_repeating_timer(&plantNoteOffTimer);
-                last_byte = 252;
-                break;
-            }
-            if (buff[i] == 248) {
-                if (last_byte == 250) {
-                    BPM_clock_active();
-                    last_timer = time_us_64();
-                    cancel_repeating_timer(&plantNoteOffTimer);
-                    clk = 0;
-                }
-                MidiClock();
-                last_byte = 248;
-                break;
-            }
-            res[len++] = buff[i];
 
-//            printf("%d ", buff[i]);
-        }
-//        printf("\n");
-    }
+     if ((len = tud_midi_available())) {
+         tud_midi_stream_read(res, len);
+     }
+    else return;
 
-
-    if (len == 0) {
+    if (res[0] == 250) {
+        last_byte = 250;
         return;
     }
+    if (res[0] == 252) {
+        BPM_clock_disable();
+        cancel_repeating_timer(&plantNoteOffTimer);
+        last_byte = 252;
+        return;
+    }
+    if (res[0] == 248) {
+        if (last_byte == 250) {
+            BPM_clock_active();
+            last_timer = time_us_64();
+            cancel_repeating_timer(&plantNoteOffTimer);
+            clk = 0;
+        }
+        MidiClock();
+        last_byte = 248;
+        return;
+    }
+
+    if (getStatus() == Stabilization) return;
 
 
     /** @brief Byte Commands
      *
      * res[0] == 11 is the key to remove trash commands (11 = B) */
-    if (res[0] == 11) {
-        double su = 0;
-        switch (res[1]) {
+    if (res[1] == 11 && res[0] == 240) {
+        uint16_t su = 0;
+        switch (res[2]) {
             /** @brief F0 B 0 x y ... F7 - BPM command
              *
              * @param x,y,.. - Bpm (Every value can contain maximum FF, so takes sum of all variables)
              * */
             case (0):
-                for (int i = 2; i < len; i++) {
-                    su += res[i];;
+                for (int i = 3; res[i] != 247; i++) {
+                    su += res[i];
+                    tud_task();
                 }
                 setBPM((int) (1000000.0 / (su / 60.0)));
-                printf("[!] BPM HAS CHANGED. BPM: %d, TIME: %d.\n", (int)su, (int)(1000000.0 / (su / 60.0)));
+//                 printf("[!] BPM HAS CHANGED. BPM: %d, TIME: %d.\n", (int)su, (int)(1000000.0 / (su / 60.0)));
+                tud_task();
                 break;
                 /** @brief
                  * F0 B 1 x y F7 - Fibonacci command
@@ -414,15 +416,17 @@ void MidiSettings() {
                  */
             case (1):
                 if (len != 4) break;
-                setFreqPower((double) res[2] / 100, getFirstValue());
-                printf("[!] FIBONACCI ALGORITHM HAS CHANGED. NOTE DISTANCE: %.2f, FIRST_VALUE: %.2f.\n",
-                       getFibPower(), getFirstValue());
+                setFreqPower((double) res[3] / 100, getFirstValue());
+                // printf("[!] FIBONACCI ALGORITHM HAS CHANGED. NOTE DISTANCE: %.2f, FIRST_VALUE: %.2f.\n",
+//                       getFibPower(), getFirstValue());
+                tud_task();
                 break;
             case (2):
                 if (len != 4) break;
-                setFreqPower(getFibPower(), (double) res[2] / 100);
-                printf("[!] FIBONACCI ALGORITHM HAS CHANGED. NOTE DISTANCE: %.2f, FIRST_VALUE: %.2f.\n",
-                       getFibPower(), getFirstValue());
+                setFreqPower(getFibPower(), (double) res[3] / 100);
+                // printf("[!] FIBONACCI ALGORITHM HAS CHANGED. NOTE DISTANCE: %.2f, FIRST_VALUE: %.2f.\n",
+//                       getFibPower(), getFirstValue());
+                tud_task();
                 break;
                 /** @brief F0 B 2 x F7 - Filter in active state command
                  *
@@ -432,105 +436,89 @@ void MidiSettings() {
                  * @param x - filter power (Max = 0,99)
                  * */
             case (3):
-                setFilterPercent((double) (res[2]) / 100);
-                printf("[!] FILTER VALUE HAS CHANGED. FILTER VALUE: %.2f.\n", getFilterPercent());
+                setFilterPercent((double) (res[3]) / 100);
+                // printf("[!] FILTER VALUE HAS CHANGED. FILTER VALUE: %.2f.\n", getFilterPercent());
+                tud_task();
                 break;
                 /** @brief F0 B 2 x F7 - Choose scale command
                  *
                  * @param x - num of scale
                  */
             case (4):
-                if (res[2] >= 0 && res[2] < 12) {
-                    setScale(res[2]);
-                    char *octaveName = "";
-                    switch (getScale()) {
-                        case SCALE_CHROM:
-                            octaveName = "CHROM";
-                            break;
-                        case SCALE_DIMINISHED:
-                            octaveName = "DIMINISHED";
-                            break;
-                        case SCALE_DORIAN:
-                            octaveName = "DORIAN";
-                            break;
-                        case SCALE_LYDIAN:
-                            octaveName = "LYDIAN";
-                            break;
-                        case SCALE_MAJBLUES:
-                            octaveName = "MAJBLUES";
-                            break;
-                        case SCALE_MAJOR:
-                            octaveName = "MAJOR";
-                            break;
-                        case SCALE_MAJPEN:
-                            octaveName = "MAJPEN";
-                            break;
-                        case SCALE_MINBLUES:
-                            octaveName = "MINBLUES";
-                            break;
-                        case SCALE_MINOR:
-                            octaveName = "MINOR";
-                            break;
-                        case SCALE_MINPEN:
-                            octaveName = "MINPEN";
-                            break;
-                        case SCALE_MIXOLYDIAN:
-                            octaveName = "MIXOLYDIAN";
-                            break;
-                        case SCALE_WHOLETONE:
-                            octaveName = "WHOLETONE";
-                            break;
-                    }
-                    printf("[!] SCALE HAS CHANGED. CURRENT SCALE IS %s.\n", octaveName);
+                if (res[3] >= 0 && res[3] < 12) {
+                    setScale(res[3]);
                 }
+                tud_task();
                 break;
             case(5):
-                setPlantVelocity(res[2]);
-                printf("[!] Plant Velocity has been changed. Velocity: %d\n", getPlantVelocity());
+                setPlantVelocity(getMinPlantVelocity(), res[3], getRandomPlantVelocity());
+                // printf("[!] Plant Velocity has been changed. Velocity: %d\n", getPlantVelocity());
+                tud_task();
                 break;
             case(6):
-                setLightVelocity(res[2]);
-                printf("[!] Light Velocity has been changed. Velocity: %d\n", getLightVelocity());
+                setLightVelocity(getMinLightVelocity(), res[3], getRandomLightVelocity());
+                // printf("[!] Light Velocity has been changed. Velocity: %d\n", getLightVelocity());
+                tud_task();
                 break;
             case (7):
                 set_default();
+                tud_task();
                 break;
             case (8):
                 PrintInfo();
+                tud_task();
                 break;
             case(9):
-                if (res[2] > 0) {
-                    setLightBPM(res[2]);
-                    printf("[!] Light BPM has been changed. Every %d Plant Note\n", res[2]);
+                if (res[3] > 0) {
+                    setLightBPM(res[3]);
+                    // printf("[!] Light BPM has been changed. Every %d Plant Note\n", res[3]);
                 }
+                tud_task();
                 break;
             case(10):
-                if (res[2] != 0) {
+                if (res[3] != 0) {
                     enable_random_note(true);
-                    printf("[!] Random Notes Active\n");
+                    // printf("[!] Random Notes Active\n");
                 } else {
                     enable_random_note(false);
-                    printf("[!] Random Notes Inactive\n");
+                    // printf("[!] Random Notes Inactive\n");
                 }
+                tud_task();
                 break;
             case(11):
-                if (res[2] == 0) {
-                    control_same_note(res[2]);
-                    printf("[!] Same Notes Active\n");
+                if (res[3] == 0) {
+                    control_same_note(res[3]);
+                    // printf("[!] Same Notes Active\n");
                 } else {
-                    control_same_note(res[2]);
-                    printf("[!] Same Notes Inactive, %d\n", res[2]);
+                    control_same_note(res[3]);
+                    // printf("[!] Same Notes Inactive, %d\n", res[3]);
                 }
+                tud_task();
                 break;
             case(12):
-                set_note_off_speed_percent(res[2]);
-                printf("[!] Note Off time has changed. %d\n", get_note_off_speed_percent());
+                set_note_off_speed_percent(res[3]);
+                // printf("[!] Note Off time has changed. %d\n", get_note_off_speed_percent());
+                tud_task();
                 break;
             case (13):
-                set_light_min_notes(res[2]);
+                set_light_min_notes(res[3]);
+                tud_task();
                 break;
             case (14):
-                set_light_max_notes(res[2]);
+                set_light_max_notes(res[3]);
+                tud_task();
+                break;
+            case(15):
+                setPlantVelocity(res[3], getMaxPlantVelocity(), getRandomPlantVelocity());
+                break;
+            case(16):
+                setPlantVelocity(getMinPlantVelocity(), getMaxPlantVelocity(), res[3] > 0);
+                break;
+            case(17):
+                setLightVelocity(res[3], getMaxLightVelocity(), getRandomLightVelocity());
+                break;
+            case(18):
+                setLightVelocity(getMinLightVelocity(), getMaxLightVelocity(), res[3] > 0);
                 break;
         }
     }
@@ -546,100 +534,67 @@ void MidiSettings() {
              */
             case (3):
                 setFilterPercent((double)(res[2]) / 127);
-                printf("[!] FILTER VALUE HAS CHANGED. FILTER VALUE: %.2f.\n", (double)(res[2]) / 127);
+                // printf("[!] FILTER VALUE HAS CHANGED. FILTER VALUE: %.2f.\n", (double)(res[2]) / 127);
                 break;
                 /** @brief CC9 x - Change velocity command
                 *
                 * @param x - velocity (Max = 127)
                  */
             case(9):
-                setPlantVelocity(res[2]);
-                printf("[!] Plant Velocity has been changed. Velocity: %d\n", getPlantVelocity());
+                setPlantVelocity(getMinPlantVelocity(), res[2], getRandomPlantVelocity());
+                // printf("[!] Plant Velocity has been changed. Velocity: %d\n", getPlantVelocity());
                 break;
             case(14):
                 setBPM((int) (1000000.0 / ((res[2] * 5) / 60.0)));
-                printf("[!] BPM HAS CHANGED. BPM: %d, TIME: %d.\n", (int)res[2] * 5,
-                       (int)(1000000.0 / ((res[2] * 10) / 60.0)));
+                // printf("[!] BPM HAS CHANGED. BPM: %d, TIME: %d.\n", (int)res[2] * 5,
+//                       (int)(1000000.0 / ((res[2] * 10) / 60.0)));
                 break;
             case(15):
                 if (res[2] >= 63) {
                     enable_random_note(true);
-                    printf("[!] Random Notes Active\n");
+                    // printf("[!] Random Notes Active\n");
                 } else {
                     enable_random_note(false);
-                    printf("[!] Random Notes Inactive\n");
+                    // printf("[!] Random Notes Inactive\n");
                 }
                 break;
             case(20):
                 if (res[2] * 127 / 1000 <= 0) {
                     control_same_note(0);
-                    printf("[!] Same Notes Active\n");
+                    // printf("[!] Same Notes Active\n");
                 } else {
                     control_same_note(res[2] * 127 / 1000 <= 0);
-                    printf("[!] Same Notes Inactive, %d\n", res[2] * 127 / 1000);
+                    // printf("[!] Same Notes Inactive, %d\n", res[2] * 127 / 1000);
                 }
                 break;
             case(21):
                 set_note_off_speed_percent(res[2] / 127 * 100);
-                printf("[!] Note Off time has changed. %d\n", get_note_off_speed_percent());
+                // printf("[!] Note Off time has changed. %d\n", get_note_off_speed_percent());
                 break;
                 /** @brief CC120 - Stop all notes */
             case(22):
                 setFreqPower((double )res[2] / 127, getFirstValue());
-                printf("[!] FIBONACCI ALGORITHM HAS CHANGED. NOTE DISTANCE: %.2f, FIRST_VALUE: %.2f.\n",
-                       getFibPower(), getFirstValue());
+                // printf("[!] FIBONACCI ALGORITHM HAS CHANGED. NOTE DISTANCE: %.2f, FIRST_VALUE: %.2f.\n",
+//                       getFibPower(), getFirstValue());
                 break;
             case(23):
                 setFreqPower(getFibPower(), (double) res[2] / 127);
-                printf("[!] FIBONACCI ALGORITHM HAS CHANGED. NOTE DISTANCE: %.2f, FIRST_VALUE: %.2f.\n",
-                       getFibPower(), getFirstValue());
+                // printf("[!] FIBONACCI ALGORITHM HAS CHANGED. NOTE DISTANCE: %.2f, FIRST_VALUE: %.2f.\n",
+//                       getFibPower(), getFirstValue());
                 break;
             case(24):
                 setScale(res[2] / 10.5);
-                char *octaveName = "";
-                switch (getScale()) {
-                    case SCALE_CHROM:
-                        octaveName = "CHROM";
-                        break;
-                    case SCALE_DIMINISHED:
-                        octaveName = "DIMINISHED";
-                        break;
-                    case SCALE_DORIAN:
-                        octaveName = "DORIAN";
-                        break;
-                    case SCALE_LYDIAN:
-                        octaveName = "LYDIAN";
-                        break;
-                    case SCALE_MAJBLUES:
-                        octaveName = "MAJBLUES";
-                        break;
-                    case SCALE_MAJOR:
-                        octaveName = "MAJOR";
-                        break;
-                    case SCALE_MAJPEN:
-                        octaveName = "MAJPEN";
-                        break;
-                    case SCALE_MINBLUES:
-                        octaveName = "MINBLUES";
-                        break;
-                    case SCALE_MINOR:
-                        octaveName = "MINOR";
-                        break;
-                    case SCALE_MINPEN:
-                        octaveName = "MINPEN";
-                        break;
-                    case SCALE_MIXOLYDIAN:
-                        octaveName = "MIXOLYDIAN";
-                        break;
-                    case SCALE_WHOLETONE:
-                        octaveName = "WHOLETONE";
-                        break;
-                }
-                printf("[!] SCALE HAS CHANGED. CURRENT SCALE IS %s.\n", octaveName);
+                // printf("[!] SCALE HAS CHANGED. CURRENT SCALE IS %s.\n", octaveName);
+                break;
+            case(25):
+                setPlantVelocity(res[2], getMaxPlantVelocity(), getRandomPlantVelocity());
+                break;
+            case(26):
+                setPlantVelocity(getMinPlantVelocity(), getMaxPlantVelocity(), res[2] > 63);
                 break;
             case(120):
                 MidiStop();
-                printf("[!] All NOTES OFF\n");
+                // printf("[!] All NOTES OFF\n");
                 break;
         }
     }
@@ -651,98 +606,64 @@ void MidiSettings() {
             * @param x - velocity (Max = 127)
              */
             case(9):
-                setLightVelocity(res[2]);
-                printf("[!] Light Velocity has been changed. Velocity: %d\n", getLightVelocity());
+                setLightVelocity(getMinLightVelocity(), res[2], getRandomLightVelocity());
+                // printf("[!] Light Velocity has been changed. Velocity: %d\n", getLightVelocity());
                 break;
             case(14):
                 if (res[2] > 0) {
                     setLightBPM(res[2]);
-                    printf("[!] Light BPM has been changed. Every %d Plant Note\n", res[2]);
+                    // printf("[!] Light BPM has been changed. Every %d Plant Note\n", res[2]);
                 }
                 break;
             case(15):
                 if (res[2] >= 63) {
                     enable_random_note(true);
-                    printf("[!] Random Notes Active\n");
+                    // printf("[!] Random Notes Active\n");
                 } else {
                     enable_random_note(false);
-                    printf("[!] Random Notes Inactive\n");
+                    // printf("[!] Random Notes Inactive\n");
                 }
                 break;
             case(20):
                 if (res[2] * 127 / 1000 <= 0) {
                     control_same_note(0);
-                    printf("[!] Same Notes Active\n");
+                    // printf("[!] Same Notes Active\n");
                 } else {
                     control_same_note(res[2] * 127 / 1000 <= 0);
-                    printf("[!] Same Notes Inactive, %d\n", res[2] * 127 / 1000);
+                    // printf("[!] Same Notes Inactive, %d\n", res[2] * 127 / 1000);
                 }
                 break;
             case(21):
                 set_note_off_speed_percent(res[2] / 127 * 100);
-                printf("[!] Note Off time has changed. %d\n", get_note_off_speed_percent());
+                // printf("[!] Note Off time has changed. %d\n", get_note_off_speed_percent());
                 break;
                 /** @brief CC120 - Stop all notes */
             case(22):
                 setFreqPower((double )res[2] / 127, getFirstValue());
-                printf("[!] FIBONACCI ALGORITHM HAS CHANGED. NOTE DISTANCE: %.2f, FIRST_VALUE: %.2f.\n",
-                       getFibPower(), getFirstValue());
+                // printf("[!] FIBONACCI ALGORITHM HAS CHANGED. NOTE DISTANCE: %.2f, FIRST_VALUE: %.2f.\n",
+//                       getFibPower(), getFirstValue());
                 break;
             case(23):
                 setFreqPower(getFibPower(), (double) res[2] / 127);
-                printf("[!] FIBONACCI ALGORITHM HAS CHANGED. NOTE DISTANCE: %.2f, FIRST_VALUE: %.2f.\n",
-                       getFibPower(), getFirstValue());
+                // printf("[!] FIBONACCI ALGORITHM HAS CHANGED. NOTE DISTANCE: %.2f, FIRST_VALUE: %.2f.\n",
+//                       getFibPower(), getFirstValue());
                 break;
             case(24):
                 setScale(res[2] / 10.5);
-                char *octaveName = "";
-                switch (getScale()) {
-                    case SCALE_CHROM:
-                        octaveName = "CHROM";
-                        break;
-                    case SCALE_DIMINISHED:
-                        octaveName = "DIMINISHED";
-                        break;
-                    case SCALE_DORIAN:
-                        octaveName = "DORIAN";
-                        break;
-                    case SCALE_LYDIAN:
-                        octaveName = "LYDIAN";
-                        break;
-                    case SCALE_MAJBLUES:
-                        octaveName = "MAJBLUES";
-                        break;
-                    case SCALE_MAJOR:
-                        octaveName = "MAJOR";
-                        break;
-                    case SCALE_MAJPEN:
-                        octaveName = "MAJPEN";
-                        break;
-                    case SCALE_MINBLUES:
-                        octaveName = "MINBLUES";
-                        break;
-                    case SCALE_MINOR:
-                        octaveName = "MINOR";
-                        break;
-                    case SCALE_MINPEN:
-                        octaveName = "MINPEN";
-                        break;
-                    case SCALE_MIXOLYDIAN:
-                        octaveName = "MIXOLYDIAN";
-                        break;
-                    case SCALE_WHOLETONE:
-                        octaveName = "WHOLETONE";
-                        break;
-                }
-                printf("[!] SCALE HAS CHANGED. CURRENT SCALE IS %s.\n", octaveName);
+                break;
+            case(25):
+                setLightVelocity(res[2], getMaxLightVelocity(), getRandomLightVelocity());
+                break;
+            case(26):
+                setLightVelocity(getMinLightVelocity(), getMaxLightVelocity(), res[2] > 63);
                 break;
             case(120):
                 MidiStop();
-                printf("[!] All NOTES OFF\n");
+                // printf("[!] All NOTES OFF\n");
                 break;
         }
-
     }
+    SaveSettings();
 }
 
 

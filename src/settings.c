@@ -18,8 +18,12 @@ void SaveSettings() {
     settings.firstValue = getFirstValue();
     settings.filterPercent = getFilterPercent();
     settings.scale = getScale();
-    settings.plantVelocity = getPlantVelocity();
-    settings.lightVelocity = getLightVelocity();
+    settings.isRandomPlantVelocity = getRandomPlantVelocity();
+    settings.minPlantVelocity = getMinPlantVelocity();
+    settings.maxPlantVelocity = getMaxPlantVelocity();
+    settings.isRandomLightVelocity = getRandomLightVelocity();
+    settings.minLightVelocity = getMinLightVelocity();
+    settings.maxLightVelocity = getMaxLightVelocity();
     settings.random_note = get_random_note_state();
     settings.same_note = get_control_same_note();
     settings.percent_note_off = get_note_off_speed_percent();
@@ -53,8 +57,8 @@ void ReadSettings() {
     setFreqPower(settings.fibPower, settings.firstValue);
     setFilterPercent(1 - settings.filterPercent);
     setScale(settings.scale);
-    setPlantVelocity(settings.plantVelocity);
-    setLightVelocity(settings.lightVelocity);
+    setPlantVelocity(settings.minPlantVelocity, settings.maxPlantVelocity, settings.isRandomPlantVelocity);
+    setLightVelocity(settings.minLightVelocity, settings.maxLightVelocity, settings.isRandomLightVelocity);
     enable_random_note(settings.random_note);
     control_same_note(settings.same_note);
     set_note_off_speed_percent(settings.percent_note_off);
