@@ -79,7 +79,7 @@
 #define MIDDLE_NOTE 60
 
 /** @brief (Maximum possible value from photoresistor - 10%) for LIGHT NOTES*/
-#define MAX_OF_LIGHT 4000
+#define MAX_OF_LIGHT 3200
 
 /** @brief Asynchronous LEDs for wave effect */
 #define ASYNC 200
