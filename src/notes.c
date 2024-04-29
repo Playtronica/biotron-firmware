@@ -74,17 +74,45 @@ const NotesScale_t scales[] = {
  */
 
 int GetFrequencyDiff() {
+    static uint64_t last_change_time = 0;
+    static uint32_t last_val = 0;
+    static int8_t extra_counter = 0;
+    const uint8_t a = 10, b = 30;
+
     uint32_t oldVal = getAvgFreq();
     uint32_t newVal = getFreq();
+
     int diff = (int)newVal - (int)oldVal;
     bool minus = diff < 0;
     diff = abs(diff);
+
+    if (abs((int)last_val - (int)newVal) >= getAvgFreqChanges() * 3) {
+        last_change_time = time_us_64();
+        last_val = newVal;
+        extra_counter = 0;
+    }
+
+    if (time_us_64() - last_change_time > 90000000) {
+        int chance = rand() % 101;
+        if (chance <= a * ((extra_counter + 10.0) / 10.0)) {
+            extra_counter = MAX(-10, extra_counter - 2);
+        } else if (chance <= a * ((extra_counter + 10.0) / 10.0) + b * ((extra_counter + 10.0) / 10.0)) {
+            extra_counter = MAX(-10, extra_counter - 1);
+        } else if (chance <= a * ((extra_counter + 10.0) / 10.0) + b * ((extra_counter + 10.0) / 10.0) + 20) {
+
+        } else if (chance <= a * ((extra_counter + 10.0) / 10.0) + b * 2 + 20) {
+            extra_counter = MIN(10, extra_counter + 1);
+        } else {
+            extra_counter = MIN(10, extra_counter + 2);
+        }
+    }
 
     double first = 0;
     double second = getFirstValue();
 
     int i;
-    uint32_t noteChangeValue = getAvgFreqChanges();
+
+    uint32_t noteChangeValue = (double)getAvgFreqChanges();
     if (diff - noteChangeValue >= 0) {
         i = 1;
         diff -= noteChangeValue;
@@ -100,9 +128,9 @@ int GetFrequencyDiff() {
     }
 
     if (minus) {
-        return -i;
+        return -i + extra_counter;
     }
-    return i;
+    return i + extra_counter;
 }
 
 
@@ -247,6 +275,7 @@ void MidiPlant(void) {
         if (getRandomPlantVelocity()) {
             note_on[2] = rand() % (getMaxPlantVelocity() + 1 - getMinPlantVelocity()) + getMinPlantVelocity();
         }
+
 
         tud_midi_stream_write(cable_num, note_on, 3);
 
