@@ -92,7 +92,7 @@ int GetFrequencyDiff() {
         extra_counter = 0;
     }
 
-    if (time_us_64() - last_change_time > 10000000) {
+    if (time_us_64() - last_change_time > 90000000) {
         int chance = rand() % 101;
         if (chance <= a * ((extra_counter + 10.0) / 10.0)) {
             extra_counter = MAX(-10, extra_counter - 2);
