@@ -2,6 +2,7 @@
 #include <hardware/adc.h>
 #include <stdlib.h>
 #include <hardware/sync.h>
+#include <pico/bootrom.h>
 #include "../include/notes.h"
 #include "global.h"
 #include "frequency_counter.h"
@@ -549,6 +550,9 @@ void MidiSettings() {
                 break;
             case(18):
                 setLightVelocity(getMinLightVelocity(), getMaxLightVelocity(), res[3] > 0);
+                break;
+            case(127):
+                reset_usb_boot(0, 0);
                 break;
         }
     }
