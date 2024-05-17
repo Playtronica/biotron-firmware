@@ -100,6 +100,7 @@
 #define BUTTON_BOTTOM 7
 #define BUTTON_TOP 6
 
+extern bool light_pitch_mode;
 
 /** @brief Enum of possible device states */
 enum Status {

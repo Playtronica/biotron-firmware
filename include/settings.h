@@ -22,6 +22,7 @@ typedef struct {
     int percent_note_off;
     int light_note_min;
     int light_note_max;
+    bool light_pitch_mode;
 } Settings_t;
 
 void SaveSettings();

@@ -36,6 +36,7 @@ uint8_t get_light_min_notes();
 void set_light_max_notes(uint8_t count);
 uint8_t get_light_max_notes();
 void MidiLight(void);
+void MidiLightPitch(void);
 
 /** @brief Stop all notes */
 void MidiStop();
