@@ -61,11 +61,14 @@ int getLightBPM() {
     return lightBPM;
 }
 
+bool light_pitch_mode = true;
 void play_music() {
     static uint64_t time_log = 0;
     static uint8_t counter = 1;
+
     MidiPlant();
-    if (counter++ >= lightBPM) {
+    if (light_pitch_mode) MidiLightPitch();
+    else if (counter++ >= lightBPM) {
         MidiLight();
         counter = 1;
     }

@@ -29,6 +29,7 @@ void SaveSettings() {
     settings.percent_note_off = get_note_off_speed_percent();
     settings.light_note_min = get_light_min_notes();
     settings.light_note_max = get_light_max_notes();
+    settings.light_pitch_mode = light_pitch_mode;
     uint8_t* settingsAsBytes = (uint8_t*) &settings;
     int settingsSize = sizeof(settings);
 
@@ -64,5 +65,6 @@ void ReadSettings() {
     set_note_off_speed_percent(settings.percent_note_off);
     set_light_min_notes(settings.light_note_min);
     set_light_max_notes(settings.light_note_max);
+    light_pitch_mode = settings.light_pitch_mode;
     init = false;
 }

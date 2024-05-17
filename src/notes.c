@@ -359,6 +359,16 @@ void MidiLight(void) {
     lastNoteLight = currentNote;
 }
 
+void MidiLightPitch(void) {
+    uint8_t const cable_num = 0;
+    uint8_t channel = 0;
+
+    uint16_t buff = (uint16_t)(((double)MIN(adc_read(), MAX_OF_LIGHT) / (double)MAX_OF_LIGHT) * 4096.0);
+    uint8_t pitch[3] = {0xE0 | channel, buff % 127, buff / 127};
+    tud_midi_stream_write(cable_num, pitch, 3);
+
+}
+
 
 void MidiStop() {
     uint8_t const cable_num = 0;
@@ -507,23 +517,11 @@ void MidiSettings() {
                 tud_task();
                 break;
             case(10):
-                if (res[3] != 0) {
-                    enable_random_note(true);
-                    // printf("[!] Random Notes Active\n");
-                } else {
-                    enable_random_note(false);
-                    // printf("[!] Random Notes Inactive\n");
-                }
+                enable_random_note(res[3] != 0);
                 tud_task();
                 break;
             case(11):
-                if (res[3] == 0) {
-                    control_same_note(res[3]);
-                    // printf("[!] Same Notes Active\n");
-                } else {
-                    control_same_note(res[3]);
-                    // printf("[!] Same Notes Inactive, %d\n", res[3]);
-                }
+                control_same_note(res[3]);
                 tud_task();
                 break;
             case(12):
@@ -550,6 +548,9 @@ void MidiSettings() {
                 break;
             case(18):
                 setLightVelocity(getMinLightVelocity(), getMaxLightVelocity(), res[3] > 0);
+                break;
+            case(19):
+                light_pitch_mode = res[3] > 0;
                 break;
             case(127):
                 reset_usb_boot(0, 0);
@@ -626,6 +627,9 @@ void MidiSettings() {
             case(26):
                 setPlantVelocity(getMinPlantVelocity(), getMaxPlantVelocity(), res[2] > 63);
                 break;
+            case(27):
+                light_pitch_mode = res[2] > 63;
+                break;
             case(120):
                 MidiStop();
                 // printf("[!] All NOTES OFF\n");
@@ -690,6 +694,9 @@ void MidiSettings() {
                 break;
             case(26):
                 setLightVelocity(getMinLightVelocity(), getMaxLightVelocity(), res[2] > 63);
+                break;
+            case(27):
+                light_pitch_mode = res[2] > 63;
                 break;
             case(120):
                 MidiStop();
