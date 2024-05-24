@@ -56,7 +56,7 @@ void buttons_init(uint8_t pulse_pin);
     * @return   Returns nothing
     * @note     Must be called before buttons_init()
 */
-void buttons_add_button(int gpio, ButtonsCB_t cb_on_press, ButtonsCB_t cb_on_hold, ButtonsCB_t cb_on_release);
+void buttons_add_button(int gpio, int min_press, ButtonsCB_t cb_on_press, ButtonsCB_t cb_on_hold, ButtonsCB_t cb_on_release);
 
 
 
