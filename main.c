@@ -1,39 +1,17 @@
-#include "tusb.h"
-#include "frequency_counter.h"
-#include "notes.h"
-#include "global.h"
+#include <pico/printf.h>
 #include "pico/stdlib.h"
-#include "pico.h"
-#include "cap_buttons.h"
-#include "pico/multicore.h"
+#include "PLSDK/channel.h"
 
-uint32_t interrupts;
 
 int main(void)
 {
     stdio_init_all();
-    tusb_init();
+    init_midi();
 
-    Setup();
-    Intro();
-
-    uint16_t i = 0;
     while (true)
     {
-        tud_task();
-        if (isReady()) {
-            MainStage();
-        }
-
-
-        if (i % 50 == 0) {
-            buttons_task();
-        }
-        else {
-            while (MidiSettings());
-        }
-        LedStage();
-        i++;
+        printf("Hello World\n");
+        remind_midi();
         sleep_ms(1);
     }
 }

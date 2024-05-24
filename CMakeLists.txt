@@ -1,11 +1,12 @@
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.10)
 
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 include(pico_sdk_import.cmake)
+set(NAME_OF_DEVICE Biotron)
 
-project(biotron C CXX ASM)
+project(Biotron C CXX ASM)
 
 if (PICO_SDK_VERSION_STRING VERSION_LESS "1.3.0")
         message(FATAL_ERROR "Raspberry Pi Pico SDK version 1.3.0 (or later) required. Your version is ${PICO_SDK_VERSION_STRING}")
@@ -36,14 +37,12 @@ add_compile_options(-Wall
         -Wno-maybe-uninitialized
         )
 
-
 file(GLOB biotron_SRC "src/*.c")
-
-add_executable(${TARGET_NAME} include/ledsValue.h)
-target_sources(${TARGET_NAME} PUBLIC main.c ${biotron_SRC})
+file(GLOB biotron_PlSDK_SRC "src/PLSDK/*.c")
+add_executable(${TARGET_NAME})
+target_sources(${TARGET_NAME} PUBLIC main.c ${biotron_SRC} ${biotron_PlSDK_SRC})
 target_include_directories(${TARGET_NAME} PUBLIC include())
 pico_enable_stdio_usb(${TARGET_NAME} 1)
 pico_enable_stdio_uart(${TARGET_NAME} 0)
-target_link_libraries(${TARGET_NAME} pico_stdlib tinyusb_device hardware_pwm hardware_adc pico_multicore)
+target_link_libraries(${TARGET_NAME} pico_stdlib pico_multicore hardware_i2c tinyusb_device hardware_adc)
 pico_add_extra_outputs(${TARGET_NAME})
-
