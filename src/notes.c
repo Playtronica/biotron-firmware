@@ -366,15 +366,11 @@ void MidiLightPitch(void) {
     uint16_t buff = (uint16_t)(((double)MIN(adc_read(), MAX_OF_LIGHT) / (double)MAX_OF_LIGHT) * 4096.0);
     uint8_t pitch[3] = {0xE0 | channel, buff % 127, buff / 127};
     tud_midi_stream_write(cable_num, pitch, 3);
-
 }
 
 
 void MidiStop() {
     uint8_t const cable_num = 0;
-
-    uint8_t packet[4];
-    while (tud_midi_available()) tud_midi_packet_read(packet);
 
     uint8_t plantNote[3] = {0x80 | 0, lastNotePlant, 0};
     tud_midi_stream_write(cable_num, plantNote, 3);
@@ -385,7 +381,7 @@ void MidiStop() {
 
 
 
-void MidiSettings() {
+bool MidiSettings() {
     uint8_t res[1000];
     uint8_t len = 0;
     static uint8_t last_byte = 0;
@@ -399,17 +395,17 @@ void MidiSettings() {
      if ((len = tud_midi_available())) {
          tud_midi_stream_read(res, len);
      }
-    else return;
+    else return false;
 
     if (res[0] == 250) {
         last_byte = 250;
-        return;
+        return false;
     }
     if (res[0] == 252) {
         BPM_clock_disable();
         cancel_repeating_timer(&plantNoteOffTimer);
         last_byte = 252;
-        return;
+        return false;
     }
     if (res[0] == 248) {
         if (last_byte == 250) {
@@ -420,23 +416,23 @@ void MidiSettings() {
         }
         MidiClock();
         last_byte = 248;
-        return;
+        return false;
     }
 
-    if (getStatus() == Stabilization) return;
+    if (getStatus() == Stabilization) return false;
 
 
     /** @brief Byte Commands
      *
      * res[0] == 11 is the key to remove trash commands (11 = B) */
     if (res[1] == 11 && res[0] == 240) {
-        uint16_t su = 0;
         switch (res[2]) {
             /** @brief F0 B 0 x y ... F7 - BPM command
              *
              * @param x,y,.. - Bpm (Every value can contain maximum FF, so takes sum of all variables)
              * */
-            case (0):
+            case (0): {
+                uint16_t su = 1;
                 for (int i = 3; res[i] != 247; i++) {
                     su += res[i];
                     tud_task();
@@ -444,6 +440,7 @@ void MidiSettings() {
                 setBPM((int) (1000000.0 / (su / 60.0)));
 //                 printf("[!] BPM HAS CHANGED. BPM: %d, TIME: %d.\n", (int)su, (int)(1000000.0 / (su / 60.0)));
                 tud_task();
+                }
                 break;
                 /** @brief
                  * F0 B 1 x y F7 - Fibonacci command
@@ -549,9 +546,24 @@ void MidiSettings() {
             case(18):
                 setLightVelocity(getMinLightVelocity(), getMaxLightVelocity(), res[3] > 0);
                 break;
-            case(19):
+            case(19): {
+//                uint8_t pitch[3] = {0xE0 | 0, 63, 63};
+//                tud_midi_stream_write(0, pitch, 3);
                 light_pitch_mode = res[3] > 0;
+                MidiStop();
                 break;
+            }
+            case(120):
+                MidiStop();
+                break;
+            case(126): {
+                static int bpm = 0;
+                int buff;
+                buff = getBPM();
+                setBPM(bpm);
+                bpm = buff;
+                break;
+            }
             case(127):
                 reset_usb_boot(0, 0);
                 break;
@@ -627,9 +639,13 @@ void MidiSettings() {
             case(26):
                 setPlantVelocity(getMinPlantVelocity(), getMaxPlantVelocity(), res[2] > 63);
                 break;
-            case(27):
+            case(27): {
+                uint8_t pitch[3] = {0xE0 | 0, 63, 63};
+                tud_midi_stream_write(0, pitch, 3);
                 light_pitch_mode = res[2] > 63;
+                MidiStop();
                 break;
+            }
             case(120):
                 MidiStop();
                 // printf("[!] All NOTES OFF\n");
@@ -695,9 +711,13 @@ void MidiSettings() {
             case(26):
                 setLightVelocity(getMinLightVelocity(), getMaxLightVelocity(), res[2] > 63);
                 break;
-            case(27):
+            case(27): {
+                uint8_t pitch[3] = {0xE0 | 0, 63, 63};
+                tud_midi_stream_write(0, pitch, 3);
                 light_pitch_mode = res[2] > 63;
+                MidiStop();
                 break;
+            }
             case(120):
                 MidiStop();
                 // printf("[!] All NOTES OFF\n");
@@ -705,6 +725,7 @@ void MidiSettings() {
         }
     }
     SaveSettings();
+    return true;
 }
 
 
