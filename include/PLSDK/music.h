@@ -44,7 +44,7 @@ typedef struct {
  * @note
  * If you choose start note not equal x % 12 == 0 (C notes), scale would be alternative
  * */
-int * calculate_note_by_scale(uint8_t start_note, int counter, ScaleNums_t scale);
+int calculate_note_by_scale(uint8_t start_note, int counter, ScaleNums_t scale);
 
 void change_volume(uint8_t channel_id, uint8_t volume);
 

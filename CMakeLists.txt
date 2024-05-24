@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.13)
 
 
 set(CMAKE_C_STANDARD 11)
@@ -44,5 +44,5 @@ target_sources(${TARGET_NAME} PUBLIC main.c ${biotron_SRC} ${biotron_PlSDK_SRC})
 target_include_directories(${TARGET_NAME} PUBLIC include())
 pico_enable_stdio_usb(${TARGET_NAME} 1)
 pico_enable_stdio_uart(${TARGET_NAME} 0)
-target_link_libraries(${TARGET_NAME} pico_stdlib pico_multicore hardware_i2c tinyusb_device hardware_adc)
+target_link_libraries(${TARGET_NAME} pico_stdlib tinyusb_device hardware_pwm hardware_adc)
 pico_add_extra_outputs(${TARGET_NAME})

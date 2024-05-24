@@ -36,7 +36,7 @@ const NotesScale_t scales[] = {
         {8, diminished}
 };
 
-int * calculate_note_by_scale(uint8_t start_note, int counter, ScaleNums_t scale) {
+int calculate_note_by_scale(uint8_t start_note, int counter, ScaleNums_t scale) {
     NotesScale_t _scale = scales[scale];
     if (counter < 0) {
         counter *= -1;
