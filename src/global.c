@@ -67,11 +67,13 @@ void play_music() {
     static uint8_t counter = 1;
 
     MidiPlant();
+
     if (light_pitch_mode) MidiLightPitch();
     else if (counter++ >= lightBPM) {
         MidiLight();
         counter = 1;
     }
+
     if (time_log == 0) {
         time_log = time_us_64();
     }
@@ -104,7 +106,9 @@ void setBPM(int newTime) {
     if (status == Active) {
         resetPlantNoteOff();
         cancel_repeating_timer(&midiTimer);
-        add_repeating_timer_us(time, _repeating_timer_callback, NULL, &midiTimer);
+        if (newTime != 0) {
+            add_repeating_timer_us(time, _repeating_timer_callback, NULL, &midiTimer);
+        }
     }
     // printf("Current bpm: %d\n", (int)((double)1000000 / (double)getBPM() * (double)60));
 //    SaveSettings();

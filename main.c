@@ -30,7 +30,7 @@ int main(void)
             buttons_task();
         }
         else {
-            MidiSettings();
+            while (MidiSettings());
         }
         LedStage();
         i++;
