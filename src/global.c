@@ -226,7 +226,6 @@ void tap_tempo() {
     add_repeating_timer_ms(2000, calculate_bpm_by_tap_tempo, NULL, &tap_tempo_timer);
 }
 
-
 bool mute_mode = false;
 void change_mute_mode() {
     mute_mode = !mute_mode;
@@ -234,18 +233,30 @@ void change_mute_mode() {
     printf("Mute mode: %d\n", mute_mode);
 }
 
+bool button_bottom_pressed = false;
 void change_same_mode() {
     bool res = get_control_same_note() > 0 ? 0 : 1;
     control_same_note(res);
     SaveSettings();
+    button_bottom_pressed = true;
     printf("Same mode %d\n", res);
 }
 
+void release_bottom() {
+    button_bottom_pressed = false;
+}
+
+bool button_top_pressed = false;
 void change_scale() {
     uint8_t res = (getScale() + 1) % 12;
     setScale(res);
     SaveSettings();
+    button_top_pressed = true;
     printf("Change Scale %d\n", res);
+}
+
+void release_top() {
+    button_top_pressed = false;
 }
 
 bool get_mute_mode() {
@@ -253,7 +264,7 @@ bool get_mute_mode() {
 }
 
 
-uint16_t second_val;
+
 pwm_config config;
 void Setup() {
     adc_init();
@@ -299,9 +310,9 @@ void Setup() {
     pwm_init(pwm_gpio_to_slice_num(SECOND_GROUP_GREEN_LED_2), &config, true);
     pwm_init(pwm_gpio_to_slice_num(SECOND_GROUP_GREEN_LED_3), &config, true);
 
-    buttons_add_button(BUTTON_FINGER, change_mute_mode, NULL, NULL);
-    buttons_add_button(BUTTON_BOTTOM, change_same_mode, NULL, NULL);
-    buttons_add_button(BUTTON_TOP, change_scale, NULL, NULL);
+    buttons_add_button(BUTTON_FINGER, 60,  change_mute_mode, NULL, NULL);
+    buttons_add_button(BUTTON_BOTTOM, 40, change_same_mode, NULL, release_bottom);
+    buttons_add_button(BUTTON_TOP, 40, change_scale, NULL, release_top);
 
     buttons_init(5);
 
@@ -578,6 +589,7 @@ void MainStage() {
 }
 
 uint16_t first_val;
+uint16_t second_val;
 int32_t ledsValue[ASYNC];
 #ifdef INVERT_LED
 void LedStage() {
@@ -671,8 +683,9 @@ void LedStage() {
 #else
 void LedStage() {
     uint32_t lastNotePlant;
-
     static int level = (MAX_LIGHT - MIN_LIGHT) / (TIMER_MULTIPLIER * 40);
+
+
     switch (status) {
         /** @brief Sleep mode
          *
@@ -684,12 +697,16 @@ void LedStage() {
             for (int i = ASYNC - 1; i >= 0; i--) {
                 ledsValue[i] = MAX_LIGHT;
             }
-            pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_1, MAX_LIGHT);
-            pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_2, MAX_LIGHT);
-            pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_3, MAX_LIGHT);
-            pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_1, MAX_LIGHT);
-            pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_2, MAX_LIGHT);
-            pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_3, MAX_LIGHT);
+            if (!button_top_pressed) {
+                pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_1, MAX_LIGHT);
+                pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_2, MAX_LIGHT);
+                pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_3, MAX_LIGHT);
+            }
+            if (!button_bottom_pressed) {
+                pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_1, MAX_LIGHT);
+                pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_2, MAX_LIGHT);
+                pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_3, MAX_LIGHT);
+            }
             second_val = MAX_LIGHT;
             break;
          /** @brief Stabilization mode
@@ -697,17 +714,27 @@ void LedStage() {
          * Smooth switching on green LEDs
          *
          */
-        case Stabilization:
+        case Stabilization: {
             if ((ledsValue[ASYNC - 1] - level) >= MIN_LIGHT) {
                 ledsValue[ASYNC - 1] -= level;
             }
-            pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_1, ledsValue[ASYNC - 1]);
-            pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_2, ledsValue[ASYNC - 1]);
-            pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_3, ledsValue[ASYNC - 1]);
-            pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_1, ledsValue[ASYNC - 1]);
-            pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_2, ledsValue[ASYNC - 1]);
-            pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_3, ledsValue[ASYNC - 1]);
+            uint16_t value = ledsValue[ASYNC - 1];
+            if (mute_mode) {
+                value = (1 << 16) - (((1 << 16) - value) / 8);
+            }
+            if (!button_top_pressed) {
+                pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_1, value);
+                pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_2, value);
+                pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_3, value);
+            }
+            if (!button_bottom_pressed) {
+                pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_1, value);
+                pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_2, value);
+                pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_3, value);
+            }
+
             break;
+        }
          /** @brief Active mode
          *
          * Leds work in pulse mode,
@@ -731,14 +758,26 @@ void LedStage() {
             ledsValue[ASYNC - 1] += level;
 
             lastNotePlant = getLastNotePlant();
-            first_val = MAX(MIN_LIGHT, MIN(MAX_LIGHT, ledsValue[0] + ((MIDDLE_NOTE - (int)lastNotePlant) * NOTE_STRONG)));
-            pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_1, first_val);
-            pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_2, first_val);
-            pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_3, first_val);
-            second_val = MAX(MIN_LIGHT, MIN(MAX_LIGHT, ledsValue[ASYNC - 1] + ((MIDDLE_NOTE - (int)lastNotePlant) * NOTE_STRONG)));
-            pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_1, second_val);
-            pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_2, second_val);
-            pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_3, second_val);
+            if (!button_top_pressed) {
+                first_val = MAX(MIN_LIGHT,
+                                MIN(MAX_LIGHT, (ledsValue[0] + ((MIDDLE_NOTE - (int) lastNotePlant) * NOTE_STRONG))));
+                if (mute_mode) {
+                    first_val = (1 << 16) - (((1 << 16) - first_val) / 8);
+                }
+                pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_1, first_val);
+                pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_2, first_val);
+                pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_3, first_val);
+            }
+            if (!button_bottom_pressed) {
+                second_val = MAX(MIN_LIGHT, MIN(MAX_LIGHT, (ledsValue[ASYNC - 1] +
+                                                           ((MIDDLE_NOTE - (int) lastNotePlant) * NOTE_STRONG))));
+                if (mute_mode) {
+                    second_val = (1 << 16) - (((1 << 16) - second_val) / 8);
+                }
+                pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_1, second_val);
+                pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_2, second_val);
+                pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_3, second_val);
+            }
             break;
         case BPMClockActive:
             if (ledsValue[ASYNC - 1] >= MAX_LIGHT && level > 0) {
@@ -755,17 +794,40 @@ void LedStage() {
             }
 
             ledsValue[ASYNC - 1] += level;
-
             lastNotePlant = getLastNotePlant();
-            first_val = MAX(MIN_LIGHT, MIN(MAX_LIGHT, ledsValue[0] + ((MIDDLE_NOTE - (int)lastNotePlant) * NOTE_STRONG)));
-            pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_1, first_val);
-            pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_2, first_val);
-            pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_3, first_val);
-            second_val = MAX(MIN_LIGHT, MIN(MAX_LIGHT, ledsValue[ASYNC - 1] + ((MIDDLE_NOTE - (int)lastNotePlant) * NOTE_STRONG)));
-            pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_1, second_val);
-            pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_2, second_val);
-            pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_3, second_val);
+
+            if (!button_top_pressed) {
+                first_val = MAX(MIN_LIGHT,
+                                MIN(MAX_LIGHT, (ledsValue[0] + ((MIDDLE_NOTE - (int) lastNotePlant) * NOTE_STRONG))));
+                if (mute_mode) {
+                    first_val = (1 << 16) - (((1 << 16) - first_val) / 8);
+                }
+                pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_1, first_val);
+                pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_2, first_val);
+                pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_3, first_val);
+            }
+            if (!button_bottom_pressed) {
+                second_val = MAX(MIN_LIGHT, MIN(MAX_LIGHT, (ledsValue[ASYNC - 1] +
+                                                            ((MIDDLE_NOTE - (int) lastNotePlant) * NOTE_STRONG))));
+                if (mute_mode) {
+                    second_val = (1 << 16) - (((1 << 16) - second_val) / 8);
+                }
+                pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_1, second_val);
+                pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_2, second_val);
+                pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_3, second_val);
+            }
             break;
+    }
+
+    if (button_top_pressed) {
+        pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_1, 0);
+        pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_2, 0);
+        pwm_set_gpio_level(FIRST_GROUP_GREEN_LED_3, 0);
+    }
+    if (button_bottom_pressed) {
+        pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_1, 0);
+        pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_2, 0);
+        pwm_set_gpio_level(SECOND_GROUP_GREEN_LED_3, 0);
     }
 }
 #endif

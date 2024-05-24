@@ -28,6 +28,7 @@ typedef struct{
     ButtonsCB_t on_press;   /**< Action to call on button press */
     ButtonsCB_t on_hold;    /**< Action to call on button hold */
     ButtonsCB_t on_release; /**< Action to call on button release */
+    uint16_t min_press_interval;
 } ButtonState_t;
 
 /**
@@ -60,9 +61,9 @@ int _num_of_registered_buttons = 0;
 ButtonState_t _buttons[100];
 
 /** @brief Minimal time interval to consider button is pressed, us*/
-const uint32_t _minPressInterval = 50;
+const uint32_t _minPressInterval = 40;
 /** @brief Time interval for one measuring cycle, us*/
-const uint32_t _measureInterval = 100000;
+const uint32_t _measureInterval = 10000;
 
 /** @brief Start time of last measure cycle, us */
 uint32_t _lastPulseTime;
@@ -108,13 +109,14 @@ void buttons_init(uint8_t pulse_pin){
     }
 }
 
-void buttons_add_button(int gpio, ButtonsCB_t cb_on_press, ButtonsCB_t cb_on_hold, ButtonsCB_t cb_on_release){
+void buttons_add_button(int gpio, int min_press, ButtonsCB_t cb_on_press, ButtonsCB_t cb_on_hold, ButtonsCB_t cb_on_release){
 //    if(_num_of_registered_buttons < MAX_NUM_OF_BUTTONS){
         ButtonState_t * button = &_buttons[_num_of_registered_buttons];
 
         button->gpio = gpio;
         button->interval = 0;
         button->isPressed = 0;
+        button->min_press_interval = min_press;
 
         if(cb_on_press != NULL){
             button->on_press = cb_on_press;
@@ -135,7 +137,6 @@ void buttons_add_button(int gpio, ButtonsCB_t cb_on_press, ButtonsCB_t cb_on_hol
         }
 
         _num_of_registered_buttons++;
-//    }
 }
 
 void _buttons_int_cb(uint gpio, uint32_t event){
@@ -148,7 +149,7 @@ void _buttons_int_cb(uint gpio, uint32_t event){
 
 void _check_button(ButtonState_t * button){
     //// printf("Check GPIO %d\nPress interval is %d\n", button->gpio, button->interval);
-    if(button->interval > _minPressInterval || button->interval == 0){
+    if(button->interval > button->min_press_interval || button->interval == 0){
         if(button->isPressed){
             button->on_hold();
             return;
