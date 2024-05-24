@@ -42,7 +42,7 @@ void MidiLightPitch(void);
 void MidiStop();
 
 /** @brief Settings for device (CC commands and Byte commands (F0 .. F7)) */
-void MidiSettings();
+bool MidiSettings();
 
 void control_same_note(uint8_t value);
 
