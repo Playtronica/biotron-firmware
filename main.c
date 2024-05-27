@@ -19,6 +19,8 @@ void setup() {
     init_leds();
     init_buttons();
     init_plant();
+
+    intro_leds();
 }
 
 
@@ -28,7 +30,7 @@ int main(void)
 
     while (true)
     {
-        printf("Hello World\n");
+        status_loop();
         remind_midi();
         sleep_ms(1);
     }

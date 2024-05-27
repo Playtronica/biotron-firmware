@@ -17,6 +17,10 @@
                  (1 << FIRST_GROUP_GREEN_LED_1) | (1 << FIRST_GROUP_GREEN_LED_2) | (1 << FIRST_GROUP_GREEN_LED_3) | \
                  (1 << SECOND_GROUP_GREEN_LED_1) | (1 << SECOND_GROUP_GREEN_LED_2) | (1 << SECOND_GROUP_GREEN_LED_3))
 
-void init_leds();
 
+#define MAX_LIGHT ((1 << 16) - 100)
+#define MIN_LIGHT 10
+
+void init_leds();
+void intro_leds();
 #endif //BIOTRON_LEDS_H
