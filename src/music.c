@@ -13,10 +13,15 @@ uint8_t last_note_light = 0;
 
 
 struct repeating_timer plantNoteOffTimer;
-bool MidiPlantNoteOff(struct repeating_timer *t) {
+bool plant_note_off(struct repeating_timer *t) {
     note_off(0, last_note_plant);
     cancel_repeating_timer(&plantNoteOffTimer);
     return true;
+}
+
+void reset_plant_note_off() {
+    note_off(0, last_note_plant);
+    cancel_repeating_timer(&plantNoteOffTimer);
 }
 
 uint8_t get_CC(uint8_t currentNote) {
@@ -122,7 +127,7 @@ void midi_plant() {
         note_on(0, currentNote, velocity);
 
         if (active_status == Active) {
-            add_repeating_timer_us(settings.BPM / 100 * settings.percent_note_off, MidiPlantNoteOff,
+            add_repeating_timer_us(settings.BPM / 100 * settings.percent_note_off, plant_note_off,
                                    NULL, &plantNoteOffTimer);
         }
     }
@@ -159,4 +164,9 @@ void midi_light() {
 void midi_light_pitch() {
     uint16_t buff = (uint16_t)(((double)MIN(adc_read(), MAX_OF_LIGHT) / (double)MAX_OF_LIGHT) * 4096.0);
     change_pitch(0, buff % 127, buff / 12);
+}
+
+void stop_midi() {
+    note_off(0, last_note_plant);
+    note_off(1, last_note_light);
 }

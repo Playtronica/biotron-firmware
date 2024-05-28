@@ -23,7 +23,7 @@ typedef struct CC_command_s {
 } CC_command_s;
 
 typedef struct sys_ex_command_s {
-    void (*action)(uint8_t data[], uint8_t len);
+    void (*action)(const uint8_t data[], uint8_t len);
     uint8_t num;
 } sys_ex_command_s;
 
@@ -55,7 +55,7 @@ void add_CC(void action(uint8_t channel, uint8_t value), uint8_t num);
  * @note
  * void action(uint8_t data[], uint8_t len)
  * */
-void add_sys_ex_com(void action(uint8_t data[], uint8_t len), uint8_t num);
+void add_sys_ex_com(void action(const uint8_t data[], uint8_t len), uint8_t num);
 
 /**
  * @brief Parse value to sys ex format

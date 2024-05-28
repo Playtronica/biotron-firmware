@@ -55,6 +55,15 @@ bool play_music() {
 }
 
 
+void reset_bpm() {
+    if (status == Active) {
+        cancel_repeating_timer(&midi_timer);
+        reset_plant_note_off();
+        add_repeating_timer_us(settings.BPM, play_music, NULL, &midi_timer);
+    }
+}
+
+
 void status_loop() {
     const uint8_t jingle_notes[] = {36, 40, 43, 48};
     static uint8_t jingle_step = 0;
@@ -140,7 +149,6 @@ void status_loop() {
             }
 
 
-//            printf("%d %d\n", average_freq, last_freq);
             if (counter > SLEEP_COUNTER) {
                 counter = 0;
                 last_freq = 0;
@@ -149,7 +157,7 @@ void status_loop() {
                 status = Sleep;
                 cancel_repeating_timer(&midi_timer);
                 filter_freq(0, 0);
-//                MidiStop();
+                stop_midi();
                 printf("[+] Change status: Active -> Sleep\n");
                 return;
             }

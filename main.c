@@ -23,6 +23,7 @@ void setup() {
 
     intro_leds();
     read_settings();
+    setup_commands();
 }
 
 

@@ -48,6 +48,7 @@ extern bool is_mute;
 void save_settings();
 void read_settings();
 
+void setup_commands();
 
 
 #endif //BIOTRON_PARAMS_H

@@ -4,6 +4,7 @@
 #include "PLSDK/commands.h"
 #include "PLSDK/channel.h"
 #include "PLSDK/constants.h"
+#include "params.h"
 #include <pico/bootrom.h>
 
 CC_command_s CC[MAX_COUNT_COMMANDS];
@@ -19,7 +20,7 @@ void add_CC(void action(uint8_t channel, uint8_t value), uint8_t num) {
     CC[length_cc++] = new_CC;
 }
 
-void add_sys_ex_com(void action(uint8_t data[], uint8_t len), uint8_t num) {
+void add_sys_ex_com(void action(const uint8_t data[], uint8_t len), uint8_t num) {
     sys_ex_command_s new_sys_ex_com;
     new_sys_ex_com.num = num;
     new_sys_ex_com.action = action;
@@ -44,16 +45,25 @@ void print_pure(uint8_t cable, const uint8_t data[], uint8_t len) {
 
 bool collecting_data = false;
 void read_sys_ex() {
-    uint8_t res[1000];
-    uint8_t len = 0;
+    uint8_t res[300];
+    uint8_t buff[4];
+    uint32_t len = 0;
 
-    if ((len = tud_midi_available())) {
-        tud_midi_stream_read(res, len);
-    } else {
+
+    while (tud_midi_packet_read(buff)) {
+        remind_midi();
+        for (int i = 1; i < 4; ++i) {
+            res[len++] = buff[i];
+            if (buff[i] == SYS_EX_END) break;
+        }
+    }
+
+    if (len == 0) {
         return;
     }
 
-    if (res[0] >= CC_START && res[0] <= CC_END && len == CC_LENGTH) {
+
+    if (res[0] >= CC_START && res[0] <= CC_END) {
         for (int i = 0; i < length_cc; i++) {
             if (CC[i].num == res[1]) {
                 CC[i].action(res[0] - CC_START, res[2]);
@@ -61,10 +71,11 @@ void read_sys_ex() {
             }
         }
         print_pure(CABLE_NUM_MAIN, res, len);
+        save_settings();
         return;
     }
 
-    if (res[0] == SYS_EX_START && res[len - 1] == SYS_EX_END) {
+    if (res[0] == SYS_EX_START) {
         if (res[1] == PLAYTRONICA_KEY_FIRST && res[2] == PLAYTRONICA_KEY_SECOND) {
             for (int i = 0; i < length_sys; i++) {
                 if (sys_com[i].num == res[3]) {
@@ -73,6 +84,7 @@ void read_sys_ex() {
                         data[j - 4] = res[j];
                     }
                     sys_com[i].action(data, len - 5);
+                    save_settings();
                 }
             }
         }
