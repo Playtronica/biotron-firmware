@@ -1,11 +1,13 @@
 #include "buttons.h"
 #include "PLSDK/cap_buttons.h"
+#include "params.h"
 #include <stdlib.h>
 
 
 bool button_finger_pressed = false;
 void change_mute_mode() {
     button_finger_pressed = true;
+    is_mute = !is_mute;
 }
 
 void release_finger() {
@@ -15,6 +17,7 @@ void release_finger() {
 bool button_bottom_pressed = false;
 void change_same_mode() {
     button_bottom_pressed = true;
+    settings.same_note = !(bool)settings.same_note;
 }
 
 void release_bottom() {
@@ -24,6 +27,7 @@ void release_bottom() {
 bool button_top_pressed = false;
 void change_scale() {
     button_top_pressed = true;
+    settings.scale = (settings.scale + 1) % 12;
 }
 
 void release_top() {
@@ -36,4 +40,8 @@ void init_buttons() {
     buttons_add_button(BUTTON_TOP, 40, change_scale, NULL, release_top);
 
     buttons_init(5);
+}
+
+void check_buttons() {
+    buttons_task();
 }

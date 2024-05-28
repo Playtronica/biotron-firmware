@@ -20,7 +20,10 @@
 
 #define MAX_LIGHT ((1 << 16) - 100)
 #define MIN_LIGHT 10
+#define ASYNC_LEDS 200
+#define NOTE_STRONG 414
 
 void init_leds();
 void intro_leds();
+void led_loop();
 #endif //BIOTRON_LEDS_H

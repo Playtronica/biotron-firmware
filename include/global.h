@@ -20,12 +20,12 @@ enum Status {
 };
 
 extern enum Status status;
+extern enum Status active_status;
 void status_loop();
-
-
 
 extern uint32_t last_freq;
 extern uint32_t average_freq;
 extern uint32_t average_delta_freq;
+
 
 #endif //BIOTRON_GLOBAL_H

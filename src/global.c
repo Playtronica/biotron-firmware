@@ -4,9 +4,12 @@
 #include <stdlib.h>
 #include "raw_plant.h"
 #include "PLSDK/music.h"
+#include "params.h"
+#include "music.h"
 
 
 enum Status status = Sleep;
+enum Status active_status = Active;
 uint32_t last_freq = 0;
 uint32_t average_freq = 0;
 uint32_t average_delta_freq = 0;
@@ -27,6 +30,29 @@ uint32_t filter_freq(double val, double k) {
     return filter_val;
 }
 
+struct repeating_timer midi_timer;
+bool play_music() {
+    static uint64_t time_log = 0;
+    static uint8_t counter = 1;
+
+    midi_plant();
+
+    if (settings.light_pitch_mode) midi_light_pitch();
+    else if (counter++ >= settings.lightBPM) {
+        midi_light();
+        counter = 1;
+    }
+
+    if (time_log == 0) {
+        time_log = time_us_64();
+    }
+    if (time_us_64() - time_log > 100000) {
+        printf("{\"AverageFreq\": %d, \"Freq\": %d, \"PlantNote\": %d, \"LightNote\": %d }\n",
+               average_freq, last_freq, last_note_plant, last_note_light);
+        time_log = time_us_64();
+    }
+    return true;
+}
 
 
 void status_loop() {
@@ -83,7 +109,10 @@ void status_loop() {
                 counter = 0;
                 note_off(0, jingle_notes[jingle_step - 1]);
                 jingle_step = 0;
-                status = Active;
+                if (active_status == Active) {
+                    add_repeating_timer_us(settings.BPM, play_music, NULL, &midi_timer);
+                }
+                status = active_status;
                 printf("[+] Change status: Stab -> Active\n");
             }
             else {
@@ -96,14 +125,14 @@ void status_loop() {
             break;
         }
         case Active:
+        case BPMClockActive:
             if (raw_freq < MIN_FREQ) {
                 counter++;
             } else {
                 counter = 0;
             }
 
-//            if (filterPercent != 0)
-            if (true) {
+            if (settings.filterPercent != 0) {
                 last_freq = filter_freq(raw_freq, 0.3);
             }
             else {
@@ -111,22 +140,20 @@ void status_loop() {
             }
 
 
-            printf("%d %d\n", average_freq, last_freq);
+//            printf("%d %d\n", average_freq, last_freq);
             if (counter > SLEEP_COUNTER) {
                 counter = 0;
                 last_freq = 0;
                 average_freq = 0;
                 average_delta_freq = 0;
                 status = Sleep;
-//                cancel_repeating_timer(&midiTimer);
+                cancel_repeating_timer(&midi_timer);
                 filter_freq(0, 0);
 //                MidiStop();
                 printf("[+] Change status: Active -> Sleep\n");
                 return;
             }
 
-            break;
-        case BPMClockActive:
             break;
     }
 }

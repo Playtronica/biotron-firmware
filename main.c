@@ -6,6 +6,7 @@
 #include "buttons.h"
 #include "leds.h"
 #include "raw_plant.h"
+#include "params.h"
 
 
 void setup() {
@@ -21,6 +22,7 @@ void setup() {
     init_plant();
 
     intro_leds();
+    read_settings();
 }
 
 
@@ -31,6 +33,8 @@ int main(void)
     while (true)
     {
         status_loop();
+        led_loop();
+        check_buttons();
         remind_midi();
         sleep_ms(1);
     }

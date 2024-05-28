@@ -16,5 +16,6 @@ extern bool button_bottom_pressed;
 extern bool button_top_pressed;
 
 void init_buttons();
+void check_buttons();
 
 #endif //BIOTRON_BUTTONS_H
