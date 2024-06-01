@@ -27,7 +27,6 @@ typedef struct sys_ex_command_s {
     uint8_t num;
 } sys_ex_command_s;
 
-extern bool collecting_data;
 
 /**
  * @note

@@ -241,7 +241,7 @@ char const* string_desc_arr [] =
 #ifdef DEVICE_NAME
                 STRINGIZE(DEVICE_NAME), // 2: Product
 #else
-                "PL_SDK_DEVICE_UNKNOWN", // 2: Product
+                "Biotron", // 2: Product
 #endif
                 "Bio5",                                 // 3: Serials, should use chip ID
                 "TinyUSB CDC"                           // 4: CDC Interface

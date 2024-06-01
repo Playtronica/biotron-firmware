@@ -5,6 +5,7 @@
 #include "PLSDK/channel.h"
 #include "PLSDK/constants.h"
 #include "params.h"
+#include "global.h"
 #include <pico/bootrom.h>
 
 CC_command_s CC[MAX_COUNT_COMMANDS];
@@ -43,7 +44,6 @@ void print_pure(uint8_t cable, const uint8_t data[], uint8_t len) {
     tud_midi_stream_write(cable, data, len);
 }
 
-bool collecting_data = false;
 void read_sys_ex() {
     uint8_t res[300];
     uint8_t buff[4];
@@ -62,7 +62,7 @@ void read_sys_ex() {
         return;
     }
 
-
+//    printf("%d %d %d %d %d\n", res[0], res[1], res[2], res[3], res[4]);
     if (res[0] >= CC_START && res[0] <= CC_END) {
         for (int i = 0; i < length_cc; i++) {
             if (CC[i].num == res[1]) {
@@ -74,6 +74,7 @@ void read_sys_ex() {
         save_settings();
         return;
     }
+
 
     if (res[0] == SYS_EX_START) {
         if (res[1] == PLAYTRONICA_KEY_FIRST && res[2] == PLAYTRONICA_KEY_SECOND) {
@@ -94,7 +95,7 @@ void read_sys_ex() {
                     // TODO Scala reader
                     break;
                 case 126:
-                    collecting_data = !collecting_data;
+                    load_settings();
                     break;
                 case 127:
                     reset_usb_boot(0, 0);
@@ -119,7 +120,7 @@ static bool _repeating_timer_callback_t_settings(repeating_timer_t *rt) {
 struct repeating_timer settingsTimer;
 
 void init_commands() {
-    add_repeating_timer_ms(1000,
+    add_repeating_timer_ms(50,
                            _repeating_timer_callback_t_settings,
                            NULL, &settingsTimer);
 }

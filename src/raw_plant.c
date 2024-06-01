@@ -4,6 +4,7 @@
 #include "../include/raw_plant.h"
 #include "pico/time.h"
 #include "hardware/irq.h"
+#include "params.h"
 #include <stdlib.h>
 
 struct repeating_timer getFrequencyTimer;
@@ -12,7 +13,6 @@ uint32_t count = 0;
 uint32_t LastCount = 0;
 bool freq_ready = false;
 uint32_t realFreq = 0;
-bool random_k = true;
 
 
 static void _on_pwm_wrap() {
@@ -36,7 +36,7 @@ static uint32_t _pwm_read(uint sliceNum) {
 
 static bool _repeating_timer_callback_t(repeating_timer_t *rt) {
     freq_ready = true;
-    realFreq = _pwm_read(slice_num) * TIMER_MULTIPLIER + rand() % (random_k * 10);
+    realFreq = _pwm_read(slice_num) * TIMER_MULTIPLIER + rand() % (settings.random_note * 10);
     return true;
 }
 

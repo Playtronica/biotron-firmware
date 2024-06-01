@@ -3,6 +3,7 @@
 #include "PLSDK/music.h"
 #include "PLSDK/commands.h"
 #include "PLSDK/constants.h"
+#include "music.h"
 
 
 const uint8_t major[] = { 2, 4, 5, 7, 9, 11, 12 };
@@ -36,8 +37,10 @@ const NotesScale_t scales[] = {
         {8, diminished}
 };
 
+
 int calculate_note_by_scale(uint8_t start_note, int counter, ScaleNums_t scale) {
     NotesScale_t _scale = scales[scale];
+
     if (counter < 0) {
         counter *= -1;
         start_note -= MIN(start_note, _scale.scale[_scale.steps - 1] * (counter / _scale.steps + 1));
@@ -50,7 +53,7 @@ int calculate_note_by_scale(uint8_t start_note, int counter, ScaleNums_t scale) 
         note += MIN(127 - note, _scale.scale[counter % _scale.steps - 1]);
     }
 
-    return  start_note + note;
+    return MAX(LOWEST_NOTE, MIN(HIGHEST_NOTE, start_note + note));
 }
 
 

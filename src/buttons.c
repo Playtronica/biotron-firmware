@@ -18,6 +18,7 @@ bool button_bottom_pressed = false;
 void change_same_mode() {
     button_bottom_pressed = true;
     settings.same_note = !(bool)settings.same_note;
+    save_settings();
 }
 
 void release_bottom() {
@@ -28,6 +29,7 @@ bool button_top_pressed = false;
 void change_scale() {
     button_top_pressed = true;
     settings.scale = (settings.scale + 1) % 12;
+    save_settings();
 }
 
 void release_top() {

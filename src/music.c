@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <pico/time.h>
 #include <hardware/adc.h>
+#include <pico/printf.h>
 #include "music.h"
 #include "pico/stdio.h"
 #include "params.h"
@@ -52,16 +53,14 @@ int get_plant_counter() {
     static int8_t extra_counter = 0;
     const uint8_t a = 10, b = 30;
 
-    uint32_t oldVal = average_freq;
-    uint32_t newVal = last_freq;
 
-    int diff = (int)newVal - (int)oldVal;
+    int diff = (int)average_freq - (int)last_freq;
     bool minus = diff < 0;
     diff = abs(diff);
 
-    if (abs((int)last_val - (int)newVal) >= average_delta_freq * 3) {
+    if (abs((int)last_val - (int)last_freq) >= average_delta_freq * 3) {
         last_change_time = time_us_64();
-        last_val = newVal;
+        last_val = last_freq;
         extra_counter = 0;
     }
 
@@ -85,20 +84,20 @@ int get_plant_counter() {
 
     int i;
 
-    uint32_t noteChangeValue = average_delta_freq;
-    if (diff - noteChangeValue >= 0) {
+    if (diff - average_delta_freq >= 0) {
         i = 1;
-        diff -= noteChangeValue;
-    } else return 0;
+        diff -= (int)average_delta_freq;
+    } else return extra_counter;
 
     double extra;
-    while (diff - (noteChangeValue + settings.fibPower * (first + second)) >= 0) {
-        diff -= noteChangeValue + settings.fibPower * (first + second);
+    while (diff - (average_delta_freq + settings.fibPower * (first + second)) > 0) {
+        diff -= (int)average_delta_freq + (int)(settings.fibPower * (first + second));
         extra = first + second;
         first = second;
         second = extra;
         i++;
     }
+//    printf("%d %f\n", diff, settings.fibPower * (first + second));
 
     if (minus) {
         return -i + extra_counter;
@@ -169,4 +168,5 @@ void midi_light_pitch() {
 void stop_midi() {
     note_off(0, last_note_plant);
     note_off(1, last_note_light);
+    change_pitch(0, 63, 63);
 }

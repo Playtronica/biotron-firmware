@@ -24,9 +24,8 @@ uint32_t filter_freq(double val, double k) {
     if (val == 0 && k == 0) {
         filter_val = 0;
     }
-    filter_val += (int32_t)((val - filter_val) * k);
-//    if (!get_random_note_state()) (filter_val = filter_val / 10 * 10);
-    filter_val = (filter_val >> 1) << 1;
+    filter_val += (int32_t)((val - filter_val) * (1 - k));
+    if (!settings.random_note) filter_val = (filter_val << 1) >> 1;
     return filter_val;
 }
 
@@ -48,7 +47,7 @@ bool play_music() {
     }
     if (time_us_64() - time_log > 100000) {
         printf("{\"AverageFreq\": %d, \"Freq\": %d, \"PlantNote\": %d, \"LightNote\": %d }\n",
-               average_freq, last_freq, last_note_plant, last_note_light);
+               average_freq, last_freq, last_note_plant, average_delta_freq);
         time_log = time_us_64();
     }
     return true;
@@ -58,9 +57,25 @@ bool play_music() {
 void reset_bpm() {
     if (status == Active) {
         cancel_repeating_timer(&midi_timer);
-        reset_plant_note_off();
         add_repeating_timer_us(settings.BPM, play_music, NULL, &midi_timer);
     }
+}
+
+void load_settings() {
+    static bool is_stopped = false;
+    if (is_stopped) {
+        if (status == Active) {
+            add_repeating_timer_us(settings.BPM, play_music, NULL, &midi_timer);
+        }
+
+    } else {
+        if (status == Active) {
+            cancel_repeating_timer(&midi_timer);
+            reset_plant_note_off();
+        }
+    }
+    is_stopped = !is_stopped;
+
 }
 
 
@@ -95,11 +110,15 @@ void status_loop() {
         case Stabilization: {
             if (raw_freq > MIN_FREQ) {
                 counter++;
-                if (average_freq != 0) {
-                    average_delta_freq += abs((int)last_freq - (int)raw_freq);
+                uint32_t b = filter_freq(raw_freq, 0.3);
+                if (average_freq == 0) {
+                    last_freq = raw_freq;
                 }
-                average_freq += raw_freq;
-                last_freq = raw_freq;
+                else {
+                    average_delta_freq += abs((int)last_freq - (int)raw_freq);
+                    raw_freq = last_freq;
+                }
+                average_freq += b;
             } else {
                 counter = 0;
                 average_delta_freq = 0;
@@ -142,7 +161,7 @@ void status_loop() {
             }
 
             if (settings.filterPercent != 0) {
-                last_freq = filter_freq(raw_freq, 0.3);
+                last_freq = filter_freq(raw_freq,  settings.filterPercent);
             }
             else {
                 last_freq = raw_freq;

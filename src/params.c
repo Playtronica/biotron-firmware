@@ -4,6 +4,7 @@
 #include "PLSDK/constants.h"
 #include "global.h"
 #include "PLSDK/commands.h"
+#include "PLSDK/music.h"
 #include <hardware/flash.h>
 #include <hardware/sync.h>
 #include <pico/printf.h>
@@ -57,6 +58,7 @@ void read_settings() {
         return;
     }
 }
+
 
 //region MIDI commands
 
@@ -120,6 +122,7 @@ void set_filter_cc(uint8_t channel, uint8_t value) {
 }
 
 void set_scale_sys_ex(const uint8_t data[], uint8_t len) {
+    printf("Change scale %d\n", data[0] % 12);
     settings.scale = data[0] % 12;
 }
 
@@ -192,6 +195,7 @@ void set_random_vel_cc(uint8_t channel, uint8_t value) {
 
 void set_default_sys_ex(const uint8_t data[], uint8_t len) {
     default_settings();
+    reset_bpm();
 }
 
 void set_random_note_sys_ex(const uint8_t data[], uint8_t len) {
@@ -228,13 +232,14 @@ void set_light_max_note_sys_ex(const uint8_t data[], uint8_t len) {
 
 void set_light_pitch_mode_sys_ex(const uint8_t data[], uint8_t len) {
     settings.light_pitch_mode = data[0] > 0;
+    change_pitch(0, 63, 63);
 }
 
 void set_light_pitch_mode_cc(uint8_t channel, uint8_t value) {
     settings.light_pitch_mode = value > 63;
+    change_pitch(0, 63, 63);
 }
 //endregion
-
 
 
 void setup_commands() {
