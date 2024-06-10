@@ -10,10 +10,8 @@
 * @date   2022-04-12
 */
 
-#include "cap_buttons.h"
+#include "PLSDK/cap_buttons.h"
 
-
-//#define MAX_NUM_OF_BUTTONS 5
 uint8_t pulse = 5;
 
 /**
@@ -61,9 +59,9 @@ int _num_of_registered_buttons = 0;
 ButtonState_t _buttons[100];
 
 /** @brief Minimal time interval to consider button is pressed, us*/
-const uint32_t _minPressInterval = 40;
+const uint32_t _minPressInterval = 50;
 /** @brief Time interval for one measuring cycle, us*/
-const uint32_t _measureInterval = 10000;
+const uint32_t _measureInterval = 100000;
 
 /** @brief Start time of last measure cycle, us */
 uint32_t _lastPulseTime;
@@ -100,7 +98,7 @@ void buttons_init(uint8_t pulse_pin){
     gpio_set_dir(pulse_pin, GPIO_OUT);
 
     for(int i = 0; i < _num_of_registered_buttons; i++ ){
-        // printf("Init button %d\n", _buttons[i].gpio);
+        printf("Init button %d\n", _buttons[i].gpio);
         gpio_init(_buttons[i].gpio);
         gpio_set_dir(_buttons[i].gpio, GPIO_IN);
         gpio_disable_pulls(_buttons[i].gpio);
@@ -110,7 +108,6 @@ void buttons_init(uint8_t pulse_pin){
 }
 
 void buttons_add_button(int gpio, int min_press, ButtonsCB_t cb_on_press, ButtonsCB_t cb_on_hold, ButtonsCB_t cb_on_release){
-//    if(_num_of_registered_buttons < MAX_NUM_OF_BUTTONS){
         ButtonState_t * button = &_buttons[_num_of_registered_buttons];
 
         button->gpio = gpio;
@@ -148,8 +145,7 @@ void _buttons_int_cb(uint gpio, uint32_t event){
 }
 
 void _check_button(ButtonState_t * button){
-    //// printf("Check GPIO %d\nPress interval is %d\n", button->gpio, button->interval);
-    if(button->interval > button->min_press_interval || button->interval == 0){
+    if(button->interval > _minPressInterval || button->interval == 0){
         if(button->isPressed){
             button->on_hold();
             return;
