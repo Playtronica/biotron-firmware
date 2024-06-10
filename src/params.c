@@ -65,6 +65,7 @@ void read_settings() {
 void change_plant_bpm(uint16_t bpm) {
     if (bpm == 0) return;
     settings.BPM = BPM_TO_US(bpm);
+
     if (status == Active) {
         reset_bpm();
     }

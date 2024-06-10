@@ -44,10 +44,18 @@ void print_pure(uint8_t cable, const uint8_t data[], uint8_t len) {
     tud_midi_stream_write(cable, data, len);
 }
 
+static uint16_t clk = 0;
+void midi_clock() {
+    if (clk++ < 25) return;
+    clk = 1;
+    if (status == BPMClockActive) play_music();
+}
+
 void read_sys_ex() {
     uint8_t res[300];
     uint8_t buff[4];
     uint32_t len = 0;
+    static uint8_t bpm_clock_prepare = 0;
 
 
     while (tud_midi_packet_read(buff)) {
@@ -61,6 +69,31 @@ void read_sys_ex() {
     if (len == 0) {
         return;
     }
+//    printf("%d", res[0]);
+    if (res[0] == 250 || res[0] == 242) {
+        bpm_clock_prepare = 250;
+//        printf("1\n");
+        return;
+    }
+
+    if (res[0] == 252) {
+        bpm_clock_control(false);
+//        printf("2\n");
+        bpm_clock_prepare = 252;
+        return;
+    }
+
+    if (res[0] == 248) {
+//        printf("3\n");
+        if (bpm_clock_prepare == 250) {
+            bpm_clock_control(true);
+            clk = 0;
+        }
+        midi_clock();
+        bpm_clock_prepare = 248;
+        return;
+    }
+
 
 //    printf("%d %d %d %d %d\n", res[0], res[1], res[2], res[3], res[4]);
     if (res[0] >= CC_START && res[0] <= CC_END) {
@@ -120,7 +153,7 @@ static bool _repeating_timer_callback_t_settings(repeating_timer_t *rt) {
 struct repeating_timer settingsTimer;
 
 void init_commands() {
-    add_repeating_timer_ms(50,
+    add_repeating_timer_ms(10,
                            _repeating_timer_callback_t_settings,
                            NULL, &settingsTimer);
 }

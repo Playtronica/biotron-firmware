@@ -47,15 +47,30 @@ bool play_music() {
     }
     if (time_us_64() - time_log > 100000) {
         printf("{\"AverageFreq\": %d, \"Freq\": %d, \"PlantNote\": %d, \"LightNote\": %d }\n",
-               average_freq, last_freq, last_note_plant, average_delta_freq);
+               average_freq, last_freq, last_note_plant, settings.BPM);
         time_log = time_us_64();
     }
     return true;
 }
 
 
+void bpm_clock_control(bool enabled) {
+    if (enabled && status == Active) {
+        cancel_repeating_timer(&midi_timer);
+        status = BPMClockActive;
+
+    }
+    else if (!enabled && status == BPMClockActive) {
+        add_repeating_timer_us(settings.BPM, play_music, NULL, &midi_timer);
+        status = Active;
+    }
+    active_status = enabled ? BPMClockActive : Active;
+    reset_plant_note_off();
+}
+
 void reset_bpm() {
     if (status == Active) {
+        reset_plant_note_off();
         cancel_repeating_timer(&midi_timer);
         add_repeating_timer_us(settings.BPM, play_music, NULL, &midi_timer);
     }
@@ -174,7 +189,10 @@ void status_loop() {
                 average_freq = 0;
                 average_delta_freq = 0;
                 status = Sleep;
-                cancel_repeating_timer(&midi_timer);
+                if (status == Active) {
+                    cancel_repeating_timer(&midi_timer);
+                }
+
                 filter_freq(0, 0);
                 stop_midi();
                 printf("[+] Change status: Active -> Sleep\n");
