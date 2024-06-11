@@ -1,39 +1,42 @@
-#include "tusb.h"
-#include "frequency_counter.h"
-#include "notes.h"
-#include "global.h"
+#include <pico/printf.h>
+#include <hardware/adc.h>
 #include "pico/stdlib.h"
-#include "pico.h"
-#include "cap_buttons.h"
-#include "pico/multicore.h"
+#include "PLSDK/channel.h"
+#include "global.h"
+#include "buttons.h"
+#include "leds.h"
+#include "raw_plant.h"
+#include "params.h"
 
-uint32_t interrupts;
+
+void setup() {
+    stdio_init_all();
+    init_midi();
+
+    adc_init();
+    adc_gpio_init(LIGHT_PIN);
+    adc_select_input(0);
+
+    init_leds();
+    init_buttons();
+    init_plant();
+
+    intro_leds();
+    read_settings();
+    setup_commands();
+}
+
 
 int main(void)
 {
-    stdio_init_all();
-    tusb_init();
+    setup();
 
-    Setup();
-    Intro();
-
-    uint16_t i = 0;
     while (true)
     {
-        tud_task();
-        if (isReady()) {
-            MainStage();
-        }
-
-
-        if (i % 50 == 0) {
-            buttons_task();
-        }
-        else {
-            while (MidiSettings());
-        }
-        LedStage();
-        i++;
+        status_loop();
+        led_loop();
+        check_buttons();
+        remind_midi();
         sleep_ms(1);
     }
 }
