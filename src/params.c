@@ -29,8 +29,7 @@ void default_settings() {
     settings.random_note = DEF_RANDOM_NOTE;
     settings.same_note = DEF_SANE_NOTE;
     settings.percent_note_off = DEF_PERCENT_NOTE_OFF;
-    settings.light_note_min = DEF_LIGHT_NOTE_MIN;
-    settings.light_note_max = DEF_LIGHT_NOTE_MAX;
+    settings.light_note_range = DEF_LIGHT_NOTE_RANGE;
     settings.light_pitch_mode = DEF_LIGHT_PITCH_MODE;
 };
 
@@ -223,12 +222,8 @@ void set_note_off_percent_cc(uint8_t channel, uint8_t value) {
     settings.percent_note_off = (int)((double)value / 127.0 * 100.0);
 }
 
-void set_light_min_note_sys_ex(const uint8_t data[], uint8_t len) {
-    settings.light_note_min = data[0];
-}
-
-void set_light_max_note_sys_ex(const uint8_t data[], uint8_t len) {
-    settings.light_note_max = data[0];
+void set_light_range_sys_ex(const uint8_t data[], uint8_t len) {
+    settings.light_note_range = data[0];
 }
 
 void set_light_pitch_mode_sys_ex(const uint8_t data[], uint8_t len) {
@@ -281,8 +276,7 @@ void setup_commands() {
     add_sys_ex_com(set_note_off_percent_sys_ex, 12);
     add_CC(set_note_off_percent_cc, 21);
 
-    add_sys_ex_com(set_light_min_note_sys_ex, 13);
-    add_sys_ex_com(set_light_max_note_sys_ex, 14);
+    add_sys_ex_com(set_light_range_sys_ex, 13);
 
     add_sys_ex_com(set_light_pitch_mode_sys_ex, 19);
     add_CC(set_light_pitch_mode_cc, 27);
