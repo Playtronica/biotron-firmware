@@ -106,9 +106,10 @@ int get_plant_counter() {
 }
 
 
-
 void midi_plant() {
-    uint8_t currentNote = calculate_note_by_scale(MIDDLE_NOTE, get_plant_counter(), settings.scale);
+    uint8_t currentNote = MAX(LOWEST_NOTE,
+                              MIN(HIGHEST_NOTE,
+                                  calculate_note_by_scale(MIDDLE_NOTE, get_plant_counter(), settings.scale)));
 
     if (!is_mute) {
         if (abs((int)currentNote - (int)last_note_plant) < settings.same_note) {
@@ -139,21 +140,25 @@ void midi_plant() {
 
 
 void midi_light() {
-    if (settings.light_note_min > settings.light_note_max) {
-        uint8_t buff = settings.light_note_min;
-        settings.light_note_max = settings.light_note_min;
-        settings.light_note_min = buff;
+    uint16_t adc = MIN(adc_read(), MAX_OF_LIGHT);
+    uint16_t step = MAX_OF_LIGHT / (settings.light_note_range * 2);
+
+    int counter = abs(MAX_OF_LIGHT / 2 - (int)adc) / step;
+    if (adc > MAX_OF_LIGHT / 2) {
+        counter = -counter;
     }
 
-    uint16_t buff = MIN(adc_read(), MAX_OF_LIGHT);
-    uint8_t current_note = (MAX_OF_LIGHT - buff) / (MAX_OF_LIGHT / (settings.light_note_max - settings.light_note_min))
-                           + settings.light_note_min;
+
+    uint8_t current_note = MAX(MIDDLE_NOTE - 24 - settings.light_note_range,
+                               MIN(MIDDLE_NOTE - 24 + settings.light_note_range,
+                                   calculate_note_by_scale(MIDDLE_NOTE - 24, counter, settings.scale)));
+
 
     if (!is_mute) {
         note_off(1, last_note_light);
         uint8_t vel = settings.isRandomLightVelocity ?
-                rand() % (settings.light_note_max + 1 - settings.light_note_min) + settings.light_note_min :
-                      settings.light_note_max;
+                rand() % (settings.maxLightVelocity + 1 - settings.minLightVelocity) + settings.minLightVelocity :
+                      settings.maxLightVelocity;
         note_on(1, current_note, vel);
 
     }
