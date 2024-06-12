@@ -13,7 +13,7 @@ Settings_t settings;
 bool is_mute = false;
 
 void default_settings() {
-    settings.settingsIsNull = false;
+    settings.id = ID_FLASH;
     settings.BPM = DEF_TIMER_MIDI_US;
     settings.lightBPM = DEF_LIGHT_BPM;
     settings.fibPower = DEF_FIB_POW;
@@ -52,14 +52,15 @@ void read_settings() {
     const uint8_t* flash_target_contents = (const uint8_t *) (XIP_BASE + FLASH_TARGET_OFFSET);
     memcpy(&settings, flash_target_contents, sizeof(settings));
 
-    if (settings.settingsIsNull) {
+    if (settings.id != ID_FLASH) {
+        clear_flash();
         default_settings();
         save_settings();
         return;
     }
 }
 
-void clean_flash() {
+void clear_flash() {
     int settingsSize = sizeof(settings);
 
     int writeSize = (settingsSize / FLASH_PAGE_SIZE) + 1;
@@ -67,7 +68,6 @@ void clean_flash() {
 
     uint32_t interrupts = save_and_disable_interrupts();
     flash_range_erase(FLASH_TARGET_OFFSET, FLASH_SECTOR_SIZE * sectorCount);
-    flash_range_program(FLASH_TARGET_OFFSET, settingsAsBytes, FLASH_PAGE_SIZE * writeSize);
     restore_interrupts(interrupts);
 }
 

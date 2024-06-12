@@ -47,7 +47,8 @@ bool play_music() {
     }
     if (time_us_64() - time_log > 100000) {
         printf("{\"AverageFreq\": %d, \"Freq\": %d, \"PlantNote\": %d, \"LightNote\": %d }\n",
-               average_freq, last_freq, last_note_plant, settings.BPM);
+               average_freq, last_freq, last_note_plant, last_note_light);
+
         time_log = time_us_64();
     }
     return true;
@@ -188,11 +189,10 @@ void status_loop() {
                 last_freq = 0;
                 average_freq = 0;
                 average_delta_freq = 0;
-                status = Sleep;
                 if (status == Active) {
                     cancel_repeating_timer(&midi_timer);
                 }
-
+                status = Sleep;
                 filter_freq(0, 0);
                 stop_midi();
                 printf("[+] Change status: Active -> Sleep\n");

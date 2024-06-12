@@ -4,6 +4,12 @@
 #include <stdbool.h>
 #define FLASH_TARGET_OFFSET (512 * 1024)
 
+#ifdef FLASH_ID_STARTUP
+#define ID_FLASH FLASH_ID_STARTUP
+#else
+#define ID_FLASH 0
+#endif
+
 #define DEF_TIMER_MIDI_US 500000
 #define DEF_LIGHT_BPM 4
 #define DEF_FIB_POW 0.5
@@ -21,7 +27,7 @@
 #define DEF_LIGHT_PITCH_MODE false
 
 typedef struct {
-    bool settingsIsNull;
+    int id;
     int BPM;
     int lightBPM;
     double fibPower;
@@ -47,6 +53,7 @@ extern bool is_mute;
 
 void save_settings();
 void read_settings();
+void clear_flash();
 
 void setup_commands();
 
