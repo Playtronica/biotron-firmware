@@ -48,7 +48,6 @@ bool play_music() {
     if (time_us_64() - time_log > 100000) {
         printf("{\"AverageFreq\": %d, \"Freq\": %d, \"PlantNote\": %d, \"LightNote\": %d }\n",
                average_freq, last_freq, last_note_plant, last_note_light);
-
         time_log = time_us_64();
     }
     return true;

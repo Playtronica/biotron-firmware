@@ -22,8 +22,7 @@
 #define DEF_RANDOM_NOTE true
 #define DEF_SANE_NOTE 0
 #define DEF_PERCENT_NOTE_OFF 100
-#define DEF_LIGHT_NOTE_MIN 24
-#define DEF_LIGHT_NOTE_MAX 48
+#define DEF_LIGHT_NOTE_RANGE 12
 #define DEF_LIGHT_PITCH_MODE false
 
 typedef struct {
@@ -43,8 +42,8 @@ typedef struct {
     bool random_note;
     int same_note;
     int percent_note_off;
-    int light_note_min;
-    int light_note_max;
+    int light_note_range;
+    int undef;
     bool light_pitch_mode;
 } Settings_t;
 

@@ -48,12 +48,12 @@ int calculate_note_by_scale(uint8_t start_note, int counter, ScaleNums_t scale) 
         counter *= -1;
     }
 
-    uint8_t note = MIN(127, _scale.scale[_scale.steps - 1] * (counter / _scale.steps));
+    int note = MIN(127, _scale.scale[_scale.steps - 1] * (counter / _scale.steps));
     if (counter % _scale.steps > 0) {
         note += MIN(127 - note, _scale.scale[counter % _scale.steps - 1]);
     }
 
-    return MAX(LOWEST_NOTE, MIN(HIGHEST_NOTE, start_note + note));
+    return start_note + note;
 }
 
 
