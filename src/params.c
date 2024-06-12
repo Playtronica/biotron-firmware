@@ -59,6 +59,17 @@ void read_settings() {
     }
 }
 
+void clean_flash() {
+    int settingsSize = sizeof(settings);
+
+    int writeSize = (settingsSize / FLASH_PAGE_SIZE) + 1;
+    int sectorCount = ((writeSize * FLASH_PAGE_SIZE) / FLASH_SECTOR_SIZE) + 1;
+
+    uint32_t interrupts = save_and_disable_interrupts();
+    flash_range_erase(FLASH_TARGET_OFFSET, FLASH_SECTOR_SIZE * sectorCount);
+    flash_range_program(FLASH_TARGET_OFFSET, settingsAsBytes, FLASH_PAGE_SIZE * writeSize);
+    restore_interrupts(interrupts);
+}
 
 //region MIDI commands
 
