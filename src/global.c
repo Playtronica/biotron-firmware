@@ -188,11 +188,11 @@ void status_loop() {
                 last_freq = 0;
                 average_freq = 0;
                 average_delta_freq = 0;
-                status = Sleep;
+
                 if (status == Active) {
                     cancel_repeating_timer(&midi_timer);
                 }
-
+                status = Sleep;
                 filter_freq(0, 0);
                 stop_midi();
                 printf("[+] Change status: Active -> Sleep\n");
