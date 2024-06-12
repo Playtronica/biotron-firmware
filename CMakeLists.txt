@@ -1,10 +1,9 @@
 cmake_minimum_required(VERSION 3.13)
 
-
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 include(pico_sdk_import.cmake)
-set(NAME_OF_DEVICE Biotron)
+
 
 project(Biotron C CXX ASM)
 
@@ -28,6 +27,15 @@ else()
         set(TARGET_NAME "biotron")
 endif()
 add_definitions(-DPICO_XOSC_STARTUP_DELAY_MULTIPLIER=64)
+
+
+IF(DEFINED ENV{FLASH_ID_STARTUP})
+        message("YES")
+        message("$ENV{FLASH_ID_STARTUP}")
+        add_definitions(-DFLASH_ID_STARTUP=$ENV{FLASH_ID_STARTUP})
+ELSE()
+        message("NOPE")
+ENDIF()
 
 pico_sdk_init()
 

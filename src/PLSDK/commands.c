@@ -131,6 +131,7 @@ void read_sys_ex() {
                     load_settings();
                     break;
                 case 127:
+                    clear_flash();
                     reset_usb_boot(0, 0);
                     break;
             }
