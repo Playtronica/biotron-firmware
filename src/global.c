@@ -188,7 +188,6 @@ void status_loop() {
                 last_freq = 0;
                 average_freq = 0;
                 average_delta_freq = 0;
-
                 if (status == Active) {
                     cancel_repeating_timer(&midi_timer);
                 }
