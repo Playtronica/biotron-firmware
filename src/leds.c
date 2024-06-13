@@ -10,12 +10,12 @@
 #include "music.h"
 #include "params.h"
 
-uint8_t ALL_LEDS[] = {
+const uint8_t ALL_LEDS[] = {
         GROUP_BlUE_LED_CENTER, GROUP_BlUE_LED_LEFT, GROUP_BlUE_LED_RIGHT,
         FIRST_GROUP_GREEN_LED_1, FIRST_GROUP_GREEN_LED_2, FIRST_GROUP_GREEN_LED_3,
         SECOND_GROUP_GREEN_LED_1, SECOND_GROUP_GREEN_LED_2, SECOND_GROUP_GREEN_LED_3
 };
-uint8_t LED_COUNT = 9;
+const uint8_t LED_COUNT = 9;
 
 
 void pwm_set_gpio_level_invert(uint gpio, uint16_t level) {
@@ -39,7 +39,8 @@ void intro_leds() {
     while (time_us_64() - startTime <= 1000000) {
         uint16_t val = (uint16_t)(MAX_LIGHT * ((double)(time_us_64() - startTime) / 1000000));
         for (int i = 0; i < LED_COUNT; ++i) {
-            pwm_set_gpio_level(ALL_LEDS[i], val);
+            if (i < 3) pwm_set_gpio_level_invert(ALL_LEDS[i], val);
+            else pwm_set_gpio_level(ALL_LEDS[i], val);
             remind_midi();
         }
     }

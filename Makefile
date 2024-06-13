@@ -14,6 +14,7 @@ create_container: build_image
 
 build: create_container
 	mkdir -p output
+	echo $$RANDOM
 	docker exec -e FLASH_ID_STARTUP=$$RANDOM $(IMAGE_NAME) bash -c "cd /build/output ; cmake .. ; make;"
 	$(call stop_and_rm_container)
 
