@@ -6,6 +6,9 @@ IMAGE_ID = $(shell docker images -q $(IMAGE))
 
 PWD := $(shell pwd)
 
+TIMESTAMP := $(shell date "+%s")
+
+
 
 create_container: build_image
 	docker rm -f $(IMAGE_NAME) || :;
@@ -14,8 +17,8 @@ create_container: build_image
 
 build: create_container
 	mkdir -p output
-	echo $$RANDOM
-	docker exec -e FLASH_ID_STARTUP=$$RANDOM $(IMAGE_NAME) bash -c "cd /build/output ; cmake .. ; make;"
+	echo $(TIMESTAMP)
+	docker exec -e FLASH_ID_STARTUP=$(TIMESTAMP) $(IMAGE_NAME) bash -c "cd /build/output ; cmake .. ; make;"
 	$(call stop_and_rm_container)
 
 build_image:
