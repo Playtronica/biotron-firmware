@@ -31,6 +31,7 @@ void default_settings() {
     settings.percent_note_off = DEF_PERCENT_NOTE_OFF;
     settings.light_note_range = DEF_LIGHT_NOTE_RANGE;
     settings.light_pitch_mode = DEF_LIGHT_PITCH_MODE;
+    settings.stuck_mode = true;
 };
 
 

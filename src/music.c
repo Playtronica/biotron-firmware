@@ -58,13 +58,13 @@ int get_plant_counter() {
     bool minus = diff < 0;
     diff = abs(diff);
 
-    if (abs((int)last_val - (int)last_freq) >= average_delta_freq * 3) {
+    if (abs((int)last_val - (int)last_freq) >= average_delta_freq * 3 || !settings.stuck_mode) {
         last_change_time = time_us_64();
         last_val = last_freq;
         extra_counter = 0;
     }
 
-    if (time_us_64() - last_change_time > 90000000) {
+    if (time_us_64() - last_change_time > 10000000) {
         int chance = rand() % 101;
         if (chance <= a * ((extra_counter + 10.0) / 10.0)) {
             extra_counter = MAX(-10, extra_counter - 2);
