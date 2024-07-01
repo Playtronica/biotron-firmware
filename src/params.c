@@ -237,6 +237,10 @@ void set_light_range_sys_ex(const uint8_t data[], uint8_t len) {
     settings.light_note_range = data[0];
 }
 
+void set_light_range_cc(const uint8_t channel, uint8_t value) {
+    settings.light_note_range = value;
+}
+
 void set_light_pitch_mode_sys_ex(const uint8_t data[], uint8_t len) {
     settings.light_pitch_mode = data[0] > 0;
     change_pitch(0, 63, 63);
@@ -252,7 +256,7 @@ void set_light_pitch_mode_cc(uint8_t channel, uint8_t value) {
 void setup_commands() {
     add_sys_ex_com(change_plant_bpm_sys_ex, 0);
     add_sys_ex_com(change_light_bpm_sys_ex, 9);
-    add_CC(change_bpm_cc, 14);
+//    add_CC(change_bpm_cc, 14);
 
     add_sys_ex_com(set_fib_power_sys_ex, 1);
     add_CC(set_fib_power_cc, 22);
@@ -264,7 +268,7 @@ void setup_commands() {
     add_CC(set_filter_cc, 3);
 
     add_sys_ex_com(set_scale_sys_ex, 4);
-    add_CC(set_scale_cc, 3);
+    add_CC(set_scale_cc, 24);
 
     add_sys_ex_com(set_max_plant_vel_sys_ex, 5);
     add_sys_ex_com(set_max_light_vel_sys_ex, 6);
@@ -288,9 +292,9 @@ void setup_commands() {
     add_CC(set_note_off_percent_cc, 21);
 
     add_sys_ex_com(set_light_range_sys_ex, 13);
+    add_CC(set_light_range_cc, 28);
 
     add_sys_ex_com(set_light_pitch_mode_sys_ex, 19);
     add_CC(set_light_pitch_mode_cc, 27);
-
 }
 
