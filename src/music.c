@@ -8,6 +8,7 @@
 #include "global.h"
 #include "PLSDK/music.h"
 #include "PLSDK/commands.h"
+#include "PLSDK/constants.h"
 
 uint8_t last_note_plant = MIDDLE_NOTE;
 uint8_t last_note_light = 0;
@@ -127,7 +128,9 @@ void midi_plant() {
         note_on(0, currentNote, velocity);
 
         if (active_status == Active) {
-            add_repeating_timer_us(settings.BPM / 100 * settings.percent_note_off, plant_note_off,
+            int bpm = !settings.light_bpm_mode ? settings.BPM :
+                      BPM_TO_US((MAX_OF_LIGHT - last_adc) / (int)(MAX_OF_LIGHT / MAX_OF_LIGHT_BPM));
+            add_repeating_timer_us(bpm / 100 * settings.percent_note_off, plant_note_off,
                                    NULL, &plantNoteOffTimer);
         }
     }
@@ -140,11 +143,10 @@ void midi_plant() {
 
 
 void midi_light() {
-    uint16_t adc = MIN(adc_read(), MAX_OF_LIGHT);
     uint16_t step = MAX_OF_LIGHT / (settings.light_note_range * 2);
 
-    int counter = abs(MAX_OF_LIGHT / 2 - (int)adc) / step;
-    if (adc > MAX_OF_LIGHT / 2) {
+    int counter = abs(MAX_OF_LIGHT / 2 - (int)last_adc) / step;
+    if (last_adc > MAX_OF_LIGHT / 2) {
         counter = -counter;
     }
 

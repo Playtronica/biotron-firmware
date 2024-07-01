@@ -2,10 +2,12 @@
 #include "global.h"
 #include "pico/stdlib.h"
 #include <stdlib.h>
+#include <hardware/adc.h>
 #include "raw_plant.h"
 #include "PLSDK/music.h"
 #include "params.h"
 #include "music.h"
+#include "PLSDK/constants.h"
 
 
 enum Status status = Sleep;
@@ -13,6 +15,7 @@ enum Status active_status = Active;
 uint32_t last_freq = 0;
 uint32_t average_freq = 0;
 uint32_t average_delta_freq = 0;
+uint16_t last_adc = 0;
 
 
 uint32_t filter_freq(double val, double k) {
@@ -30,10 +33,23 @@ uint32_t filter_freq(double val, double k) {
 }
 
 struct repeating_timer midi_timer;
+
+void turn_on_bpm() {
+    if (active_status == Active) {
+        cancel_repeating_timer(&midi_timer);
+        int bpm = !settings.light_bpm_mode ? settings.BPM :
+                BPM_TO_US((MAX_OF_LIGHT - last_adc) / (int)(MAX_OF_LIGHT / MAX_OF_LIGHT_BPM));
+
+        printf("%d %d %d\n", bpm, last_adc, last_adc / (int)(MAX_OF_LIGHT / MAX_OF_LIGHT_BPM));
+        add_repeating_timer_us(bpm, play_music, NULL, &midi_timer);
+    }
+}
+
 bool play_music() {
     static uint64_t time_log = 0;
     static uint8_t counter = 1;
-
+//    last_adc = 3003;
+    last_adc = adc_read();
     midi_plant();
 
     if (settings.light_pitch_mode) midi_light_pitch();
@@ -46,10 +62,14 @@ bool play_music() {
         time_log = time_us_64();
     }
     if (time_us_64() - time_log > 100000) {
-        printf("{\"AverageFreq\": %d, \"Freq\": %d, \"PlantNote\": %d, \"LightNote\": %d }\n",
-               average_freq, last_freq, last_note_plant, last_note_light);
+//        printf("{\"AverageFreq\": %d, \"Freq\": %d, \"PlantNote\": %d, \"LightNote\": %d }\n",
+//               average_freq, last_freq, last_note_plant, last_note_light);
         time_log = time_us_64();
     }
+
+//    cancel_repeating_timer(&midi_timer);
+    turn_on_bpm();
+
     return true;
 }
 
@@ -152,10 +172,9 @@ void status_loop() {
                 counter = 0;
                 note_off(0, jingle_notes[jingle_step - 1]);
                 jingle_step = 0;
-                if (active_status == Active) {
-                    add_repeating_timer_us(settings.BPM, play_music, NULL, &midi_timer);
-                }
+
                 status = active_status;
+                turn_on_bpm();
                 printf("[+] Change status: Stab -> Active\n");
             }
             else {

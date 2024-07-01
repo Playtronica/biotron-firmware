@@ -9,6 +9,7 @@ extern uint8_t last_note_plant;
 
 
 #define MAX_OF_LIGHT 3200
+#define MAX_OF_LIGHT_BPM 300
 extern uint8_t last_note_light;
 
 void reset_plant_note_off();
