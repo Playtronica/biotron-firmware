@@ -8,8 +8,10 @@
 extern uint8_t last_note_plant;
 
 
-#define MAX_OF_LIGHT 3200
-#define MAX_OF_LIGHT_BPM 300
+#define MAX_OF_LIGHT 4000
+#define MIN_OF_LIGHT 300
+#define MAX_OF_LIGHT_BPM 240
+#define MIN_OF_LIGHT_BPM 1
 extern uint8_t last_note_light;
 
 void reset_plant_note_off();

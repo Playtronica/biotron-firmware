@@ -31,6 +31,7 @@ extern uint16_t last_adc;
 
 bool play_music();
 
+int calculate_bpm_from_adc();
 void bpm_clock_control(bool enabled);
 void reset_bpm();
 void load_settings();

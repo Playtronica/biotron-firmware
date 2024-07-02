@@ -17,6 +17,15 @@ uint32_t average_freq = 0;
 uint32_t average_delta_freq = 0;
 uint16_t last_adc = 0;
 
+int calculate_bpm_from_adc() {
+    uint16_t bpm = MIN_OF_LIGHT_BPM +
+            (MAX_OF_LIGHT - (last_adc - MIN_OF_LIGHT)) /
+            (int)((MAX_OF_LIGHT - MIN_OF_LIGHT) / (MAX_OF_LIGHT_BPM - MIN_OF_LIGHT_BPM));
+
+    printf("%d %d %d\n", bpm, last_adc, (int)((MAX_OF_LIGHT - MIN_OF_LIGHT) / (MAX_OF_LIGHT_BPM - MIN_OF_LIGHT_BPM)));
+    return BPM_TO_US(bpm);
+}
+
 
 uint32_t filter_freq(double val, double k) {
     static uint32_t filter_val = 0;
@@ -37,10 +46,8 @@ struct repeating_timer midi_timer;
 void turn_on_bpm() {
     if (active_status == Active) {
         cancel_repeating_timer(&midi_timer);
-        int bpm = !settings.light_bpm_mode ? settings.BPM :
-                BPM_TO_US((MAX_OF_LIGHT - last_adc) / (int)(MAX_OF_LIGHT / MAX_OF_LIGHT_BPM));
+        int bpm = !settings.light_bpm_mode ? settings.BPM : calculate_bpm_from_adc();
 
-        printf("%d %d %d\n", bpm, last_adc, last_adc / (int)(MAX_OF_LIGHT / MAX_OF_LIGHT_BPM));
         add_repeating_timer_us(bpm, play_music, NULL, &midi_timer);
     }
 }
@@ -48,7 +55,7 @@ void turn_on_bpm() {
 bool play_music() {
     static uint64_t time_log = 0;
     static uint8_t counter = 1;
-//    last_adc = 3003;
+
     last_adc = adc_read();
     midi_plant();
 

@@ -24,6 +24,7 @@
 #define DEF_PERCENT_NOTE_OFF 100
 #define DEF_LIGHT_NOTE_RANGE 12
 #define DEF_LIGHT_PITCH_MODE false
+#define DEF_LIGHT_BPM_MODE false
 
 typedef struct {
     int id;

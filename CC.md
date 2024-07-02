@@ -19,13 +19,9 @@
 <!-- TABLE OF CONTENTS -->
 
 <details >
-
   <summary>Table of Continuous Controllers</summary>
-
   <ol>
 
-[//]: # (1&#41; [Description]&#40;#description&#41;)
-1)[Commands](#commands)
    1) [Sensitivity (fib)](#sensitivity--fib-)
    2) [Smoothness](#smoothness)
    3) [Scale](#scale)
@@ -37,9 +33,9 @@
    9) [Note Off Percent](#note-off-percent)
    10) [Light Notes Range](#light-notes-range)
    11) [Light Pitch Bend](#light-pitch-bend)
+   12) [Light BPM Mode](#light-bpm-mode)
 
   </ol>
-
 </details>
 
 # Description
@@ -208,6 +204,18 @@ light sensor will change pitch band on first channel (Plant)
 
 ### Input
 Num: CC 27
+
+Turn off this mode if value < 63, else turn it on
+
+
+## Light BPM Mode
+
+### Description
+
+In this mode, value of light sensor influences on plant BPM
+
+### Input
+Num: CC 29
 
 Turn off this mode if value < 63, else turn it on
 

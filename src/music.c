@@ -128,8 +128,7 @@ void midi_plant() {
         note_on(0, currentNote, velocity);
 
         if (active_status == Active) {
-            int bpm = !settings.light_bpm_mode ? settings.BPM :
-                      BPM_TO_US((MAX_OF_LIGHT - last_adc) / (int)(MAX_OF_LIGHT / MAX_OF_LIGHT_BPM));
+            int bpm = !settings.light_bpm_mode ? settings.BPM : calculate_bpm_from_adc();
             add_repeating_timer_us(bpm / 100 * settings.percent_note_off, plant_note_off,
                                    NULL, &plantNoteOffTimer);
         }
