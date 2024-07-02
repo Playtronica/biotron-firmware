@@ -212,3 +212,15 @@ Num: CC 27
 Turn off this mode if value < 63, else turn it on
 
 
+## Stuck Mode
+
+### Description
+
+When device plays same notes, device will become more sensitive.
+
+### Input
+
+Num: CC: 30
+
+Turn off this mode if value < 63, else turn it on
+
