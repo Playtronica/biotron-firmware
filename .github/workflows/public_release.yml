@@ -1,0 +1,23 @@
+on:
+  release:
+    types: [published]
+
+jobs:
+  public-release:
+    name: "Public Release"
+    runs-on: ubuntu-latest
+    steps:
+    - name: copy_asset
+      uses: dsaltares/fetch-gh-release-asset@master
+      with:
+        regex: true
+        file: "^.*.uf2"
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+
+    - name: Check Files
+    - run: ls
+
+      
+        
+  
