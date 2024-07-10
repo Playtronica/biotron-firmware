@@ -25,14 +25,22 @@ jobs:
       run: cd output | ls | rename "s/\^.\*.uf2//g" *.uf2
 
     - name: Push to Another repo
-      uses: cpina/github-action-push-to-another-repository@main
-      env:
-        API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
-      with:
-        source-directory: '.'
-        destination-github-username: 'Playtronica'
-        destination-repository-name: 'biotron-releases'
-        commit-message: $"${{ join(steps.copy_asset.outputs.*, '\n') }}"
+      run: |
+        git add . |
+        git diff-index --quiet HEAD || git commit -m "${{ steps.copy_asset.outputs.name }}" 
+          -m "TAG: ${{ steps.copy_asset.outputs.version }}" -m "Body: ${{ steps.copy_asset.outputs.body }}" |
+          git push "https://github.com/Playtronica/biotron-releases.git" --set-upstream "main"
+        
+
+    
+      # uses: cpina/github-action-push-to-another-repository@main
+      # env:
+      #   API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
+      # with:
+      #   source-directory: '.'
+      #   destination-github-username: 'Playtronica'
+      #   destination-repository-name: 'biotron-releases'
+      #   commit-message: $"${{ join(steps.copy_asset.outputs.*, '\n') }}"
 
   
 
