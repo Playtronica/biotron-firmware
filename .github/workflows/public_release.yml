@@ -27,10 +27,12 @@ jobs:
       uses: cpina/github-action-push-to-another-repository@main
       env:
         API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
+        COMMIT_DATA: ${{ join(jobs.copy_asset.outputs.*, '\n') }}
       with:
         source-directory: '.'
         destination-github-username: 'Playtronica'
         destination-repository-name: 'biotron-releases'
+        commit-message: $COMMIT_DATA
 
   
 
