@@ -32,7 +32,7 @@ jobs:
         source-directory: '.'
         destination-github-username: 'Playtronica'
         destination-repository-name: 'biotron-releases'
-        commit-message: ${{ join(steps.copy_asset.outputs.*, '\n') }}
+        commit-message: $"${{ join(steps.copy_asset.outputs.*, '\n') }}"
 
   
 
