@@ -14,11 +14,12 @@ jobs:
       with:
         regex: true
         file: "^.*.uf2"
+        target: 'output/'
         token: ${{ secrets.GITHUB_TOKEN }}
 
 
-    - name: Check Files
-      run: ls
+    - name: Check files and name correctly
+      run: cd output | ls | rename "s/\^.\*.uf2//g" *.uf2
 
     - name: Push to Another repo
       uses: cpina/github-action-push-to-another-repository@main
