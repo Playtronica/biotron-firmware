@@ -9,15 +9,17 @@ jobs:
     name: "Public Release"
     runs-on: ubuntu-latest
     steps:
-    - name: copy_asset
+    - name: Install rename util
+      run: sudo apt-get install -y rename
+    
+    - name: Copy Asset
       uses: dsaltares/fetch-gh-release-asset@master
       with:
         regex: true
         file: "^.*.uf2"
         target: 'output/'
         token: ${{ secrets.GITHUB_TOKEN }}
-
-
+    
     - name: Check files and name correctly
       run: cd output | ls | rename "s/\^.\*.uf2//g" *.uf2
 
