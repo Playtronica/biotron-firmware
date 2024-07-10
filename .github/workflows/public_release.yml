@@ -26,8 +26,8 @@ jobs:
 
     - name: Push to Another repo
       run: |
-        git config --global user.email "" |
-        git config --global user.name "Playtronica" "
+        git config --global user.name "Playtronica" |
+        git config --global user.email "<>" |
         git clone "https://github.com/Playtronica/biotron-releases.git" |
         cp -r output biotron-releases |
         cd biotron-releases |
