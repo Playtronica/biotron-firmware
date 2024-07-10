@@ -13,6 +13,7 @@ jobs:
       run: sudo apt-get install -y rename
     
     - name: Copy Asset
+      id: copy_asset
       uses: dsaltares/fetch-gh-release-asset@master
       with:
         regex: true
@@ -31,7 +32,7 @@ jobs:
         source-directory: '.'
         destination-github-username: 'Playtronica'
         destination-repository-name: 'biotron-releases'
-        commit-message: ${{ join(steps.copy-asset.outputs.*, '\n') }}
+        commit-message: ${{ join(steps.copy_asset.outputs.*, '\n') }}
 
   
 
