@@ -35,7 +35,7 @@ jobs:
         git clone "${{ env.GIT_CMD_REPOSITORY }}"
 
         cd biotron-releases
-        rm output 2> /dev/null
+        rm -rf output 
         cp -r ../output biotron-releases 
         
         
