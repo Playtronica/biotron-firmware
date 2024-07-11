@@ -26,15 +26,15 @@ jobs:
 
     - name: Push to Another repo
       run: |
-        git config --global user.name "Playtronica" |
-        git config --global user.email "<>" |
-        git clone "https://github.com/Playtronica/biotron-releases" |
-        echo `ls`|
-        cp -r output biotron-releases |
-        cd biotron-releases |
-        git add . |
+        git config --global user.name "Playtronica" 
+        git config --global user.email "<>" 
+        git clone "https://github.com/Playtronica/biotron-releases" 
+        
+        cp -r output biotron-releases 
+        cd biotron-releases 
+        git add . 
         git commit -m "${{ steps.copy_asset.outputs.name }}" 
-          -m "TAG: ${{ steps.copy_asset.outputs.version }}" -m "Body: ${{ steps.copy_asset.outputs.body }}" |
+          -m "TAG: ${{ steps.copy_asset.outputs.version }}" -m "Body: ${{ steps.copy_asset.outputs.body }}" 
         git push -f
         
 
