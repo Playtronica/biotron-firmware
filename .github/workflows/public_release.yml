@@ -30,7 +30,7 @@ jobs:
       env:
         API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
       run: |
-        GIT_CMD_REPOSITORY = "https://Playtronica:$API_TOKEN_GITHUB@github.com/Playtronica/biotron-release.git"
+        GIT_CMD_REPOSITORY = "https://Playtronica:${{ env.API_TOKEN_GITHUB }}@github.com/Playtronica/biotron-release.git"
         
       
         git config --global user.name "Playtronica" 
