@@ -20,6 +20,14 @@ jobs:
         file: "^.*.uf2"
         target: 'output/'
         token: ${{ secrets.GITHUB_TOKEN }}
+
+
+    - name: Save files
+      run: |
+        cat "${{ github.action_path }}/CHANGELOG.md" > CHANGELOG.md
+        cat "${{ github.action_path }}/README.md" > README.md
+        cat "${{ github.action_path }}/CC.md" > CC.md
+        cp -r "${{ github.action_path }}/static" static
     
     - name: Check files and name correctly
       run: |
