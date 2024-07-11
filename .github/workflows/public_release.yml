@@ -36,7 +36,7 @@ jobs:
 
         cd biotron-releases
         rm -rf output 
-        cp -r ../output biotron-releases 
+        cp -r ../output output
         
         
         git add . 
