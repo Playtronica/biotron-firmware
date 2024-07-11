@@ -29,13 +29,11 @@ jobs:
     - name: Push to Another repo
       env:
         API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
+        GIT_CMD_REPOSITORY: "https://Playtronica:${{ secrets.API_TOKEN_GITHUB }}@github.com/Playtronica/biotron-release.git"
       run: |
-        GIT_CMD_REPOSITORY = "https://Playtronica:${{ env.API_TOKEN_GITHUB }}@github.com/Playtronica/biotron-release.git"
-        
-      
         git config --global user.name "Playtronica" 
         git config --global user.email "<>" 
-        git clone "$GIT_CMD_REPOSITORY"
+        git clone "${{ env.GIT_CMD_REPOSITORY }}"
         
         cp -r output biotron-releases 
         cd biotron-releases
@@ -43,7 +41,7 @@ jobs:
         git add . 
         git commit -m "${{ steps.copy_asset.outputs.name }}" \
           -m "TAG: ${{ steps.copy_asset.outputs.version }}" -m "Body: ${{ steps.copy_asset.outputs.body }}"
-        git push -f "$GIT_CMD_REPOSITORY" --set-upstream "main"
+        git push -f "${{ env.GIT_CMD_REPOSITORY }}" --set-upstream "main"
         
 
     
