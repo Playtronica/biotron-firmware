@@ -29,7 +29,7 @@ jobs:
     - name: Push to Another repo
       env:
         API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
-        GIT_CMD_REPOSITORY: "https://Playtronica:${{ secrets.API_TOKEN_GITHUB }}@github.com/Playtronica/biotron-release.git"
+        GIT_CMD_REPOSITORY: "https://Playtronica:${{ secrets.API_TOKEN_GITHUB }}@github.com/Playtronica/biotron-release"
       run: |
         git config --global user.name "Playtronica" 
         git config --global user.email "<>" 
