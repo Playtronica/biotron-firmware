@@ -22,7 +22,9 @@ jobs:
         token: ${{ secrets.GITHUB_TOKEN }}
     
     - name: Check files and name correctly
-      run: ls | rename "s/\^.\*.uf2//g" output/*.uf2
+      run: |
+        rename "s/\^.\*.uf2//g" output/*.uf2
+        ls
 
     - name: Push to Another repo
       run: |
@@ -31,11 +33,13 @@ jobs:
         git clone "https://github.com/Playtronica/biotron-releases" 
         
         cp -r output biotron-releases 
-        cd biotron-releases 
+        cd biotron-releases
+        
         git add . 
         git commit -m "${{ steps.copy_asset.outputs.name }}" \
-          -m "TAG: ${{ steps.copy_asset.outputs.version }}" -m "Body: ${{ steps.copy_asset.outputs.body }}" 
-        git push -f
+          -m "TAG: ${{ steps.copy_asset.outputs.version }}" -m "Body: ${{ steps.copy_asset.outputs.body }}"
+        git 
+        git push -f "https://github.com/Playtronica/biotron-releases" --set-upstream "main"
         
 
     
