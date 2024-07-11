@@ -21,13 +21,6 @@ jobs:
         target: 'output/'
         token: ${{ secrets.GITHUB_TOKEN }}
 
-
-    - name: Save files
-      run: |
-        cat "${{ github.action_path }}/CHANGELOG.md" > CHANGELOG.md
-        cat "${{ github.action_path }}/README.md" > README.md
-        cat "${{ github.action_path }}/CC.md" > CC.md
-        cp -r "${{ github.action_path }}/static" static
     
     - name: Check files and name correctly
       run: |
@@ -45,7 +38,11 @@ jobs:
         cd biotron-releases
         rm -rf output 
         cp -r ../output output
-        
+       
+        cp ../CHANGELOG.md . 
+        cp ../README.md .
+        cp ../CC.md" .
+        cp -r ../static .
         
         git add . 
         git commit -m "${{ steps.copy_asset.outputs.name }}" \
