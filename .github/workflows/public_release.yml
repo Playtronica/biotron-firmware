@@ -9,6 +9,12 @@ jobs:
     name: "Public Release"
     runs-on: ubuntu-latest
     steps:
+    
+    - name: Сheckout Repo
+      uses: actions/checkout@main
+      with:
+          fetch-depth: 0
+    
     - name: Install rename util
       run: sudo apt-get install -y rename
     
