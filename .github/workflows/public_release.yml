@@ -47,15 +47,16 @@ jobs:
         cd biotron-releases
         rm -rf output 
         
+        
         cp -r ../output output
-        cp ../CHANGELOG.md . 
-        cp ../README.md .
-        cp ../CC.md" .
-        cp -r ../static .
+        cp ../CHANGELOG.md CHANGELOG.md 
+        cp ../README.md README.md
+        cp ../CC.md CC.md
+        cp -r ../static static
         
         git add . 
         git commit -m "${{ steps.copy_asset.outputs.name }}" \
-          -m "TAG: ${{ steps.copy_asset.outputs.version }}" -m "Body: ${{ steps.copy_asset.outputs.body }}"
+          -m "TAG: ${{ steps.copy_asset.outputs.version }}" 
         git push -f "${{ env.GIT_CMD_REPOSITORY }}" --set-upstream "main"
         
 
