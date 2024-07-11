@@ -38,7 +38,6 @@ jobs:
         git add . 
         git commit -m "${{ steps.copy_asset.outputs.name }}" \
           -m "TAG: ${{ steps.copy_asset.outputs.version }}" -m "Body: ${{ steps.copy_asset.outputs.body }}"
-        git 
         git push -f "https://github.com/Playtronica/biotron-releases" --set-upstream "main"
         
 
