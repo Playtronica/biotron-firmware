@@ -100,6 +100,7 @@ void read_sys_ex() {
         for (int i = 0; i < length_cc; i++) {
             if (CC[i].num == res[1]) {
                 CC[i].action(res[0] - CC_START, res[2]);
+                save_settings();
                 return;
             }
         }

@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## v1.5.4
+### Changed
+- CC commands save setting after boot
+
 ## v1.5.3
 ### Not Firmware Added
 - Changelog file
