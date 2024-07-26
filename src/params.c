@@ -31,6 +31,7 @@ void default_settings() {
     settings.percent_note_off = DEF_PERCENT_NOTE_OFF;
     settings.light_note_range = DEF_LIGHT_NOTE_RANGE;
     settings.light_pitch_mode = DEF_LIGHT_PITCH_MODE;
+    settings.stuck_mode = DEF_STUCK_MODE;
 };
 
 
@@ -250,6 +251,15 @@ void set_light_pitch_mode_cc(uint8_t channel, uint8_t value) {
     settings.light_pitch_mode = value > 63;
     change_pitch(0, 63, 63);
 }
+
+
+void set_stuck_mode_sys_ex(const uint8_t data[], uint8_t len) {
+    settings.stuck_mode = data[0] > 0;
+}
+
+void set_stuck_mode_cc(uint8_t channel, uint8_t value) {
+    settings.stuck_mode = value > 63;
+}
 //endregion
 
 
@@ -296,5 +306,8 @@ void setup_commands() {
 
     add_sys_ex_com(set_light_pitch_mode_sys_ex, 19);
     add_CC(set_light_pitch_mode_cc, 27);
+
+    add_sys_ex_com(set_stuck_mode_sys_ex, 21);
+    add_CC(set_stuck_mode_cc, 30);
 }
 
