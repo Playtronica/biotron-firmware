@@ -56,12 +56,12 @@
     <li>
       <a href="#getting-started">Getting Started</a>
       <ul>
-        <li><a href="#prerequisites">Prerequisites</a></li>
-        <li><a href="#installation">Installation</a></li>
+        <li><a href="#build-firmware-file">Build firmware file</a></li>
+        <li><a href="#load-firmware">Load Firmware</a></li>
       </ul>
     </li>
-    <li><a href="#commands">MIDI Commands</a></li>
-    <li><a href="#contributing">Contributing</li>
+    <li><a href="#biotrons-continuous-controllers-">Biotron's Continuous Controllers</a></li>
+    <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
     <li><a href="#contact">Contact</a></li>
   </ol>
@@ -77,40 +77,47 @@ TODO
 ### Built With
 
 * [Raspberry Pi Pico SDK](https://github.com/raspberrypi/pico-sdk)
+* [Docker](https://www.docker.com/)
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
 <!-- GETTING STARTED -->
 ## Getting Started
 
-
-### Prerequisites
-
-Install docker, example for Ubuntu 20.04
+### Build firmware file
 
 
-### Build and flash with docker (Recomended way)
+1. Install docker, example for Ubuntu 20.04
 
-1. Clone the repo
+2. Clone the repo
    ```sh
    git clone https://github.com/Playtronica/Biotron.git
    ```
-2. Setup build image
-   ```sh
-   make build_image
-   ```
-3. Build binary
+3. Setup build image and build binary
    ```sh
    make build
    ```
-4. Boot biotron in bootloader mode
-- TODO
+4. Get your firmware file in output directory (file with extension uf2)
 
-5. Copy `biotron.uf2` from `output` dir to touchme mass storage device  
-   Example:
-    ```sh
-    cp output/biotron.uf2 /media/user/RPI-RP2
-    ```
+
+### Load Firmware
+
+For loading device you need firmware file. You can get it in different ways:
+1) Build firmware by yourself. How to do it, you can read [here](#build-firmware-file)
+2) Load firmware from [releases](https://github.com/Playtronica/biotron-firmware/releases/latest)
+3) Open [WebMidi](https://playtronica.github.io/WebMidiVue/#/biotron) and press "Update Firmware". 
+(It also change device state in boot mode)
+
+After that you need to turn on boot mode on device:
+
+1) If your device is already have one of the latest firmwares - 
+Open [WebMidi](https://playtronica.github.io/WebMidiVue/#/biotron) and press "Update Firmware" 
+(You also get the latest firmware)
+2) If your firmware version is not latest, or you have problems with first method -
+while you are connecting device to PC, lock boot pins
+
+The device will be displayed as removable media (like a USB flash drive).
+You should transfer the resulting .uf2 file to the removable media that appeared.
 
 
 <p align="right">(<a href="#top">back to top</a>)</p>
