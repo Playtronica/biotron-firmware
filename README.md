@@ -162,7 +162,7 @@ TODO Add license
 <!-- CONTACT -->
 ## Contact
 
-* Project Link: [https://github.com/Playtronica/Biotron](https://github.com/Playtronica/Biotron)
+* Project Link: [https://github.com/Playtronica/biotron-firmware](https://github.com/Playtronica/biotron-firmware)
 * Our website: [https://playtronica.com/](https://playtronica.com/)
 
 ### Social media
