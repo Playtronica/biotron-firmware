@@ -24,7 +24,7 @@
 #define DEF_PERCENT_NOTE_OFF 100
 #define DEF_LIGHT_NOTE_RANGE 12
 #define DEF_LIGHT_PITCH_MODE false
-#define DEF_STUCK_MODE true
+#define DEF_STUCK_MODE false
 
 typedef struct {
     int id;
@@ -45,7 +45,7 @@ typedef struct {
     int percent_note_off;
     int light_note_range;
     bool light_pitch_mode;
-    bool stuck_mode;
+    bool performance_mode;
 } Settings_t;
 
 extern Settings_t settings;

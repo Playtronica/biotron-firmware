@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## v1.5.6
+### Changed
+- Stuck mode was renamed to Performance Mode
+- Performance Mode invert logic (compare Stuck Mode)
+
 ## v1.5.5
 ### Added
 - Stuck Mode Control

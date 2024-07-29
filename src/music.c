@@ -58,7 +58,7 @@ int get_plant_counter() {
     bool minus = diff < 0;
     diff = abs(diff);
 
-    if ((abs((int)last_val - (int)last_freq) >= average_delta_freq * 3) || !settings.stuck_mode) {
+    if ((abs((int)last_val - (int)last_freq) >= average_delta_freq * 3) || settings.performance_mode) {
         last_change_time = time_us_64();
         last_val = last_freq;
         extra_counter = 0;

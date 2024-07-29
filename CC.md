@@ -37,6 +37,7 @@
    9) [Note Off Percent](#note-off-percent)
    10) [Light Notes Range](#light-notes-range)
    11) [Light Pitch Bend](#light-pitch-bend)
+   12) [Performance Mode](#performance-mode) 
 
   </ol>
 
@@ -212,11 +213,11 @@ Num: CC 27
 Turn off this mode if value < 63, else turn it on
 
 
-## Stuck Mode
+## Performance Mode
 
 ### Description
 
-When device plays same notes, device will become more sensitive.
+Mode for better manual control of the device
 
 ### Input
 
