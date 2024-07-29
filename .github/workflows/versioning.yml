@@ -42,6 +42,7 @@ jobs:
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           automatic_release_tag: "${{ steps.newtag.outputs.TAG_NAME }}"
+          title: "Release ${{ steps.newtag.outputs.TAG_NAME }}"
           prerelease: true
           files: |
             *.uf2

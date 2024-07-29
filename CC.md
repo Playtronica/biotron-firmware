@@ -45,7 +45,7 @@
 
 # Description
 
-It is list of Continuous Controllers. For each function you can find:
+It is list of Continuous Controllers.
 
 # Commands
 

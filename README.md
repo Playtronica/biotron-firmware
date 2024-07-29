@@ -117,9 +117,10 @@ Install docker, example for Ubuntu 20.04
 
 <!-- COMMANDS -->
 ## Biotron's Continuous Controllers 
+**Continuous Controllers** - MIDI messages, 
+which are used to patch data for parameters.
 
-
-Read more [here](./CC.md)
+Get list of Biotron's CC [here](./CC.md)
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 

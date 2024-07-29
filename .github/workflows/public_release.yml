@@ -50,7 +50,6 @@ jobs:
         
         cp -r ../output output
         cp ../CHANGELOG.md CHANGELOG.md 
-        cp ../README.md README.md
         cp ../CC.md CC.md
         cp -r ../static static
         
@@ -61,14 +60,6 @@ jobs:
         
 
     
-      # uses: cpina/github-action-push-to-another-repository@main
-      # env:
-      #   API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
-      # with:
-      #   source-directory: '.'
-      #   destination-github-username: 'Playtronica'
-      #   destination-repository-name: 'biotron-releases'
-      #   commit-message: $"${{ join(steps.copy_asset.outputs.*, '\n') }}"
 
   
 
