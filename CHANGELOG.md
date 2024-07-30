@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## v1.5.7
+### Added
+- Mute mode SysEx and CC command
+
 ## v1.5.6
 ### Changed
 - Stuck mode was renamed to Performance Mode

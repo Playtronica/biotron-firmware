@@ -111,7 +111,7 @@ void midi_plant() {
                               MIN(HIGHEST_NOTE,
                                   calculate_note_by_scale(MIDDLE_NOTE, get_plant_counter(), settings.scale)));
 
-    if (!is_mute) {
+    if (!is_mute && !settings.isMutePlantVelocity) {
         if (abs((int)currentNote - (int)last_note_plant) < settings.same_note) {
             return;
         }
@@ -154,8 +154,8 @@ void midi_light() {
                                    calculate_note_by_scale(MIDDLE_NOTE - 24, counter, settings.scale)));
 
 
-    if (!is_mute) {
-        note_off(1, last_note_light);
+    note_off(1, last_note_light);
+    if (!is_mute && !settings.isMuteLightVelocity) {
         uint8_t vel = settings.isRandomLightVelocity ?
                 rand() % (settings.maxLightVelocity + 1 - settings.minLightVelocity) + settings.minLightVelocity :
                       settings.maxLightVelocity;
