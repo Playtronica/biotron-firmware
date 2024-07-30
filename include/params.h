@@ -17,6 +17,7 @@
 #define DEF_FILTER_PERCENT 0
 #define DEF_SCALE 0
 #define DEF_RAND_VEL false
+#define DEF_MUTE false
 #define DEF_MIN_VEL 0
 #define DEF_MAX_VEL 75
 #define DEF_RANDOM_NOTE true
@@ -35,9 +36,11 @@ typedef struct {
     double filterPercent;
     int scale;
     bool isRandomPlantVelocity;
+    bool isMutePlantVelocity;
     int minPlantVelocity;
     int maxPlantVelocity;
     bool isRandomLightVelocity;
+    bool isMuteLightVelocity;
     int minLightVelocity;
     int maxLightVelocity;
     bool random_note;

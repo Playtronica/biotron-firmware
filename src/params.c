@@ -21,9 +21,11 @@ void default_settings() {
     settings.filterPercent = DEF_FILTER_PERCENT;
     settings.scale = DEF_SCALE;
     settings.isRandomPlantVelocity = DEF_RAND_VEL;
+    settings.isMutePlantVelocity = DEF_MUTE;
     settings.minPlantVelocity = DEF_MIN_VEL;
     settings.maxPlantVelocity = DEF_MAX_VEL;
     settings.isRandomLightVelocity = DEF_RAND_VEL;
+    settings.isMuteLightVelocity = DEF_MUTE;
     settings.minLightVelocity = DEF_MIN_VEL;
     settings.maxLightVelocity = DEF_MAX_VEL;
     settings.random_note = DEF_RANDOM_NOTE;
@@ -166,6 +168,15 @@ void set_random_light_vel_sys_ex(const uint8_t data[], uint8_t len) {
     settings.isRandomLightVelocity = data[0] > 0;
 }
 
+void set_mute_plant_vel_sys_ex(const uint8_t data[], uint8_t len) {
+    settings.isMutePlantVelocity = data[0] > 0;
+}
+
+void set_mute_light_vel_sys_ex(const uint8_t data[], uint8_t len) {
+    settings.isMuteLightVelocity = data[0] > 0;
+}
+
+
 void set_max_vel_cc(uint8_t channel, uint8_t value) {
     switch (channel) {
         case 0:
@@ -195,10 +206,24 @@ void set_min_vel_cc(uint8_t channel, uint8_t value) {
 void set_random_vel_cc(uint8_t channel, uint8_t value) {
     switch (channel) {
         case 0:
-            settings.isRandomPlantVelocity = value;
+            settings.isRandomPlantVelocity = value >= 64;
             break;
         case 1:
-            settings.isRandomLightVelocity = value;
+            settings.isRandomLightVelocity = value >= 64;
+            break;
+        default:
+            break;
+    }
+}
+
+
+void set_mute_cc(uint8_t channel, uint8_t value) {
+    switch (channel) {
+        case 0:
+            settings.isMutePlantVelocity = value >= 64;
+            break;
+        case 1:
+            settings.isMuteLightVelocity = value >= 64;
             break;
         default:
             break;
@@ -285,9 +310,13 @@ void setup_commands() {
     add_sys_ex_com(set_min_light_vel_sys_ex, 17);
     add_sys_ex_com(set_random_plant_vel_sys_ex, 16);
     add_sys_ex_com(set_random_light_vel_sys_ex, 18);
+    add_sys_ex_com(set_mute_plant_vel_sys_ex, 22);
+    add_sys_ex_com(set_mute_light_vel_sys_ex, 23);
+
     add_CC(set_max_vel_cc, 9);
     add_CC(set_min_vel_cc, 25);
     add_CC(set_random_vel_cc, 26);
+    add_CC(set_mute_cc, 31);
 
     add_sys_ex_com(set_default_sys_ex, 7);
 

@@ -142,6 +142,18 @@ Num: CC 26
 
 Turn off humanize if value < 63, else turn it on
 
+## Mute
+
+### Description
+
+Disable note generation from the channel
+(From plant and from light sensor)
+
+### Input
+Num: CC 31
+
+Turn off mute if value < 63, else turn it on
+
 
 ## Ultra sensitivity
 
@@ -224,4 +236,6 @@ Mode for better manual control of the device
 Num: CC: 30
 
 Turn off this mode if value < 63, else turn it on
+
+
 
