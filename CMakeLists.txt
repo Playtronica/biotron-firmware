@@ -42,10 +42,14 @@ add_compile_options(-Wall
         -Wno-maybe-uninitialized
         )
 
-file(GLOB biotron_SRC "src/*.c")
-file(GLOB biotron_PlSDK_SRC "src/PLSDK/*.c")
+
+
 add_executable(${TARGET_NAME})
-target_sources(${TARGET_NAME} PUBLIC main.c ${biotron_SRC} ${biotron_PlSDK_SRC})
+
+add_subdirectory(src)
+add_subdirectory(PLSDK)
+
+target_sources(${TARGET_NAME} PUBLIC main.c)
 target_include_directories(${TARGET_NAME} PUBLIC include())
 pico_enable_stdio_usb(${TARGET_NAME} 1)
 pico_enable_stdio_uart(${TARGET_NAME} 0)
