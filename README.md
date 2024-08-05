@@ -71,7 +71,19 @@
 
 ## About The Project
 
-TODO
+### Biotron: A Plant-Responsive MIDI Device
+
+Biotron is a unique MIDI device that transforms the internal processes of plants into musical compositions. By connecting to a plant via electrodes, Biotron captures the plant's natural electrical resistance and translates it into MIDI signals, allowing you to create dynamic and evolving music that reflects the plant's interaction with its environment.
+
+### Key Features:
+
+- Plant Interaction: Biotron measures the plant's active resistance, capacitive resistance, and minimal inductive resistance to generate MIDI notes. The music changes in real-time as the plant's internal conditions, such as moisture and environmental factors, fluctuate.
+- Theremin-Like Playability: In addition to responding to the plant's internal state, Biotron also reacts to movements around the plant, similar to a theremin. This feature allows you to "play" the plant by moving your hands nearby, influencing the music.
+- Light Sensor Integration: Biotron includes a second MIDI channel connected to a light sensor. By adjusting light and shadows over the sensor, you can add another layer of musical interaction and depth to your compositions.
+- Customizable Generative Logic: With the help of Playtronica's online tool, you can adjust and fine-tune Biotron’s generative music logic, tailoring the device to your creative needs and exploring various soundscapes.
+- Versatile Connectivity: Biotron connects via USB and is compatible with DAWs on phones, computers, and hardware synthesizers, making it a flexible addition to any music production setup.
+
+Biotron provides a unique fusion of nature and technology, turning the life processes of plants into a living, evolving musical experience. Ideal for musicians, sound artists, and nature enthusiasts, Biotron offers an innovative way to explore the intersection of biology and music.
 
 
 ### Built With
