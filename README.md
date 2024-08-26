@@ -29,11 +29,9 @@
   <p align="center">
     BODY IS AN INSTRUMENT
     <br />
-    <a href="https://github.com/Playtronica/Biotron"><strong>Explore the docs »</strong></a>
+    <a href="https://github.com/Playtronica/biotron-firmware"><strong>Explore the docs »</strong></a>
     <br />
     <br />
-    <a href="#">View Demo</a>
-    ·
     <a href="https://github.com/Playtronica/Biotron/issues">Report Bug</a>
     ·
     <a href="https://github.com/Playtronica/Biotron/issues">Request Feature</a>
