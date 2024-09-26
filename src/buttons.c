@@ -8,6 +8,7 @@ bool button_finger_pressed = false;
 void change_mute_mode() {
     button_finger_pressed = true;
     is_mute = !is_mute;
+//    printf("BUTTON_EVENT Mute\n");
 }
 
 void release_finger() {
@@ -19,6 +20,7 @@ void change_same_mode() {
     button_bottom_pressed = true;
     settings.same_note = !(bool)settings.same_note;
     save_settings();
+//    printf("BUTTON_EVENT Same note\n");
 }
 
 void release_bottom() {
@@ -30,6 +32,7 @@ void change_scale() {
     button_top_pressed = true;
     settings.scale = (settings.scale + 1) % 12;
     save_settings();
+//    printf("BUTTON_EVENT Scale\n");
 }
 
 void release_top() {

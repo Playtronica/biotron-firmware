@@ -13,6 +13,7 @@
 #include "PLSDK/cap_buttons.h"
 
 uint8_t pulse = 5;
+#define THRESHOLD_COUNTER 3
 
 /**
  * @struct ButtonState_t
@@ -27,6 +28,7 @@ typedef struct{
     ButtonsCB_t on_hold;    /**< Action to call on button hold */
     ButtonsCB_t on_release; /**< Action to call on button release */
     uint16_t min_press_interval;
+    uint8_t threshold;
 } ButtonState_t;
 
 /**
@@ -102,7 +104,7 @@ void buttons_init(uint8_t pulse_pin){
         gpio_init(_buttons[i].gpio);
         gpio_set_dir(_buttons[i].gpio, GPIO_IN);
         gpio_disable_pulls(_buttons[i].gpio);
-
+        _buttons[i].threshold = 0;
         gpio_set_irq_enabled_with_callback(_buttons[i].gpio, GPIO_IRQ_EDGE_RISE, true, &_buttons_int_cb);
     }
 }
@@ -146,6 +148,10 @@ void _buttons_int_cb(uint gpio, uint32_t event){
 
 void _check_button(ButtonState_t * button){
     if(button->interval > _minPressInterval || button->interval == 0){
+        if (button->threshold < THRESHOLD_COUNTER) {
+            button->threshold++;
+            return;
+        }
         if(button->isPressed){
             button->on_hold();
             return;
@@ -159,6 +165,7 @@ void _check_button(ButtonState_t * button){
             button->on_release();
         }
         button->isPressed = false;
+        button->threshold = 0;
     }
     button->interval = 0;
 }
