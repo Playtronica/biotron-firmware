@@ -74,12 +74,16 @@ void led_loop() {
             }
 
             break;
-        case Stabilization:
-            if ((ledsValue[ASYNC_LEDS - 1] + level) < MAX_LIGHT) {
-                ledsValue[ASYNC_LEDS - 1] += level;
+        case Stabilization: {
+            static int16_t led_step = 1000;
+            static uint16_t value = MIN_LIGHT;
+            if ((value + led_step > MAX_LIGHT && led_step > 0)
+                || (value + led_step < MIN_LIGHT && led_step < 0)) {
+                led_step *= -1;
             }
 
-            uint16_t value = ledsValue[ASYNC_LEDS - 1];
+            value += led_step;
+
 
             if (!button_top_pressed) {
                 pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_1, value / mute_light);
@@ -92,14 +96,12 @@ void led_loop() {
                 pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_3, value / mute_plant);
             }
             break;
+        }
         case Active:
         case BPMClockActive: {
-            if (ledsValue[ASYNC_LEDS - 1] + level > MAX_LIGHT && level > 0) {
+            if ((ledsValue[ASYNC_LEDS - 1] + level > MAX_LIGHT && level > 0) ||
+                (ledsValue[ASYNC_LEDS - 1] + level < MIN_LIGHT && level < 0)) {
                 level *= -1;
-            } else {
-                if (ledsValue[ASYNC_LEDS - 1] + level < MIN_LIGHT && level < 0) {
-                    level *= -1;
-                }
             }
 
             for (int i = 0; i < ASYNC_LEDS - 1; i++) {
