@@ -10,7 +10,7 @@
 #include <pico/printf.h>
 
 Settings_t settings;
-bool is_mute = false;
+enum MuteState mute_state = MuteNone;
 
 void default_settings() {
     settings.id = ID_FLASH;
