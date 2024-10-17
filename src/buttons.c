@@ -7,7 +7,7 @@
 bool button_finger_pressed = false;
 void change_mute_mode() {
     button_finger_pressed = true;
-    is_mute = !is_mute;
+    mute_state = (mute_state + 1) % 4;
 //    printf("BUTTON_EVENT Mute\n");
 }
 

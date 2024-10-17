@@ -52,7 +52,14 @@ typedef struct {
 } Settings_t;
 
 extern Settings_t settings;
-extern bool is_mute;
+extern enum MuteState {
+    MuteNone,
+    MutePlant,
+    MuteLight,
+    MuteAll
+} mute_state;
+
+
 
 void save_settings();
 void read_settings();
