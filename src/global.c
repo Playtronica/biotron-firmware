@@ -115,7 +115,7 @@ void status_loop() {
             }
 
             if (counter >= STABILIZATION_COUNTER) {
-                note_on(0, jingle_notes[jingle_step++], 90);
+//                note_on(0, jingle_notes[jingle_step++], 90);
 
                 status = Stabilization;
                 counter = 0;
@@ -139,7 +139,9 @@ void status_loop() {
                 average_delta_freq = 0;
                 average_freq = 0;
                 last_freq = 0;
-                note_off(0, jingle_notes[jingle_step - 1]);
+//                note_off(0, jingle_notes[jingle_step - 1]);
+                note_off(0, 92);
+                note_off(0, 91);
                 jingle_step = 0;
                 status = Sleep;
                 printf("[+] Change status: Stab -> Sleep\n");
@@ -150,7 +152,9 @@ void status_loop() {
                 average_freq /= counter;
                 average_delta_freq /= counter;
                 counter = 0;
-                note_off(0, jingle_notes[jingle_step - 1]);
+//                note_off(0, jingle_notes[jingle_step - 1]);
+                note_off(0, 92);
+                note_off(0, 91);
                 jingle_step = 0;
                 if (active_status == Active) {
                     add_repeating_timer_us(settings.BPM, play_music, NULL, &midi_timer);
@@ -160,8 +164,8 @@ void status_loop() {
             }
             else {
                 if (counter >= (AVERAGE_COUNTER / 3) * jingle_step && jingle_step < 4) {
-                    note_off(0, jingle_notes[jingle_step - 1]);
-                    note_on(0, jingle_notes[jingle_step++], 90);
+//                    note_off(0, jingle_notes[jingle_step - 1]);
+//                    note_on(0, jingle_notes[jingle_step++], 90);
                 }
             }
 

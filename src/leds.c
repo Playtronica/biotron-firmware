@@ -80,10 +80,17 @@ void led_loop() {
             if ((value + led_step > MAX_LIGHT && led_step > 0)
                 || (value + led_step < MIN_LIGHT && led_step < 0)) {
                 led_step *= -1;
+                if (led_step < 0) {
+                    note_off(0, 91);
+                    note_on(0, 92, 90);
+                }
+                else {
+                    note_off(0, 92);
+                    note_on(0, 91, 90);
+                }
             }
 
             value += led_step;
-
 
             if (!button_top_pressed) {
                 pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_1, value / mute_light);
