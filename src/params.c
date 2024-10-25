@@ -11,6 +11,7 @@
 
 Settings_t settings;
 enum MuteState mute_state = MuteNone;
+bool TestMode = false;
 
 void default_settings() {
     settings.id = ID_FLASH;
@@ -29,7 +30,8 @@ void default_settings() {
     settings.minLightVelocity = DEF_MIN_VEL;
     settings.maxLightVelocity = DEF_MAX_VEL;
     settings.random_note = DEF_RANDOM_NOTE;
-    settings.same_note = DEF_SANE_NOTE;
+    settings.same_note_plant = DEF_SANE_NOTE;
+    settings.same_note_light = DEF_SANE_NOTE;
     settings.percent_note_off = DEF_PERCENT_NOTE_OFF;
     settings.light_note_range = DEF_LIGHT_NOTE_RANGE;
     settings.light_pitch_mode = DEF_LIGHT_PITCH_MODE;
@@ -243,12 +245,26 @@ void set_random_note_cc(uint8_t channel, uint8_t value) {
     settings.random_note = value > 63;
 }
 
-void set_same_note_sys_ex(const uint8_t data[], uint8_t len) {
-    settings.same_note = data[0];
+void set_same_note_plant_sys_ex(const uint8_t data[], uint8_t len) {
+    settings.same_note_plant = data[0];
+}
+
+void set_same_note_light_sys_ex(const uint8_t data[], uint8_t len) {
+    settings.same_note_light = data[0];
 }
 
 void set_same_note_cc(uint8_t channel, uint8_t value) {
-    settings.same_note = value;
+    switch (channel) {
+        case 0:
+            settings.same_note_plant = value;
+            break;
+        case 1:
+            settings.same_note_light = value;
+            break;
+        default:
+            break;
+    }
+
 }
 
 void set_note_off_percent_sys_ex(const uint8_t data[], uint8_t len) {
@@ -323,7 +339,8 @@ void setup_commands() {
     add_sys_ex_com(set_random_note_sys_ex, 10);
     add_CC(set_random_note_cc, 15);
 
-    add_sys_ex_com(set_same_note_sys_ex, 11);
+    add_sys_ex_com(set_same_note_plant_sys_ex, 11);
+    add_sys_ex_com(set_same_note_light_sys_ex, 24);
     add_CC(set_same_note_cc, 20);
 
     add_sys_ex_com(set_note_off_percent_sys_ex, 12);

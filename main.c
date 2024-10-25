@@ -9,6 +9,11 @@
 #include "params.h"
 
 
+
+void test_mode() {
+
+}
+
 void setup() {
     stdio_init_all();
     init_midi();
@@ -36,7 +41,11 @@ int main(void)
         status_loop();
         led_loop();
         check_buttons();
+
+        if (TestMode) test_mode();
+
         remind_midi();
         sleep_ms(1);
     }
 }
+
