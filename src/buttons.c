@@ -18,7 +18,7 @@ void release_finger() {
 bool button_bottom_pressed = false;
 void change_same_mode() {
     button_bottom_pressed = true;
-    settings.same_note = !(bool)settings.same_note;
+    settings.same_note_plant = !(bool)settings.same_note_plant;
     save_settings();
 //    printf("BUTTON_EVENT Same note\n");
 }

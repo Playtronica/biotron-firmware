@@ -97,7 +97,6 @@ void load_settings() {
 
 
 void status_loop() {
-    const uint8_t jingle_notes[] = {36, 40, 43, 48};
     static uint8_t jingle_step = 0;
     static uint8_t counter = 0;
 

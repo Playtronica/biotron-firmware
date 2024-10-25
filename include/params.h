@@ -44,7 +44,8 @@ typedef struct {
     int minLightVelocity;
     int maxLightVelocity;
     bool random_note;
-    int same_note;
+    int same_note_plant;
+    int same_note_light;
     int percent_note_off;
     int light_note_range;
     bool light_pitch_mode;
