@@ -1,6 +1,24 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 1.6.0
+### Added
+- Same note mode for light (second) channel
+- Test Mode
+
+## v1.5.10
+### Changed
+- Jingle in stabilization mode
+
+## v1.5.9
+### Changed
+- Led Indication in Stabilization mode
+- Functionality of mute button
+
+## v1.5.8
+### Added
+- Threshold for buttons
+
 ## v1.5.7
 ### Added
 - Mute mode SysEx and CC command

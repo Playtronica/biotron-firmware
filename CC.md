@@ -173,7 +173,7 @@ Decrease sensitivity of device if value < 63, else increase it
 
 Notes that are played only when changing notes with a customizable step,
 where 1 - produces a note if the notes have changed by 1 note,
-10 if there has been a shift by 10 notes
+10 if there has been a shift by 10 notes. (For each channel)
 
 ### Input
 Num: CC 20
