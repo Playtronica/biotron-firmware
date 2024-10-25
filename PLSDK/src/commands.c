@@ -125,6 +125,14 @@ void read_sys_ex() {
         }
         if (res[1] == PLAYTRONICA_SYS_KEY && res[2] == PLAYTRONICA_KEY_FIRST && res[3] == PLAYTRONICA_KEY_SECOND) {
             switch (res[4]) {
+                case 0:
+                    TestMode = true;
+                    printf("Device is in TEST mode\n");
+                    break;
+                case 1:
+                    TestMode = false;
+                    printf("Device is in PLAY mode\n");
+                    break;
                 case 125:
                     // TODO Scala reader
                     break;

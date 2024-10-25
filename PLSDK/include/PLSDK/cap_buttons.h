@@ -30,6 +30,8 @@
 /** @brief Callback type to specify actions for buttons */
 typedef void (*ButtonsCB_t)();
 
+extern uint32_t button_states[];
+
 /*!
     * @brief    Manager for buttons.
     * @return   Returns nothing

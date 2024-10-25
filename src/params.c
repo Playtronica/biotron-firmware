@@ -11,6 +11,7 @@
 
 Settings_t settings;
 enum MuteState mute_state = MuteNone;
+bool TestMode = false;
 
 void default_settings() {
     settings.id = ID_FLASH;

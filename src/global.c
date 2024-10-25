@@ -2,10 +2,12 @@
 #include "global.h"
 #include "pico/stdlib.h"
 #include <stdlib.h>
+#include <hardware/adc.h>
 #include "raw_plant.h"
 #include "PLSDK/music.h"
 #include "params.h"
 #include "music.h"
+#include "PLSDK/cap_buttons.h"
 
 
 enum Status status = Sleep;
@@ -108,6 +110,15 @@ void status_loop() {
 
     switch (status) {
         case Sleep:
+            if (TestMode) {
+                printf("{\"generator_freq\": %d, \"photoresistor_adc\": %d,"
+                       "\"buttons_state\": {"
+                       "\"finger_button\": %d, \"button_bottom\": %d, \"button_top\": %d}}\n",
+                       raw_freq, adc_read(), button_states[0],  button_states[1],  button_states[2]);
+
+                break;
+            }
+
             if (raw_freq > MIN_FREQ) {
                 counter++;
             } else {
@@ -123,7 +134,7 @@ void status_loop() {
             }
             break;
         case Stabilization: {
-            if (raw_freq > MIN_FREQ) {
+            if (raw_freq > MIN_FREQ && !TestMode) {
                 counter++;
                 uint32_t b = filter_freq(raw_freq, 0.3);
                 if (average_freq == 0) {
@@ -187,7 +198,7 @@ void status_loop() {
             }
 
 
-            if (counter > SLEEP_COUNTER) {
+            if (counter > SLEEP_COUNTER || TestMode) {
                 counter = 0;
                 last_freq = 0;
                 average_freq = 0;

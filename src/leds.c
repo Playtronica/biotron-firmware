@@ -56,6 +56,17 @@ void led_loop() {
 
     switch (status) {
         case Sleep:
+            if (TestMode) {
+                pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_1, MAX_LIGHT);
+                pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_2, MAX_LIGHT);
+                pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_3, MAX_LIGHT);
+                pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_1, MAX_LIGHT);
+                pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_2, MAX_LIGHT);
+                pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_3, MAX_LIGHT);
+                break;
+            }
+
+
             if (level < 0) level *= -1;
 
             for (int i = ASYNC_LEDS - 1; i >= 0; i--) {
@@ -72,6 +83,8 @@ void led_loop() {
                 pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_2, 0);
                 pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_3, 0);
             }
+
+
 
             break;
         case Stabilization: {
@@ -145,6 +158,4 @@ void led_loop() {
         pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_2, MAX_LIGHT);
         pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_3, MAX_LIGHT);
     }
-
-    
 }

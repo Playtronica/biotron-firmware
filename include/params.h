@@ -58,6 +58,7 @@ extern enum MuteState {
     MuteLight,
     MuteAll
 } mute_state;
+extern bool TestMode;
 
 
 

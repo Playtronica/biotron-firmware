@@ -59,6 +59,7 @@ int _num_of_registered_buttons = 0;
 
 /** @brief Array containing structures of configured buttons */
 ButtonState_t _buttons[100];
+uint32_t button_states[3] = {};
 
 /** @brief Minimal time interval to consider button is pressed, us*/
 const uint32_t _minPressInterval = 50;
@@ -142,6 +143,7 @@ void _buttons_int_cb(uint gpio, uint32_t event){
     for(int i = 0; i < _num_of_registered_buttons; i++){
         if(_buttons[i].gpio == gpio && _buttons[i].interval == 0){
             _buttons[i].interval = time_us_32() - _lastPulseTime;
+            button_states[i] = _buttons[i].interval;
         }
     }
 }
@@ -169,6 +171,7 @@ void _check_button(ButtonState_t * button){
     }
     button->interval = 0;
 }
+
 
 void _start_measure(){
     _setup_buttons();
