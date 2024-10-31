@@ -30,10 +30,10 @@ uint8_t get_CC(uint8_t currentNote) {
     uint8_t buff = abs(MIDDLE_NOTE - currentNote);
     uint8_t target_CC;
     if (currentNote > MIDDLE_NOTE) {
-        target_CC = (1 - ((double )buff / (HIGHEST_NOTE - MIDDLE_NOTE))) * 127;
+        target_CC = (1 - ((double )buff / HIGHEST_NOTE_RANGE)) * 127;
     }
     else {
-        target_CC = (1 - ((double )buff / (MIDDLE_NOTE - LOWEST_NOTE))) * 127;
+        target_CC = (1 - ((double )buff / LOWEST_NOTE_RANGE)) * 127;
     }
 
     if (target_CC > lastCC) {
@@ -107,9 +107,10 @@ int get_plant_counter() {
 
 
 void midi_plant() {
-    uint8_t currentNote = MAX(LOWEST_NOTE,
-                              MIN(HIGHEST_NOTE,
-                                  calculate_note_by_scale(MIDDLE_NOTE, get_plant_counter(), settings.scale)));
+    uint8_t currentNote = MAX(settings.middle_plant_note - LOWEST_NOTE_RANGE,
+                              MIN(settings.middle_plant_note + HIGHEST_NOTE_RANGE,
+                                  calculate_note_by_scale(settings.middle_plant_note,
+                                                          get_plant_counter(), settings.scale)));
 
     if ((mute_state == MuteNone || mute_state == MuteLight) && !settings.isMutePlantVelocity) {
         if (abs((int)currentNote - (int)last_note_plant) < settings.same_note_plant) {
@@ -149,9 +150,10 @@ void midi_light() {
     }
 
 
-    uint8_t current_note = MAX(MIDDLE_NOTE - 24 - settings.light_note_range,
-                               MIN(MIDDLE_NOTE - 24 + settings.light_note_range,
-                                   calculate_note_by_scale(MIDDLE_NOTE - 24, counter, settings.scale)));
+    uint8_t current_note = MAX(settings.middle_plant_note - LIGHT_DIFFERENCE - settings.light_note_range,
+                               MIN(settings.middle_plant_note - LIGHT_DIFFERENCE + settings.light_note_range,
+                                   calculate_note_by_scale(settings.middle_plant_note - LIGHT_DIFFERENCE, counter,
+                                                           settings.scale)));
 
     note_off(1, last_note_light);
 

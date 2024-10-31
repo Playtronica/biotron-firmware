@@ -50,6 +50,7 @@ typedef struct {
     int light_note_range;
     bool light_pitch_mode;
     bool performance_mode;
+    int middle_plant_note;
 } Settings_t;
 
 extern Settings_t settings;
