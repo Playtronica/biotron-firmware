@@ -7,7 +7,6 @@
 
 #define LIGHT_PIN 26
 
-
 #define STABILIZATION_COUNTER (5 * TIMER_MULTIPLIER)
 #define AVERAGE_COUNTER (5 * TIMER_MULTIPLIER)
 #define SLEEP_COUNTER (3 * TIMER_MULTIPLIER)
@@ -29,6 +28,7 @@ extern uint32_t average_delta_freq;
 
 bool play_music();
 
+void watchdog_reset();
 void bpm_clock_control(bool enabled);
 void reset_bpm();
 void load_settings();

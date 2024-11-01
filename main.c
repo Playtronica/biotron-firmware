@@ -7,12 +7,8 @@
 #include "leds.h"
 #include "raw_plant.h"
 #include "params.h"
+#include "hardware/watchdog.h"
 
-
-
-void test_mode() {
-
-}
 
 void setup() {
     stdio_init_all();
@@ -27,8 +23,17 @@ void setup() {
     init_plant();
 
     intro_leds();
+
+
     read_settings();
     setup_commands();
+
+    if (watchdog_enable_caused_reboot()) {
+        printf("Watchdog reset\n");
+        watchdog_reset();
+    }
+
+    watchdog_enable(100, 1);
 }
 
 
@@ -42,9 +47,9 @@ int main(void)
         led_loop();
         check_buttons();
 
-        if (TestMode) test_mode();
-
         remind_midi();
+        watchdog_update();
+
         sleep_ms(1);
     }
 }

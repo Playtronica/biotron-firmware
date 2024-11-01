@@ -1,13 +1,13 @@
 #include <string.h>
-#include "params.h"
-#include "pico/stdlib.h"
-#include "PLSDK/constants.h"
-#include "global.h"
-#include "PLSDK/commands.h"
-#include "PLSDK/music.h"
 #include <hardware/flash.h>
 #include <hardware/sync.h>
 #include <pico/printf.h>
+
+#include "params.h"
+#include "global.h"
+#include "PLSDK/constants.h"
+#include "PLSDK/commands.h"
+#include "PLSDK/music.h"
 
 Settings_t settings;
 enum MuteState mute_state = MuteNone;
@@ -36,7 +36,18 @@ void default_settings() {
     settings.light_note_range = DEF_LIGHT_NOTE_RANGE;
     settings.light_pitch_mode = DEF_LIGHT_PITCH_MODE;
     settings.performance_mode = DEF_STUCK_MODE;
+
+    settings.average_freq = 0;
+    settings.average_delta_freq = 0;
+    settings.status = 0;
 };
+
+void save_watchdog() {
+    settings.average_freq = average_freq;
+    settings.average_delta_freq = average_delta_freq;
+    settings.status = status;
+    save_settings();
+}
 
 
 void save_settings() {
@@ -300,6 +311,10 @@ void set_stuck_mode_sys_ex(const uint8_t data[], uint8_t len) {
 void set_stuck_mode_cc(uint8_t channel, uint8_t value) {
     settings.performance_mode = value > 63;
 }
+
+void emulate_watchdog_execute(const uint8_t data[], uint8_t len) {
+    while (true);
+}
 //endregion
 
 
@@ -354,5 +369,7 @@ void setup_commands() {
 
     add_sys_ex_com(set_stuck_mode_sys_ex, 21);
     add_CC(set_stuck_mode_cc, 30);
+
+    add_sys_ex_com(emulate_watchdog_execute, 127);
 }
 

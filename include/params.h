@@ -1,7 +1,7 @@
 #ifndef BIOTRON_PARAMS_H
 #define BIOTRON_PARAMS_H
 
-#include <stdbool.h>
+
 #define FLASH_TARGET_OFFSET (512 * 1024)
 
 #ifdef FLASH_ID_STARTUP
@@ -50,6 +50,10 @@ typedef struct {
     int light_note_range;
     bool light_pitch_mode;
     bool performance_mode;
+
+    uint32_t average_freq;
+    uint32_t average_delta_freq;
+    int status;
 } Settings_t;
 
 extern Settings_t settings;
@@ -68,6 +72,6 @@ void read_settings();
 void clear_flash();
 
 void setup_commands();
-
+void save_watchdog();
 
 #endif //BIOTRON_PARAMS_H
