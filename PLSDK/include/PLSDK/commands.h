@@ -94,5 +94,7 @@ void print_sys_ex(const uint8_t data[], uint8_t len);
  * */
 void print_pure(uint8_t cable, const uint8_t data[], uint8_t len);
 
+void read_sys_ex();
+
 
 #endif //PLSDK_COMMANDS_H

@@ -33,4 +33,7 @@ void bpm_clock_control(bool enabled);
 void reset_bpm();
 void load_settings();
 
+extern bool settings_load;
+extern bool stuck_emul;
+
 #endif //BIOTRON_GLOBAL_H

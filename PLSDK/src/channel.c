@@ -19,7 +19,7 @@ void init_midi() {
         channels[i].start_note = 60;
         channels[i].max_note = 80;
     }
-    init_commands();
+//    init_commands();
 }
 
 void remind_midi() {
