@@ -5,6 +5,7 @@
 #include "global.h"
 #include "PLSDK/commands.h"
 #include "PLSDK/music.h"
+#include "music.h"
 #include <hardware/flash.h>
 #include <hardware/sync.h>
 #include <pico/printf.h>
@@ -36,7 +37,8 @@ void default_settings() {
     settings.light_note_range = DEF_LIGHT_NOTE_RANGE;
     settings.light_pitch_mode = DEF_LIGHT_PITCH_MODE;
     settings.performance_mode = DEF_STUCK_MODE;
-};
+    settings.middle_plant_note = MIDDLE_NOTE;
+}
 
 
 void save_settings() {
@@ -300,6 +302,14 @@ void set_stuck_mode_sys_ex(const uint8_t data[], uint8_t len) {
 void set_stuck_mode_cc(uint8_t channel, uint8_t value) {
     settings.performance_mode = value > 63;
 }
+
+void set_middle_plant_note_sys_ex(const uint8_t data[], uint8_t len) {
+    settings.middle_plant_note = data[0];
+}
+
+void set_middle_plant_note_cc(uint8_t channel, uint8_t value) {
+    settings.middle_plant_note = value;
+}
 //endregion
 
 
@@ -354,5 +364,8 @@ void setup_commands() {
 
     add_sys_ex_com(set_stuck_mode_sys_ex, 21);
     add_CC(set_stuck_mode_cc, 30);
+
+    add_sys_ex_com(set_middle_plant_note_sys_ex, 25);
+    add_CC(set_middle_plant_note_cc, 85);
 }
 

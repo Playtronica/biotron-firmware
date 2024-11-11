@@ -2,9 +2,10 @@
 #define BIOTRON_MUSIC_H
 
 
-#define LOWEST_NOTE 36
-#define HIGHEST_NOTE 107
+#define LOWEST_NOTE_RANGE 24
+#define HIGHEST_NOTE_RANGE 37
 #define MIDDLE_NOTE 60
+#define LIGHT_DIFFERENCE 24
 extern uint8_t last_note_plant;
 
 
