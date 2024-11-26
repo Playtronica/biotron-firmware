@@ -26,7 +26,6 @@ ifeq ($(IMAGE_ID),)
 WORK_DIR = .build
 
 build_image:
-
 	mkdir -p $(WORK_DIR)/usr/local/src/pico
 	git clone https://github.com/raspberrypi/pico-sdk/ $(WORK_DIR)/usr/local/src/pico/pico-sdk
 	git clone https://github.com/raspberrypi/pico-extras $(WORK_DIR)/usr/local/src/pico/pico-extras
