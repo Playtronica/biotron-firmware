@@ -16,6 +16,22 @@
 
 #define MAX_COUNT_COMMANDS 50
 
+enum SYS_EX_RESPONSE {
+    CUSTOM_COMMAND,
+    BPM_CLOCK_ACTIVATE,
+    BPM_CLOCK_DEACTIVATE,
+    BPM_CLOCK_PLAY,
+    BPM_CLOCK_INACTIVE,
+    UNKNOWN,
+
+    TEST_MODE_ACTIVATE,
+    TEST_MODE_DEACTIVATE,
+    LOGGER_ACTIVATE,
+    LOGGER_DEACTIVATE,
+    LIST_OF_COMMANDS_ACTION,
+    RESET_DEVICE,
+};
+
 
 typedef struct CC_command_s {
     void (*action)(uint8_t channel, uint8_t value);
@@ -93,6 +109,8 @@ void print_sys_ex(const uint8_t data[], uint8_t len);
  *
  * */
 void print_pure(uint8_t cable, const uint8_t data[], uint8_t len);
+
+int read_sys_ex();
 
 
 #endif //PLSDK_COMMANDS_H

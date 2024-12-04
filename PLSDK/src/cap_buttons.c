@@ -11,6 +11,7 @@
 */
 
 #include "PLSDK/cap_buttons.h"
+#include "PLSDK.h"
 
 uint8_t pulse = 5;
 #define THRESHOLD_COUNTER 3
@@ -101,7 +102,7 @@ void buttons_init(uint8_t pulse_pin){
     gpio_set_dir(pulse_pin, GPIO_OUT);
 
     for(int i = 0; i < _num_of_registered_buttons; i++ ){
-        printf("Init button %d\n", _buttons[i].gpio);
+        plsdk_printf("Init button %d\n", _buttons[i].gpio);
         gpio_init(_buttons[i].gpio);
         gpio_set_dir(_buttons[i].gpio, GPIO_IN);
         gpio_disable_pulls(_buttons[i].gpio);

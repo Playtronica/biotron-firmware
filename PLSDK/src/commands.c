@@ -1,12 +1,9 @@
-#include <class/midi/midi_device.h>
-#include <malloc.h>
-#include <pico/time.h>
+#include "pico/stdlib.h"
 #include "PLSDK/commands.h"
-#include "PLSDK/channel.h"
 #include "PLSDK/constants.h"
-#include "params.h"
-#include "global.h"
-#include <pico/bootrom.h>
+#include "PLSDK.h"
+#include "tusb.h"
+
 
 CC_command_s CC[MAX_COUNT_COMMANDS];
 uint8_t length_cc = 0;
@@ -45,68 +42,67 @@ void print_pure(uint8_t cable, const uint8_t data[], uint8_t len) {
 }
 
 static uint16_t clk = 0;
-void midi_clock() {
-    if (clk++ < 25) return;
+int midi_clock() {
+    if (clk++ < 25) return BPM_CLOCK_INACTIVE;
     clk = 1;
-    if (status == BPMClockActive) play_music();
+    return BPM_CLOCK_PLAY;
 }
 
-void read_sys_ex() {
+
+int read_sys_ex() {
     uint8_t res[300];
     uint8_t buff[4];
     uint32_t len = 0;
-    static uint8_t bpm_clock_prepare = 0;
+    static uint8_t bpm_clock_prepare = BPM_CLOCK_STOP_BYTE;
 
 
     while (tud_midi_packet_read(buff)) {
         remind_midi();
         for (int i = 1; i < 4; ++i) {
             res[len++] = buff[i];
-            if (buff[i] == SYS_EX_END) break;
+            if (buff[i] == SYS_EX_END ||
+                buff[i] == BPM_CLOCK_STOP_BYTE ||
+                buff[i] == BPM_CLOCK_START_BYTE ||
+                buff[i] == BPM_CLOCK_BYTE) break;
         }
     }
 
     if (len == 0) {
-        return;
-    }
-//    printf("%d", res[0]);
-    if (res[0] == 250 || res[0] == 242) {
-        bpm_clock_prepare = 250;
-//        printf("1\n");
-        return;
+        return UNKNOWN;
     }
 
-    if (res[0] == 252) {
-        bpm_clock_control(false);
-//        printf("2\n");
-        bpm_clock_prepare = 252;
-        return;
+    if (res[0] == BPM_CLOCK_START_BYTE || res[0] == MUSIC_SELECT) {
+        printf("START\n");
+        bpm_clock_prepare = BPM_CLOCK_START_BYTE;
+        return BPM_CLOCK_INACTIVE;
     }
 
-    if (res[0] == 248) {
-//        printf("3\n");
-        if (bpm_clock_prepare == 250) {
-            bpm_clock_control(true);
+    if (res[0] == BPM_CLOCK_STOP_BYTE) {
+        printf("END\n");
+        bpm_clock_prepare = BPM_CLOCK_STOP_BYTE;
+        return BPM_CLOCK_DEACTIVATE;
+    }
+
+    if (res[0] == BPM_CLOCK_BYTE &&
+        (bpm_clock_prepare == BPM_CLOCK_START_BYTE || bpm_clock_prepare == BPM_CLOCK_BYTE)) {
+        if (bpm_clock_prepare == BPM_CLOCK_START_BYTE) {
             clk = 0;
+            bpm_clock_prepare = BPM_CLOCK_BYTE;
+            return BPM_CLOCK_ACTIVATE;
         }
-        midi_clock();
-        bpm_clock_prepare = 248;
-        return;
+        return midi_clock();
     }
 
 
-//    printf("%d %d %d %d %d\n", res[0], res[1], res[2], res[3], res[4]);
     if (res[0] >= CC_START && res[0] <= CC_END) {
         for (int i = 0; i < length_cc; i++) {
             if (CC[i].num == res[1]) {
                 CC[i].action(res[0] - CC_START, res[2]);
-                save_settings();
-                return;
+                return CUSTOM_COMMAND;
             }
         }
         print_pure(CABLE_NUM_MAIN, res, len);
-        save_settings();
-        return;
+        return UNKNOWN;
     }
 
 
@@ -119,51 +115,43 @@ void read_sys_ex() {
                         data[j - 4] = res[j];
                     }
                     sys_com[i].action(data, len - 5);
-                    save_settings();
+                    return CUSTOM_COMMAND;
                 }
             }
         }
         if (res[1] == PLAYTRONICA_SYS_KEY && res[2] == PLAYTRONICA_KEY_FIRST && res[3] == PLAYTRONICA_KEY_SECOND) {
             switch (res[4]) {
                 case 0:
-                    TestMode = true;
-                    printf("Device is in TEST mode\n");
-                    break;
+                    plsdk_printf("Device is in TEST mode\n");
+                    return TEST_MODE_ACTIVATE;
                 case 1:
-                    TestMode = false;
-                    printf("Device is in PLAY mode\n");
-                    break;
+                    plsdk_printf("Device is in PLAY mode\n");
+                    return TEST_MODE_DEACTIVATE;
+                case 2:
+                    LOGGER_FLAG = true;
+                    plsdk_printf("Log is working\n");
+                    return LOGGER_ACTIVATE;
+                case 3:
+                    plsdk_printf("Log won't work\n");
+                    LOGGER_FLAG = false;
+                    return LOGGER_DEACTIVATE;
                 case 125:
                     // TODO Scala reader
                     break;
-                case 126:
-                    load_settings();
-                    break;
+                case 126: {
+                    return LIST_OF_COMMANDS_ACTION;
+                }
                 case 127:
-                    clear_flash();
-                    reset_usb_boot(0, 0);
-                    break;
+                    return RESET_DEVICE;
             }
         }
         print_pure(CABLE_NUM_EXTRA, res, len);
-        return;
+        return UNKNOWN;
     }
 
     if (res[0] >= VALUE_LIMIT) {
         print_pure(CABLE_NUM_MAIN, res, len);
-        return;
     }
+    return UNKNOWN;
 }
 
-static bool _repeating_timer_callback_t_settings(repeating_timer_t *rt) {
-    read_sys_ex();
-    return true;
-}
-
-struct repeating_timer settingsTimer;
-
-void init_commands() {
-    add_repeating_timer_ms(10,
-                           _repeating_timer_callback_t_settings,
-                           NULL, &settingsTimer);
-}

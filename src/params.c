@@ -9,6 +9,7 @@
 #include <hardware/flash.h>
 #include <hardware/sync.h>
 #include <pico/printf.h>
+#include <pico/bootrom.h>
 
 Settings_t settings;
 enum MuteState mute_state = MuteNone;
@@ -369,3 +370,35 @@ void setup_commands() {
     add_CC(set_middle_plant_note_cc, 85);
 }
 
+
+void get_sys_ex_and_behave() {
+    int sys_ex_status = read_sys_ex();
+
+    switch (sys_ex_status) {
+        case RESET_DEVICE:
+            clear_flash();
+            reset_usb_boot(0, 0);
+        case TEST_MODE_ACTIVATE:
+            TestMode = true;
+            break;
+        case TEST_MODE_DEACTIVATE:
+            TestMode = false;
+            break;
+        case LIST_OF_COMMANDS_ACTION:
+            load_settings();
+            break;
+        case CUSTOM_COMMAND:
+            save_settings();
+            break;
+        case BPM_CLOCK_PLAY:
+            printf("Hello World\n");
+            play_music();
+            break;
+        case BPM_CLOCK_DEACTIVATE:
+            bpm_clock_control(false);
+            break;
+        case BPM_CLOCK_ACTIVATE:
+            bpm_clock_control(true);
+            break;
+    }
+}

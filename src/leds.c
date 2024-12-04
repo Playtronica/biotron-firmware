@@ -3,12 +3,13 @@
 #include <pico/time.h>
 #include <pico/printf.h>
 #include "leds.h"
-#include "PLSDK/channel.h"
 #include "raw_plant.h"
 #include "global.h"
 #include "buttons.h"
 #include "music.h"
 #include "params.h"
+#include "PLSDK/music.h"
+#include "PLSDK.h"
 
 const uint8_t ALL_LEDS[] = {
         GROUP_BlUE_LED_CENTER, GROUP_BlUE_LED_LEFT, GROUP_BlUE_LED_RIGHT,

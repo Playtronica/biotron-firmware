@@ -8,6 +8,7 @@
 #include "params.h"
 #include "music.h"
 #include "PLSDK/cap_buttons.h"
+#include "PLSDK.h"
 
 
 enum Status status = Sleep;
@@ -48,7 +49,7 @@ bool play_music() {
         time_log = time_us_64();
     }
     if (time_us_64() - time_log > 100000) {
-        printf("{\"AverageFreq\": %d, \"Freq\": %d, \"PlantNote\": %d, \"LightNote\": %d }\n",
+        plsdk_printf("{\"AverageFreq\": %d, \"Freq\": %d, \"PlantNote\": %d, \"LightNote\": %d }\n",
                average_freq, last_freq, last_note_plant, last_note_light);
         time_log = time_us_64();
     }
@@ -92,7 +93,6 @@ void load_settings() {
         }
     }
     is_stopped = !is_stopped;
-
 }
 
 
@@ -110,7 +110,7 @@ void status_loop() {
     switch (status) {
         case Sleep:
             if (TestMode) {
-                printf("{\"generator_freq\": %d, \"photoresistor_adc\": %d,"
+                plsdk_printf("{\"generator_freq\": %d, \"photoresistor_adc\": %d,"
                        "\"buttons_state\": {"
                        "\"finger_button\": %d, \"button_bottom\": %d, \"button_top\": %d}}\n",
                        raw_freq, adc_read(), button_states[0],  button_states[1],  button_states[2]);
@@ -129,7 +129,7 @@ void status_loop() {
 
                 status = Stabilization;
                 counter = 0;
-                printf("[+] Change status: Sleep -> Stab\n");
+                plsdk_printf("[+] Change status: Sleep -> Stab\n");
             }
             break;
         case Stabilization: {
@@ -154,7 +154,7 @@ void status_loop() {
                 note_off(0, 91);
                 jingle_step = 0;
                 status = Sleep;
-                printf("[+] Change status: Stab -> Sleep\n");
+                plsdk_printf("[+] Change status: Stab -> Sleep\n");
                 break;
             }
 
@@ -170,7 +170,7 @@ void status_loop() {
                     add_repeating_timer_us(settings.BPM, play_music, NULL, &midi_timer);
                 }
                 status = active_status;
-                printf("[+] Change status: Stab -> Active\n");
+                plsdk_printf("[+] Change status: Stab -> Active\n");
             }
             else {
                 if (counter >= (AVERAGE_COUNTER / 3) * jingle_step && jingle_step < 4) {
@@ -208,7 +208,7 @@ void status_loop() {
                 status = Sleep;
                 filter_freq(0, 0);
                 stop_midi();
-                printf("[+] Change status: Active -> Sleep\n");
+                plsdk_printf("[+] Change status: Active -> Sleep\n");
                 return;
             }
 

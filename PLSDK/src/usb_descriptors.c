@@ -1,4 +1,4 @@
-/* 
+/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2019 Ha Thach (tinyusb.org)
@@ -35,6 +35,9 @@
 #define USB_PID           (0x4000 | _PID_MAP(CDC, 0) | _PID_MAP(MSC, 1) | _PID_MAP(HID, 2) | \
                            _PID_MAP(MIDI, 3) | _PID_MAP(VENDOR, 4) )
 
+#define USB_VID   0xCafe
+#define USB_BCD   0x0200
+
 //--------------------------------------------------------------------+
 // Device Descriptors
 //--------------------------------------------------------------------+
@@ -42,13 +45,16 @@ tusb_desc_device_t const desc_device =
         {
                 .bLength            = sizeof(tusb_desc_device_t),
                 .bDescriptorType    = TUSB_DESC_DEVICE,
-                .bcdUSB             = 0x0200,
+                .bcdUSB             = USB_BCD,
+
+                // Use Interface Association Descriptor (IAD) for CDC
+                // As required by USB Specs IAD's subclass must be common class (2) and protocol must be IAD (1)
                 .bDeviceClass       = 0x00,
                 .bDeviceSubClass    = 0x00,
                 .bDeviceProtocol    = 0x00,
                 .bMaxPacketSize0    = CFG_TUD_ENDPOINT0_SIZE,
 
-                .idVendor           = 0xCafe,
+                .idVendor           = USB_VID,
                 .idProduct          = USB_PID,
                 .bcdDevice          = 0x0100,
 
@@ -59,30 +65,6 @@ tusb_desc_device_t const desc_device =
                 .bNumConfigurations = 0x01
         };
 
-tusb_desc_configuration_t const decs_conf =
-        {
-                .bLength             = sizeof(tusb_desc_configuration_t), ///< Size of this descriptor in bytes
-                .bDescriptorType     = TUSB_DESC_CONFIGURATION, ///< CONFIGURATION Descriptor Type
-                .wTotalLength        = 101, ///< Total length of data returned for this configuration. Includes the combined length of all descriptors (configuration, interface, endpoint, and class- or vendor-specific) returned for this configuration.
-                .bNumInterfaces      = 2, ///< Number of interfaces supported by this configuration
-                .bConfigurationValue = 0, ///< Value to use as an argument to the SetConfiguration() request to select this configuration.
-                .iConfiguration      = 1, ///< Index of string descriptor describing this configuration
-                .bmAttributes        = TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, ///< Configuration characteristics \n D7: Reserved (set to one)\n D6: Self-powered \n D5: Remote Wakeup \n D4...0: Reserved (reset to zero) \n D7 is reserved and must be set to one for historical reasons. \n A device configuration that uses power from the bus and a local source reports a non-zero value in bMaxPower to indicate the amount of bus power required and sets D6. The actual power source at runtime may be determined using the GetStatus(DEVICE) request (see USB 2.0 spec Section 9.4.5). \n If a device configuration supports remote wakeup, D5 is set to one.
-                .bMaxPower           = TUSB_DESC_CONFIG_POWER_MA(2)
-        };
-
-tusb_desc_interface_t const desc_interface =
-        {
-                .bLength            = sizeof(tusb_desc_interface_t), ///< Size of this descriptor in bytes
-                .bDescriptorType    = TUSB_DESC_INTERFACE, ///< INTERFACE Descriptor Type
-                .bInterfaceNumber   = 0, ///< Number of this interface. Zero-based value identifying the index in the array of concurrent interfaces supported by this configuration.
-                .bAlternateSetting  = 0, ///< Value used to select this alternate setting for the interface identified in the prior field
-                .bNumEndpoints      = 0, ///< Number of endpoints used by this interface (excluding endpoint zero). If this value is zero, this interface only uses the Default Control Pipe.
-                .bInterfaceClass    = 1, ///< Class code (assigned by the USB-IF). \li A value of zero is reserved for future standardization. \li If this field is set to FFH, the interface class is vendor-specific. \li All other values are reserved for assignment by the USB-IF.
-                .bInterfaceSubClass = 1, ///< Subclass code (assigned by the USB-IF). \n These codes are qualified by the value of the bInterfaceClass field. \li If the bInterfaceClass field is reset to zero, this field must also be reset to zero. \li If the bInterfaceClass field is not set to FFH, all values are reserved for assignment by the USB-IF.
-                .bInterfaceProtocol = 0, ///< Protocol code (assigned by the USB). \n These codes are qualified by the value of the bInterfaceClass and the bInterfaceSubClass fields. If an interface supports class-specific requests, this code identifies the protocols that the device uses as defined by the specification of the device class. \li If this field is reset to zero, the device does not use a class-specific protocol on this interface. \li If this field is set to FFH, the device uses a vendor-specific protocol for this interface.
-                .iInterface         = 0  ///< Index of string descriptor describing this interface
-        };
 
 // Invoked when received GET DEVICE DESCRIPTOR
 // Application return pointer to descriptor
@@ -91,26 +73,72 @@ uint8_t const * tud_descriptor_device_cb(void)
     return (uint8_t const *) &desc_device;
 }
 
-
 //--------------------------------------------------------------------+
 // Configuration Descriptor
 //--------------------------------------------------------------------+
-
 enum
 {
+
     ITF_NUM_MIDI = 0,
     ITF_NUM_MIDI_STREAMING,
+    ITF_NUM_CDC,
+    ITF_NUM_CDC_DATA,
     ITF_NUM_TOTAL
 };
 
-#define CONFIG_TOTAL_LEN  (TUD_CONFIG_DESC_LEN + TUD_MIDI_DESC_LEN)
+#define CONFIG_TOTAL_LEN  (TUD_CONFIG_DESC_LEN + \
+(TUD_MIDI_DESC_HEAD_LEN + TUD_MIDI_DESC_JACK_LEN * MIDI_NUM_CABLES + TUD_MIDI_DESC_EP_LEN(MIDI_NUM_CABLES) * 2) + \
+(TUD_CDC_DESC_LEN))
+#if CFG_TUSB_MCU == OPT_MCU_LPC175X_6X || CFG_TUSB_MCU == OPT_MCU_LPC177X_8X || CFG_TUSB_MCU == OPT_MCU_LPC40XX
+// LPC 17xx and 40xx endpoint type (bulk/interrupt/iso) are fixed by its number
+// 0 control, 1 In, 2 Bulk, 3 Iso, 4 In etc ...
+#define EPNUM_MIDI   0x02
+#else
+#define EPNUM_MIDI   0x01
+#endif
+#define MIDI_NUM_CABLES 2
 
 #if CFG_TUSB_MCU == OPT_MCU_LPC175X_6X || CFG_TUSB_MCU == OPT_MCU_LPC177X_8X || CFG_TUSB_MCU == OPT_MCU_LPC40XX
 // LPC 17xx and 40xx endpoint type (bulk/interrupt/iso) are fixed by its number
-  // 0 control, 1 In, 2 Bulk, 3 Iso, 4 In etc ...
-  #define EPNUM_MIDI   0x02
+// 0 control, 1 In, 2 Bulk, 3 Iso, 4 In etc ...
+#define EPNUM_CDC_0_NOTIF   0x81
+#define EPNUM_CDC_0_OUT     0x02
+#define EPNUM_CDC_0_IN      0x82
+
+#define EPNUM_CDC_1_NOTIF   0x84
+#define EPNUM_CDC_1_OUT     0x05
+#define EPNUM_CDC_1_IN      0x85
+
+#elif CFG_TUSB_MCU == OPT_MCU_SAMG || CFG_TUSB_MCU ==  OPT_MCU_SAMX7X
+// SAMG & SAME70 don't support a same endpoint number with different direction IN and OUT
+  //    e.g EP1 OUT & EP1 IN cannot exist together
+  #define EPNUM_CDC_0_NOTIF   0x81
+  #define EPNUM_CDC_0_OUT     0x02
+  #define EPNUM_CDC_0_IN      0x83
+
+  #define EPNUM_CDC_1_NOTIF   0x84
+  #define EPNUM_CDC_1_OUT     0x05
+  #define EPNUM_CDC_1_IN      0x86
+
 #else
-#define EPNUM_MIDI   0x01
+#define EPNUM_CDC_0_NOTIF   0x83
+#define EPNUM_CDC_0_OUT     0x02
+#define EPNUM_CDC_0_IN      0x82
+
+#endif
+
+#if CFG_TUSB_MCU == OPT_MCU_LPC175X_6X || CFG_TUSB_MCU == OPT_MCU_LPC177X_8X || CFG_TUSB_MCU == OPT_MCU_LPC40XX
+// LPC 17xx and 40xx endpoint type (bulk/interrupt/iso) are fixed by its number
+// 0 control, 1 In, 2 Bulk, 3 Iso, 4 In etc ...
+#define EPNUM_MIDI_OUT   0x02
+#define EPNUM_MIDI_IN   0x02
+#elif CFG_TUSB_MCU == OPT_MCU_FT90X || CFG_TUSB_MCU == OPT_MCU_FT93X
+// On Bridgetek FT9xx endpoint numbers must be unique...
+  #define EPNUM_MIDI_OUT   0x02
+  #define EPNUM_MIDI_IN   0x03
+#else
+#define EPNUM_MIDI_OUT   0x01
+#define EPNUM_MIDI_IN   0x01
 #endif
 
 uint8_t const desc_fs_configuration[] =
@@ -118,20 +146,68 @@ uint8_t const desc_fs_configuration[] =
                 // Config number, interface count, string index, total length, attribute, power in mA
                 TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, CONFIG_TOTAL_LEN, 0x00, 100),
 
-                // Interface number, string index, EP Out & EP In address, EP size
-                TUD_MIDI_DESCRIPTOR(ITF_NUM_MIDI, 0, EPNUM_MIDI, 0x80 | EPNUM_MIDI, 64)
+                TUD_CDC_DESCRIPTOR(ITF_NUM_CDC, 0, EPNUM_CDC_0_NOTIF, 8, EPNUM_CDC_0_OUT, EPNUM_CDC_0_IN, 64),
+                TUD_MIDI_DESC_HEAD(ITF_NUM_MIDI, 0, MIDI_NUM_CABLES),
+                TUD_MIDI_DESC_JACK(1),
+                TUD_MIDI_DESC_JACK(2),
+                TUD_MIDI_DESC_EP(EPNUM_MIDI, 64, MIDI_NUM_CABLES),
+                TUD_MIDI_JACKID_IN_EMB(1),
+                TUD_MIDI_JACKID_IN_EMB(2),
+                TUD_MIDI_DESC_EP(0x80 | EPNUM_MIDI, 64, MIDI_NUM_CABLES),
+                TUD_MIDI_JACKID_OUT_EMB(1),
+                TUD_MIDI_JACKID_OUT_EMB(2),
         };
 
 #if TUD_OPT_HIGH_SPEED
+// Per USB specs: high speed capable device must report device_qualifier and other_speed_configuration
+
 uint8_t const desc_hs_configuration[] =
 {
   // Config number, interface count, string index, total length, attribute, power in mA
   TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, CONFIG_TOTAL_LEN, 0x00, 100),
 
-  // Interface number, string index, EP Out & EP In address, EP size
-  TUD_MIDI_DESCRIPTOR(ITF_NUM_MIDI, 0, EPNUM_MIDI, 0x80 | EPNUM_MIDI, 512)
+  // 1st CDC: Interface number, string index, EP notification address and size, EP data address (out, in) and size.
+  TUD_CDC_DESCRIPTOR(ITF_NUM_CDC, 4, EPNUM_CDC_0_NOTIF, 8, EPNUM_CDC_0_OUT, EPNUM_CDC_0_IN, 512),
+  TUD_MIDI_DESCRIPTOR(ITF_NUM_MIDI, 4, EPNUM_MIDI, 0x80 | EPNUM_MIDI, 512),
 };
-#endif
+
+// device qualifier is mostly similar to device descriptor since we don't change configuration based on speed
+tusb_desc_device_qualifier_t const desc_device_qualifier =
+{
+  .bLength            = sizeof(tusb_desc_device_t),
+  .bDescriptorType    = TUSB_DESC_DEVICE,
+  .bcdUSB             = USB_BCD,
+
+  .bDeviceClass       = TUSB_CLASS_MISC,
+  .bDeviceSubClass    = MISC_SUBCLASS_COMMON,
+  .bDeviceProtocol    = MISC_PROTOCOL_IAD,
+
+  .bMaxPacketSize0    = CFG_TUD_ENDPOINT0_SIZE,
+  .bNumConfigurations = 0x01,
+  .bReserved          = 0x00
+};
+
+// Invoked when received GET DEVICE QUALIFIER DESCRIPTOR request
+// Application return pointer to descriptor, whose contents must exist long enough for transfer to complete.
+// device_qualifier descriptor describes information about a high-speed capable device that would
+// change if the device were operating at the other speed. If not highspeed capable stall this request.
+uint8_t const* tud_descriptor_device_qualifier_cb(void)
+{
+  return (uint8_t const*) &desc_device_qualifier;
+}
+
+// Invoked when received GET OTHER SEED CONFIGURATION DESCRIPTOR request
+// Application return pointer to descriptor, whose contents must exist long enough for transfer to complete
+// Configuration descriptor in the other speed e.g if high speed then this is for full speed and vice versa
+uint8_t const* tud_descriptor_other_speed_configuration_cb(uint8_t index)
+{
+  (void) index; // for multiple configurations
+
+  // if link speed is high return fullspeed config, and vice versa
+  return (tud_speed_get() == TUSB_SPEED_HIGH) ?  desc_fs_configuration : desc_hs_configuration;
+}
+
+#endif // highspeed
 
 // Invoked when received GET CONFIGURATION DESCRIPTOR
 // Application return pointer to descriptor
@@ -153,12 +229,20 @@ uint8_t const * tud_descriptor_configuration_cb(uint8_t index)
 //--------------------------------------------------------------------+
 
 // array of pointer to string descriptors
+#define STRINGIZE2(s) #s
+#define STRINGIZE(s) STRINGIZE2(s)
+// array of pointer to string descriptors
 char const* string_desc_arr [] =
         {
-                (const char[]) { 0x09, 0x04 }, // 0: is supported language is English (0x0409)
-                "Playtronica",                     // 1: Manufacturer
-                "Biotron",                      // 2: Product
-                "B5",                      // 3: Serials, should use chip ID
+                (const char[]) { 0x09, 0x04 },  // 0: is supported language is English (0x0409)
+                "Playtronica",                          // 1: Manufacturer
+#ifdef DEVICE_NAME
+                STRINGIZE(DEVICE_NAME), // 2: Product
+#else
+                "Biotron", // 2: Product
+#endif
+                "Bio5",                                 // 3: Serials, should use chip ID
+                "TinyUSB CDC"                           // 4: CDC Interface
         };
 
 static uint16_t _desc_str[32];
@@ -175,7 +259,8 @@ uint16_t const* tud_descriptor_string_cb(uint8_t index, uint16_t langid)
     {
         memcpy(&_desc_str[1], string_desc_arr[0], 2);
         chr_count = 1;
-    }else
+    }
+    else
     {
         // Note: the 0xEE index string is a Microsoft OS 1.0 Descriptors.
         // https://docs.microsoft.com/en-us/windows-hardware/drivers/usbcon/microsoft-defined-usb-descriptors
@@ -185,7 +270,7 @@ uint16_t const* tud_descriptor_string_cb(uint8_t index, uint16_t langid)
         const char* str = string_desc_arr[index];
 
         // Cap at max char
-        chr_count = strlen(str);
+        chr_count = (uint8_t) strlen(str);
         if ( chr_count > 31 ) chr_count = 31;
 
         // Convert ASCII string into UTF-16
@@ -196,7 +281,7 @@ uint16_t const* tud_descriptor_string_cb(uint8_t index, uint16_t langid)
     }
 
     // first byte is length (including header), second byte is string type
-    _desc_str[0] = (TUSB_DESC_STRING << 8 ) | (2*chr_count + 2);
+    _desc_str[0] = (uint16_t) ((TUSB_DESC_STRING << 8 ) | (2*chr_count + 2));
 
     return _desc_str;
 }

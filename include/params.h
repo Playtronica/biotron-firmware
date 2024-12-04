@@ -69,6 +69,7 @@ void read_settings();
 void clear_flash();
 
 void setup_commands();
+void get_sys_ex_and_behave();
 
 
 #endif //BIOTRON_PARAMS_H
