@@ -3,12 +3,13 @@
 #include <pico/time.h>
 #include <pico/printf.h>
 #include "leds.h"
-#include "PLSDK/channel.h"
 #include "raw_plant.h"
 #include "global.h"
 #include "buttons.h"
 #include "music.h"
 #include "params.h"
+#include "PLSDK/music.h"
+#include "PLSDK.h"
 
 const uint8_t ALL_LEDS[] = {
         GROUP_BlUE_LED_CENTER, GROUP_BlUE_LED_LEFT, GROUP_BlUE_LED_RIGHT,
@@ -54,6 +55,39 @@ void led_loop() {
     uint8_t mute_plant = (mute_state == MutePlant || mute_state == MuteAll) ? 8 : 1;
     uint8_t mute_light = (mute_state == MuteLight || mute_state == MuteAll) ? 8 : 1;
 
+    if (button_top_pressed) {
+        pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_1, MAX_LIGHT);
+        pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_2, MAX_LIGHT);
+        pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_3, MAX_LIGHT);
+    }
+    if (button_bottom_pressed) {
+        pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_1, MAX_LIGHT);
+        pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_2, MAX_LIGHT);
+        pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_3, MAX_LIGHT);
+    }
+
+    if (button_finger_pressed) {
+        static int16_t led_step = 2000;
+        static uint16_t value = MIN_LIGHT;
+        if ((value + led_step > MAX_LIGHT && led_step > 0)
+            || (value + led_step < MIN_LIGHT && led_step < 0)) {
+            led_step *= -1;
+        }
+
+        value += led_step;
+
+        pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_1, value / mute_light);
+        pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_2, value / mute_light);
+        pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_3, value / mute_light);
+        pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_1, value / mute_plant);
+        pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_2, value / mute_plant);
+        pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_3, value / mute_plant);
+    }
+
+    if (button_top_pressed || button_bottom_pressed || button_finger_pressed) {
+        return;
+    }
+
     switch (status) {
         case Sleep:
             if (TestMode) {
@@ -73,18 +107,12 @@ void led_loop() {
                 ledsValue[i] = 0;
             }
 
-            if (!button_top_pressed) {
-                pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_1, 0);
-                pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_2, 0);
-                pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_3, 0);
-            }
-            if (!button_bottom_pressed) {
-                pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_1, 0);
-                pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_2, 0);
-                pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_3, 0);
-            }
-
-
+            pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_1, 0);
+            pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_2, 0);
+            pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_3, 0);
+            pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_1, 0);
+            pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_2, 0);
+            pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_3, 0);
 
             break;
         case Stabilization: {
@@ -105,16 +133,12 @@ void led_loop() {
 
             value += led_step;
 
-            if (!button_top_pressed) {
-                pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_1, value / mute_light);
-                pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_2, value / mute_light);
-                pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_3, value / mute_light);
-            }
-            if (!button_bottom_pressed) {
-                pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_1, value / mute_plant);
-                pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_2, value / mute_plant);
-                pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_3, value / mute_plant);
-            }
+            pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_1, value / mute_light);
+            pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_2, value / mute_light);
+            pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_3, value / mute_light);
+            pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_1, value / mute_plant);
+            pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_2, value / mute_plant);
+            pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_3, value / mute_plant);
             break;
         }
         case Active:
@@ -130,32 +154,20 @@ void led_loop() {
 
             uint8_t lastNotePlant = 60;
             ledsValue[ASYNC_LEDS - 1] += level;
-            if (!button_top_pressed) {
-                uint16_t first_val = MAX(MIN_LIGHT,
-                                MIN(MAX_LIGHT, ledsValue[0] + (((int) lastNotePlant - MIDDLE_NOTE) * NOTE_STRONG)));
-                pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_1, first_val / mute_light);
-                pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_2, first_val / mute_light);
-                pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_3, first_val / mute_light);
-            }
-            if (!button_bottom_pressed) {
-                uint16_t second_val = MAX(MIN_LIGHT, MIN(MAX_LIGHT, ledsValue[ASYNC_LEDS - 1] +
-                                                           (((int) lastNotePlant - MIDDLE_NOTE) * NOTE_STRONG)));
-                pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_1, second_val / mute_plant);
-                pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_2, second_val / mute_plant);
-                pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_3, second_val / mute_plant);
-            }
+            uint16_t first_val = MAX(MIN_LIGHT,
+                                     MIN(MAX_LIGHT, ledsValue[0] + (((int) lastNotePlant - MIDDLE_NOTE) * NOTE_STRONG)));
+            pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_1, first_val / mute_light);
+            pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_2, first_val / mute_light);
+            pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_3, first_val / mute_light);
+
+            uint16_t second_val = MAX(MIN_LIGHT, MIN(MAX_LIGHT, ledsValue[ASYNC_LEDS - 1] +
+                                                                (((int) lastNotePlant - MIDDLE_NOTE) * NOTE_STRONG)));
+            pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_1, second_val / mute_plant);
+            pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_2, second_val / mute_plant);
+            pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_3, second_val / mute_plant);
+
+
             break;
         }
-    }
-
-    if (button_top_pressed) {
-        pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_1, MAX_LIGHT);
-        pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_2, MAX_LIGHT);
-        pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_3, MAX_LIGHT);
-    }
-    if (button_bottom_pressed) {
-        pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_1, MAX_LIGHT);
-        pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_2, MAX_LIGHT);
-        pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_3, MAX_LIGHT);
     }
 }

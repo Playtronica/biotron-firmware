@@ -1,7 +1,3 @@
-//
-// Created by shadowik on 26.07.23.
-//
-
 #ifndef PLSDK_CONSTANTS_H
 #define PLSDK_CONSTANTS_H
 
@@ -38,5 +34,11 @@
 #define BPM_TO_MS(BPM) (int)(1000.0 / ((BPM) / 60.0))
 #define US_TO_BPM(US) (int)(60.0 * 1000000.0 / (US))
 #define MS_TO_BPM(MS) (int)(60.0 * 1000.0 / (MS))
+
+#define BPM_CLOCK_START_BYTE 250 // 0xFA
+#define BPM_CLOCK_STOP_BYTE 252 // 0xFC
+#define BPM_CLOCK_BYTE 248 // 0xF8
+#define MUSIC_SELECT 242
+
 
 #endif //PLSDK_CONSTANTS_H

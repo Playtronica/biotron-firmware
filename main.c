@@ -1,7 +1,6 @@
-#include <pico/printf.h>
 #include <hardware/adc.h>
 #include "pico/stdlib.h"
-#include "PLSDK/channel.h"
+#include "PLSDK.h"
 #include "global.h"
 #include "buttons.h"
 #include "leds.h"
@@ -9,10 +8,6 @@
 #include "params.h"
 
 
-
-void test_mode() {
-
-}
 
 void setup() {
     stdio_init_all();
@@ -35,16 +30,14 @@ void setup() {
 int main(void)
 {
     setup();
-
     while (true)
     {
         status_loop();
         led_loop();
         check_buttons();
 
-        if (TestMode) test_mode();
-
         remind_midi();
+        get_sys_ex_and_behave();
         sleep_ms(1);
     }
 }

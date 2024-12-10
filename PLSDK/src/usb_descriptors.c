@@ -1,4 +1,4 @@
-/* 
+/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2019 Ha Thach (tinyusb.org)
@@ -23,7 +23,6 @@
  *
  */
 
-#include <pico/bootrom.h>
 #include "tusb.h"
 
 /* A combination of interfaces must have a unique product id, since PC will save device driver after the first plug.
@@ -92,8 +91,8 @@ enum
 (TUD_CDC_DESC_LEN))
 #if CFG_TUSB_MCU == OPT_MCU_LPC175X_6X || CFG_TUSB_MCU == OPT_MCU_LPC177X_8X || CFG_TUSB_MCU == OPT_MCU_LPC40XX
 // LPC 17xx and 40xx endpoint type (bulk/interrupt/iso) are fixed by its number
-  // 0 control, 1 In, 2 Bulk, 3 Iso, 4 In etc ...
-  #define EPNUM_MIDI   0x02
+// 0 control, 1 In, 2 Bulk, 3 Iso, 4 In etc ...
+#define EPNUM_MIDI   0x02
 #else
 #define EPNUM_MIDI   0x01
 #endif
@@ -101,14 +100,14 @@ enum
 
 #if CFG_TUSB_MCU == OPT_MCU_LPC175X_6X || CFG_TUSB_MCU == OPT_MCU_LPC177X_8X || CFG_TUSB_MCU == OPT_MCU_LPC40XX
 // LPC 17xx and 40xx endpoint type (bulk/interrupt/iso) are fixed by its number
-  // 0 control, 1 In, 2 Bulk, 3 Iso, 4 In etc ...
-  #define EPNUM_CDC_0_NOTIF   0x81
-  #define EPNUM_CDC_0_OUT     0x02
-  #define EPNUM_CDC_0_IN      0x82
+// 0 control, 1 In, 2 Bulk, 3 Iso, 4 In etc ...
+#define EPNUM_CDC_0_NOTIF   0x81
+#define EPNUM_CDC_0_OUT     0x02
+#define EPNUM_CDC_0_IN      0x82
 
-  #define EPNUM_CDC_1_NOTIF   0x84
-  #define EPNUM_CDC_1_OUT     0x05
-  #define EPNUM_CDC_1_IN      0x85
+#define EPNUM_CDC_1_NOTIF   0x84
+#define EPNUM_CDC_1_OUT     0x05
+#define EPNUM_CDC_1_IN      0x85
 
 #elif CFG_TUSB_MCU == OPT_MCU_SAMG || CFG_TUSB_MCU ==  OPT_MCU_SAMX7X
 // SAMG & SAME70 don't support a same endpoint number with different direction IN and OUT
@@ -130,9 +129,9 @@ enum
 
 #if CFG_TUSB_MCU == OPT_MCU_LPC175X_6X || CFG_TUSB_MCU == OPT_MCU_LPC177X_8X || CFG_TUSB_MCU == OPT_MCU_LPC40XX
 // LPC 17xx and 40xx endpoint type (bulk/interrupt/iso) are fixed by its number
-  // 0 control, 1 In, 2 Bulk, 3 Iso, 4 In etc ...
-  #define EPNUM_MIDI_OUT   0x02
-  #define EPNUM_MIDI_IN   0x02
+// 0 control, 1 In, 2 Bulk, 3 Iso, 4 In etc ...
+#define EPNUM_MIDI_OUT   0x02
+#define EPNUM_MIDI_IN   0x02
 #elif CFG_TUSB_MCU == OPT_MCU_FT90X || CFG_TUSB_MCU == OPT_MCU_FT93X
 // On Bridgetek FT9xx endpoint numbers must be unique...
   #define EPNUM_MIDI_OUT   0x02
@@ -144,10 +143,10 @@ enum
 
 uint8_t const desc_fs_configuration[] =
         {
-                // Config number, interface count, string channel_id, total length, attribute, power in mA
+                // Config number, interface count, string index, total length, attribute, power in mA
                 TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, CONFIG_TOTAL_LEN, 0x00, 100),
 
-
+                TUD_CDC_DESCRIPTOR(ITF_NUM_CDC, 0, EPNUM_CDC_0_NOTIF, 8, EPNUM_CDC_0_OUT, EPNUM_CDC_0_IN, 64),
                 TUD_MIDI_DESC_HEAD(ITF_NUM_MIDI, 0, MIDI_NUM_CABLES),
                 TUD_MIDI_DESC_JACK(1),
                 TUD_MIDI_DESC_JACK(2),
@@ -157,7 +156,6 @@ uint8_t const desc_fs_configuration[] =
                 TUD_MIDI_DESC_EP(0x80 | EPNUM_MIDI, 64, MIDI_NUM_CABLES),
                 TUD_MIDI_JACKID_OUT_EMB(1),
                 TUD_MIDI_JACKID_OUT_EMB(2),
-                TUD_CDC_DESCRIPTOR(ITF_NUM_CDC, 0, EPNUM_CDC_0_NOTIF, 8, EPNUM_CDC_0_OUT, EPNUM_CDC_0_IN, 64),
         };
 
 #if TUD_OPT_HIGH_SPEED
@@ -165,10 +163,10 @@ uint8_t const desc_fs_configuration[] =
 
 uint8_t const desc_hs_configuration[] =
 {
-  // Config number, interface count, string channel_id, total length, attribute, power in mA
+  // Config number, interface count, string index, total length, attribute, power in mA
   TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, CONFIG_TOTAL_LEN, 0x00, 100),
 
-  // 1st CDC: Interface number, string channel_id, EP notification address and size, EP data address (out, in) and size.
+  // 1st CDC: Interface number, string index, EP notification address and size, EP data address (out, in) and size.
   TUD_CDC_DESCRIPTOR(ITF_NUM_CDC, 4, EPNUM_CDC_0_NOTIF, 8, EPNUM_CDC_0_OUT, EPNUM_CDC_0_IN, 512),
   TUD_MIDI_DESCRIPTOR(ITF_NUM_MIDI, 4, EPNUM_MIDI, 0x80 | EPNUM_MIDI, 512),
 };
@@ -201,9 +199,9 @@ uint8_t const* tud_descriptor_device_qualifier_cb(void)
 // Invoked when received GET OTHER SEED CONFIGURATION DESCRIPTOR request
 // Application return pointer to descriptor, whose contents must exist long enough for transfer to complete
 // Configuration descriptor in the other speed e.g if high speed then this is for full speed and vice versa
-uint8_t const* tud_descriptor_other_speed_configuration_cb(uint8_t channel_id)
+uint8_t const* tud_descriptor_other_speed_configuration_cb(uint8_t index)
 {
-  (void) channel_id; // for multiple configurations
+  (void) index; // for multiple configurations
 
   // if link speed is high return fullspeed config, and vice versa
   return (tud_speed_get() == TUSB_SPEED_HIGH) ?  desc_fs_configuration : desc_hs_configuration;
@@ -214,9 +212,9 @@ uint8_t const* tud_descriptor_other_speed_configuration_cb(uint8_t channel_id)
 // Invoked when received GET CONFIGURATION DESCRIPTOR
 // Application return pointer to descriptor
 // Descriptor contents must exist long enough for transfer to complete
-uint8_t const * tud_descriptor_configuration_cb(uint8_t channel_id)
+uint8_t const * tud_descriptor_configuration_cb(uint8_t index)
 {
-    (void) channel_id; // for multiple configurations
+    (void) index; // for multiple configurations
 
 #if TUD_OPT_HIGH_SPEED
     // Although we are highspeed, host may be fullspeed.
@@ -226,23 +224,17 @@ uint8_t const * tud_descriptor_configuration_cb(uint8_t channel_id)
 #endif
 }
 
-
 //--------------------------------------------------------------------+
 // String Descriptors
 //--------------------------------------------------------------------+
 
-#define STRINGIZE2(s) #s
-#define STRINGIZE(s) STRINGIZE2(s)
+// array of pointer to string descriptors
 // array of pointer to string descriptors
 char const* string_desc_arr [] =
         {
                 (const char[]) { 0x09, 0x04 },  // 0: is supported language is English (0x0409)
                 "Playtronica",                          // 1: Manufacturer
-#ifdef DEVICE_NAME
-                STRINGIZE(DEVICE_NAME), // 2: Product
-#else
                 "Biotron", // 2: Product
-#endif
                 "Bio5",                                 // 3: Serials, should use chip ID
                 "TinyUSB CDC"                           // 4: CDC Interface
         };
@@ -251,25 +243,25 @@ static uint16_t _desc_str[32];
 
 // Invoked when received GET STRING DESCRIPTOR request
 // Application return pointer to descriptor, whose contents must exist long enough for transfer to complete
-uint16_t const* tud_descriptor_string_cb(uint8_t channel_id, uint16_t langid)
+uint16_t const* tud_descriptor_string_cb(uint8_t index, uint16_t langid)
 {
     (void) langid;
 
     uint8_t chr_count;
 
-    if ( channel_id == 0)
+    if ( index == 0)
     {
         memcpy(&_desc_str[1], string_desc_arr[0], 2);
         chr_count = 1;
     }
     else
     {
-        // Note: the 0xEE channel_id string is a Microsoft OS 1.0 Descriptors.
+        // Note: the 0xEE index string is a Microsoft OS 1.0 Descriptors.
         // https://docs.microsoft.com/en-us/windows-hardware/drivers/usbcon/microsoft-defined-usb-descriptors
 
-        if ( !(channel_id < sizeof(string_desc_arr)/sizeof(string_desc_arr[0])) ) return NULL;
+        if ( !(index < sizeof(string_desc_arr)/sizeof(string_desc_arr[0])) ) return NULL;
 
-        const char* str = string_desc_arr[channel_id];
+        const char* str = string_desc_arr[index];
 
         // Cap at max char
         chr_count = (uint8_t) strlen(str);

@@ -1,14 +1,13 @@
 #include <pico/printf.h>
 #include <malloc.h>
-#include "PLSDK/music.h"
 #include "PLSDK/commands.h"
 #include "PLSDK/constants.h"
-#include "music.h"
+#include "PLSDK/music.h"
 
 
-const uint8_t major[] = { 2, 4, 5, 7, 9, 11, 12 };
-const uint8_t minor[] = { 2, 3, 5, 7, 8, 10, 12 };
-const uint8_t chrom[] = { 1, 2, 3, 4, 5, 6,7, 8, 9, 10, 11, 12};
+const uint8_t MAJOR[] = {2, 4, 5, 7, 9, 11, 12 };
+const uint8_t MINOR[] = {2, 3, 5, 7, 8, 10, 12 };
+const uint8_t CHROM[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
 const uint8_t dorian[] = { 2, 3, 5, 7, 9, 10, 12 };
 const uint8_t mixolydian[] = { 2, 4, 5, 7, 9, 10, 12 };
 const uint8_t lydian[] = { 2, 4, 5, 6, 7, 9, 11, 12 };
@@ -23,18 +22,18 @@ uint8_t len_of_custom = 7;
 uint16_t custom[71] = { 195, 289, 513, 686, 796, 1008, 1200};
 
 const NotesScale_t scales[] = {
-        {7, major},
-        {7, minor},
-        {12, chrom},
-        {7, dorian},
-        {7, mixolydian},
-        {8, lydian},
-        {6, wholetone},
-        {6, minblues},
-        {6, majblues},
-        {5, minpen},
-        {5, majpen},
-        {8, diminished}
+        {7,  MAJOR},
+        {7,  MINOR},
+        {12, CHROM},
+        {7,  dorian},
+        {7,  mixolydian},
+        {8,  lydian},
+        {6,  wholetone},
+        {6,  minblues},
+        {6,  majblues},
+        {5,  minpen},
+        {5,  majpen},
+        {8,  diminished}
 };
 
 

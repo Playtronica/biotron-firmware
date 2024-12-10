@@ -4,7 +4,6 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 include(pico_sdk_import.cmake)
 
-
 project(Biotron C CXX ASM)
 
 if (PICO_SDK_VERSION_STRING VERSION_LESS "1.3.0")
@@ -40,8 +39,7 @@ add_compile_options(-Wall
         -Wno-format          # int != int32_t as far as the compiler is concerned because gcc has int32_t as long int
         -Wno-unused-function # we have some for the docs that aren't called
         -Wno-maybe-uninitialized
-        )
-
+)
 
 
 add_executable(${TARGET_NAME})
@@ -51,7 +49,8 @@ add_subdirectory(PLSDK)
 
 target_sources(${TARGET_NAME} PUBLIC main.c)
 target_include_directories(${TARGET_NAME} PUBLIC include())
+target_link_libraries(${TARGET_NAME} pico_stdlib PLSDK_lib hardware_pwm hardware_adc hardware_flash)
+
 pico_enable_stdio_usb(${TARGET_NAME} 1)
 pico_enable_stdio_uart(${TARGET_NAME} 0)
-target_link_libraries(${TARGET_NAME} pico_stdlib tinyusb_device hardware_pwm hardware_adc)
 pico_add_extra_outputs(${TARGET_NAME})
