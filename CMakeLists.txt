@@ -4,7 +4,6 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 include(pico_sdk_import.cmake)
 
-
 project(Biotron C CXX ASM)
 
 if (PICO_SDK_VERSION_STRING VERSION_LESS "1.3.0")
@@ -41,7 +40,6 @@ add_compile_options(-Wall
         -Wno-unused-function # we have some for the docs that aren't called
         -Wno-maybe-uninitialized
 )
-
 
 
 add_executable(${TARGET_NAME})
