@@ -229,18 +229,12 @@ uint8_t const * tud_descriptor_configuration_cb(uint8_t index)
 //--------------------------------------------------------------------+
 
 // array of pointer to string descriptors
-#define STRINGIZE2(s) #s
-#define STRINGIZE(s) STRINGIZE2(s)
 // array of pointer to string descriptors
 char const* string_desc_arr [] =
         {
                 (const char[]) { 0x09, 0x04 },  // 0: is supported language is English (0x0409)
                 "Playtronica",                          // 1: Manufacturer
-#ifdef DEVICE_NAME
-                STRINGIZE(DEVICE_NAME), // 2: Product
-#else
                 "Biotron", // 2: Product
-#endif
                 "Bio5",                                 // 3: Serials, should use chip ID
                 "TinyUSB CDC"                           // 4: CDC Interface
         };

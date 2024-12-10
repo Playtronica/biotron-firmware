@@ -391,7 +391,6 @@ void get_sys_ex_and_behave() {
             save_settings();
             break;
         case BPM_CLOCK_PLAY:
-            printf("Hello World\n");
             play_music();
             break;
         case BPM_CLOCK_DEACTIVATE:
