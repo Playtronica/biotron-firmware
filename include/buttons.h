@@ -1,7 +1,3 @@
-//
-// Created by Марк Захарченко on 24.05.2024.
-//
-
 #ifndef BIOTRON_BUTTONS_H
 #define BIOTRON_BUTTONS_H
 

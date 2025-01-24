@@ -1,15 +1,17 @@
-#include <pico/printf.h>
-#include "global.h"
-#include "pico/stdlib.h"
 #include <stdlib.h>
+#include <pico/stdlib.h>
 #include <hardware/adc.h>
-#include "raw_plant.h"
+
 #include "PLSDK/music.h"
+#include "PLSDK.h"
+#include "PLSDK/cap_buttons.h"
+
 #include "params.h"
 #include "music.h"
-#include "PLSDK/cap_buttons.h"
-#include "PLSDK.h"
+#include "raw_plant.h"
+#include "leds.h"
 
+#include "global.h"
 
 enum Status status = Sleep;
 enum Status active_status = Active;
@@ -42,6 +44,7 @@ bool play_music() {
     if (settings.light_pitch_mode) midi_light_pitch();
     else if (counter++ >= settings.lightBPM) {
         midi_light();
+        light_note_observer();
         counter = 1;
     }
 
@@ -97,7 +100,6 @@ void load_settings() {
 
 
 void status_loop() {
-    static uint8_t jingle_step = 0;
     static uint8_t counter = 0;
 
     if (!plant_is_ready()) {
@@ -105,7 +107,6 @@ void status_loop() {
     }
 
     uint32_t raw_freq = get_real_freq();
-//    printf("%d\n", raw_freq);
 
     switch (status) {
         case Sleep:
@@ -125,8 +126,6 @@ void status_loop() {
             }
 
             if (counter >= STABILIZATION_COUNTER) {
-//                note_on(0, jingle_notes[jingle_step++], 90);
-
                 status = Stabilization;
                 counter = 0;
                 plsdk_printf("[+] Change status: Sleep -> Stab\n");
@@ -149,10 +148,8 @@ void status_loop() {
                 average_delta_freq = 0;
                 average_freq = 0;
                 last_freq = 0;
-//                note_off(0, jingle_notes[jingle_step - 1]);
                 note_off(0, 92);
                 note_off(0, 91);
-                jingle_step = 0;
                 status = Sleep;
                 plsdk_printf("[+] Change status: Stab -> Sleep\n");
                 break;
@@ -162,21 +159,13 @@ void status_loop() {
                 average_freq /= counter;
                 average_delta_freq /= counter;
                 counter = 0;
-//                note_off(0, jingle_notes[jingle_step - 1]);
                 note_off(0, 92);
                 note_off(0, 91);
-                jingle_step = 0;
                 if (active_status == Active) {
                     add_repeating_timer_us(settings.BPM, play_music, NULL, &midi_timer);
                 }
                 status = active_status;
                 plsdk_printf("[+] Change status: Stab -> Active\n");
-            }
-            else {
-                if (counter >= (AVERAGE_COUNTER / 3) * jingle_step && jingle_step < 4) {
-//                    note_off(0, jingle_notes[jingle_step - 1]);
-//                    note_on(0, jingle_notes[jingle_step++], 90);
-                }
             }
 
             break;

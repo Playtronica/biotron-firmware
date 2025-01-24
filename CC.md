@@ -183,18 +183,28 @@ then all notes are playing
 
 
 
-## Note Off Percent
+## Note Off Fraction
 
 ### Description
 
-How many percent of the time the note will sound,
-where 100 is the full sound before the note changes,
-50 is half the time the note is played
+Is a unit used to measure the duration of a note's sound compared to its full duration.
 
 ### Input
 Num: CC 21
 
-The value is responsible for percent of note duration (from 0 to 100%)
+| Range Value | Note Off Fractopn |
+|-------------|-------------------|
+| 0 - 11      | 1/64              |
+| 11 - 22     | 1/48              |
+| 22 - 33     | 1/32              |
+| 33 - 44     | 1/24              |
+| 44 - 55     | 1/16              |
+| 55 - 66     | 1/12              |
+| 66 - 77     | 1/8               |
+| 77 - 88     | 1/6               |
+| 88 - 99     | 1/4               |
+| 99 - 110    | 1/2               |
+| 110 - 127   | 1                 |
 
 
 

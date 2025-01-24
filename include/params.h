@@ -1,7 +1,6 @@
 #ifndef BIOTRON_PARAMS_H
 #define BIOTRON_PARAMS_H
 
-#include <stdbool.h>
 #define FLASH_TARGET_OFFSET (512 * 1024)
 
 #ifdef FLASH_ID_STARTUP
@@ -22,7 +21,7 @@
 #define DEF_MAX_VEL 75
 #define DEF_RANDOM_NOTE true
 #define DEF_SANE_NOTE 1
-#define DEF_PERCENT_NOTE_OFF 100
+#define DEF_PERCENT_NOTE_OFF 1
 #define DEF_LIGHT_NOTE_RANGE 12
 #define DEF_LIGHT_PITCH_MODE false
 #define DEF_STUCK_MODE false
@@ -46,7 +45,7 @@ typedef struct {
     bool random_note;
     int same_note_plant;
     int same_note_light;
-    int percent_note_off;
+    int fraction_note_off;
     int light_note_range;
     bool light_pitch_mode;
     bool performance_mode;
@@ -61,7 +60,6 @@ extern enum MuteState {
     MuteAll
 } mute_state;
 extern bool TestMode;
-
 
 
 void save_settings();

@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 1.6.3 - 01-24-2025
+### Changed
+- Lights logic in active mode.
+- Note off percent was changed to note off fraction.
+
 ## 1.6.0
 ### Added
 - Same note mode for light (second) channel

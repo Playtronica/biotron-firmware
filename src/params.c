@@ -1,6 +1,6 @@
 #include <string.h>
+#include <pico/stdlib.h>
 #include "params.h"
-#include "pico/stdlib.h"
 #include "PLSDK/constants.h"
 #include "global.h"
 #include "PLSDK/commands.h"
@@ -8,7 +8,6 @@
 #include "music.h"
 #include <hardware/flash.h>
 #include <hardware/sync.h>
-#include <pico/printf.h>
 #include <pico/bootrom.h>
 
 Settings_t settings;
@@ -34,7 +33,7 @@ void default_settings() {
     settings.random_note = DEF_RANDOM_NOTE;
     settings.same_note_plant = DEF_SANE_NOTE;
     settings.same_note_light = DEF_SANE_NOTE;
-    settings.percent_note_off = DEF_PERCENT_NOTE_OFF;
+    settings.fraction_note_off = DEF_PERCENT_NOTE_OFF;
     settings.light_note_range = DEF_LIGHT_NOTE_RANGE;
     settings.light_pitch_mode = DEF_LIGHT_PITCH_MODE;
     settings.performance_mode = DEF_STUCK_MODE;
@@ -141,7 +140,6 @@ void set_filter_cc(uint8_t channel, uint8_t value) {
 }
 
 void set_scale_sys_ex(const uint8_t data[], uint8_t len) {
-    printf("Change scale %d\n", data[0] % 12);
     settings.scale = data[0] % 12;
 }
 
@@ -270,12 +268,23 @@ void set_same_note_cc(uint8_t channel, uint8_t value) {
 
 }
 
+#define LENGTH_POSSIBLE_NOTE_FRACTION 11
+static const int POSSIBLE_NOTE_FRACTION[LENGTH_POSSIBLE_NOTE_FRACTION] = {
+        64, 48, 32, 24, 16, 12, 8, 6, 4, 2, 1
+};
+
 void set_note_off_percent_sys_ex(const uint8_t data[], uint8_t len) {
-    settings.percent_note_off = data[0];
+    for (int i = 0; i < LENGTH_POSSIBLE_NOTE_FRACTION; i++) {
+        if (data[0] == POSSIBLE_NOTE_FRACTION[i]) {
+            settings.fraction_note_off = data[0];
+            return;
+        }
+    }
 }
 
 void set_note_off_percent_cc(uint8_t channel, uint8_t value) {
-    settings.percent_note_off = (int)((double)value / 127.0 * 100.0);
+    uint8_t id = MIN(LENGTH_POSSIBLE_NOTE_FRACTION - 1, value / (127 / LENGTH_POSSIBLE_NOTE_FRACTION));
+    settings.fraction_note_off = POSSIBLE_NOTE_FRACTION[id];
 }
 
 void set_light_range_sys_ex(const uint8_t data[], uint8_t len) {

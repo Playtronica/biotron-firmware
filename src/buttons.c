@@ -5,34 +5,32 @@
 
 
 bool button_finger_pressed = false;
+bool button_bottom_pressed = false;
+bool button_top_pressed = false;
+
 void change_mute_mode() {
     button_finger_pressed = true;
     mute_state = (mute_state + 1) % 4;
-//    printf("BUTTON_EVENT Mute\n");
 }
 
 void release_finger() {
     button_finger_pressed = false;
 }
 
-bool button_bottom_pressed = false;
 void change_same_mode() {
     button_bottom_pressed = true;
     settings.same_note_plant = !(bool)settings.same_note_plant;
     save_settings();
-//    printf("BUTTON_EVENT Same note\n");
 }
 
 void release_bottom() {
     button_bottom_pressed = false;
 }
 
-bool button_top_pressed = false;
 void change_scale() {
     button_top_pressed = true;
     settings.scale = (settings.scale + 1) % 12;
     save_settings();
-//    printf("BUTTON_EVENT Scale\n");
 }
 
 void release_top() {

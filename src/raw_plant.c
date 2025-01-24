@@ -1,11 +1,10 @@
-#include <stdio.h>
 #include "hardware/pwm.h"
 #include "hardware/gpio.h"
-#include "../include/raw_plant.h"
+#include "raw_plant.h"
 #include "pico/time.h"
 #include "hardware/irq.h"
 #include "params.h"
-#include <stdlib.h>
+
 
 struct repeating_timer getFrequencyTimer;
 uint8_t slice_num = 0;
