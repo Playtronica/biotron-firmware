@@ -128,7 +128,7 @@ void midi_plant() {
         note_on(0, currentNote, velocity);
 
         if (active_status == Active) {
-            add_repeating_timer_us(settings.BPM / 100 * settings.percent_note_off, plant_note_off,
+            add_repeating_timer_us(MAX(1, settings.BPM / settings.fraction_note_off), plant_note_off,
                                    NULL, &plantNoteOffTimer);
         }
     }
