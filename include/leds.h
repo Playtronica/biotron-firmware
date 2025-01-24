@@ -26,4 +26,6 @@
 void init_leds();
 void intro_leds();
 void led_loop();
+
+void light_note_observer();
 #endif //BIOTRON_LEDS_H

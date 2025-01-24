@@ -1,6 +1,6 @@
 #include <string.h>
+#include <pico/stdlib.h>
 #include "params.h"
-#include "pico/stdlib.h"
 #include "PLSDK/constants.h"
 #include "global.h"
 #include "PLSDK/commands.h"
@@ -8,7 +8,6 @@
 #include "music.h"
 #include <hardware/flash.h>
 #include <hardware/sync.h>
-#include <pico/printf.h>
 #include <pico/bootrom.h>
 
 Settings_t settings;
@@ -141,7 +140,6 @@ void set_filter_cc(uint8_t channel, uint8_t value) {
 }
 
 void set_scale_sys_ex(const uint8_t data[], uint8_t len) {
-    printf("Change scale %d\n", data[0] % 12);
     settings.scale = data[0] % 12;
 }
 

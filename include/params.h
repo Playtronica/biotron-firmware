@@ -1,7 +1,6 @@
 #ifndef BIOTRON_PARAMS_H
 #define BIOTRON_PARAMS_H
 
-#include <stdbool.h>
 #define FLASH_TARGET_OFFSET (512 * 1024)
 
 #ifdef FLASH_ID_STARTUP
@@ -61,7 +60,6 @@ extern enum MuteState {
     MuteAll
 } mute_state;
 extern bool TestMode;
-
 
 
 void save_settings();
