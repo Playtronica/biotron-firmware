@@ -59,7 +59,7 @@ extern enum MuteState {
     MuteLight,
     MuteAll
 } mute_state;
-extern bool TestMode;
+extern int TestMode;
 
 
 void save_settings();

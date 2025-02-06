@@ -12,7 +12,7 @@
 
 Settings_t settings;
 enum MuteState mute_state = MuteNone;
-bool TestMode = false;
+int TestMode = 0;
 
 void default_settings() {
     settings.id = ID_FLASH;
@@ -387,11 +387,14 @@ void get_sys_ex_and_behave() {
         case RESET_DEVICE:
             clear_flash();
             reset_usb_boot(0, 0);
-        case TEST_MODE_ACTIVATE:
-            TestMode = true;
+        case TEST_MODE_ACTIVATE_BLUE:
+            TestMode = 1;
+            break;
+        case TEST_MODE_ACTIVATE_GREEN:
+            TestMode = 2;
             break;
         case TEST_MODE_DEACTIVATE:
-            TestMode = false;
+            TestMode = 0;
             break;
         case LIST_OF_COMMANDS_ACTION:
             load_settings();

@@ -122,16 +122,19 @@ int read_sys_ex() {
         if (res[1] == PLAYTRONICA_SYS_KEY && res[2] == PLAYTRONICA_KEY_FIRST && res[3] == PLAYTRONICA_KEY_SECOND) {
             switch (res[4]) {
                 case 0:
-                    plsdk_printf("Device is in TEST mode\n");
-                    return TEST_MODE_ACTIVATE;
+                    plsdk_printf("Device is in TEST_BLUE mode\n");
+                    return TEST_MODE_ACTIVATE_BLUE;
                 case 1:
+                    plsdk_printf("Device is in TEST_GREEN mode\n");
+                    return TEST_MODE_ACTIVATE_GREEN;
+                case 2:
                     plsdk_printf("Device is in PLAY mode\n");
                     return TEST_MODE_DEACTIVATE;
-                case 2:
+                case 3:
                     LOGGER_FLAG = true;
                     plsdk_printf("Log is working\n");
                     return LOGGER_ACTIVATE;
-                case 3:
+                case 4:
                     plsdk_printf("Log won't work\n");
                     LOGGER_FLAG = false;
                     return LOGGER_DEACTIVATE;
