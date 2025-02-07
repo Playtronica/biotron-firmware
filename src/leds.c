@@ -29,9 +29,8 @@ inline uint8_t mute_light() {
 
 
 void pwm_set_gpio_level_invert(uint gpio, uint16_t level) {
-    pwm_set_gpio_level(gpio, MAX_LIGHT - level / 2);
+    pwm_set_gpio_level(gpio, MAX_LIGHT - level);
 }
-
 
 
 void init_leds() {
