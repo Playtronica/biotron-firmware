@@ -60,6 +60,7 @@ extern enum MuteState {
     MuteAll
 } mute_state;
 extern bool TestMode;
+extern bool isTestModeGreen;
 
 
 void save_settings();

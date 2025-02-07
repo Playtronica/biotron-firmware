@@ -65,6 +65,37 @@ void active_led_loop_classic();
 void active_led_loop_light_bpm_sync();
 
 void led_loop() {
+    if (TestMode) {
+        if (isTestModeGreen) {
+            pwm_set_gpio_level_invert(GROUP_BlUE_LED_RIGHT, MAX_LIGHT);
+            pwm_set_gpio_level_invert(GROUP_BlUE_LED_LEFT, MAX_LIGHT);
+            pwm_set_gpio_level_invert(GROUP_BlUE_LED_CENTER, MAX_LIGHT);
+
+            pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_1, 0);
+            pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_2, 0);
+            pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_3, 0);
+            pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_1, 0);
+            pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_2, 0);
+            pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_3, 0);
+        }
+        else {
+            pwm_set_gpio_level_invert(GROUP_BlUE_LED_RIGHT, 0);
+            pwm_set_gpio_level_invert(GROUP_BlUE_LED_LEFT, 0);
+            pwm_set_gpio_level_invert(GROUP_BlUE_LED_CENTER, 0);
+            pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_1, MAX_LIGHT);
+            pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_2, MAX_LIGHT);
+            pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_3, MAX_LIGHT);
+            pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_1, MAX_LIGHT);
+            pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_2, MAX_LIGHT);
+            pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_3, MAX_LIGHT);
+        }
+        return;
+    }
+
+    pwm_set_gpio_level_invert(GROUP_BlUE_LED_RIGHT, MAX_LIGHT);
+    pwm_set_gpio_level_invert(GROUP_BlUE_LED_LEFT, MAX_LIGHT);
+    pwm_set_gpio_level_invert(GROUP_BlUE_LED_CENTER, MAX_LIGHT);
+
     if (button_top_pressed) {
         pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_1, MAX_LIGHT);
         pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_2, MAX_LIGHT);
@@ -100,17 +131,6 @@ void led_loop() {
 
     switch (status) {
         case Sleep:
-            if (TestMode) {
-                pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_1, MAX_LIGHT);
-                pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_2, MAX_LIGHT);
-                pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_3, MAX_LIGHT);
-                pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_1, MAX_LIGHT);
-                pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_2, MAX_LIGHT);
-                pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_3, MAX_LIGHT);
-                break;
-            }
-
-
             if (level < 0) level *= -1;
 
             for (int i = ASYNC_LEDS - 1; i >= 0; i--) {
