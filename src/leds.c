@@ -29,7 +29,7 @@ inline uint8_t mute_light() {
 
 
 void pwm_set_gpio_level_invert(uint gpio, uint16_t level) {
-    pwm_set_gpio_level(gpio, MAX_LIGHT - level);
+    pwm_set_gpio_level(gpio, MAX_LIGHT - level / 2);
 }
 
 
@@ -67,18 +67,6 @@ void active_led_loop_light_bpm_sync();
 void led_loop() {
     if (TestMode) {
         if (isTestModeGreen) {
-            pwm_set_gpio_level_invert(GROUP_BlUE_LED_RIGHT, MAX_LIGHT);
-            pwm_set_gpio_level_invert(GROUP_BlUE_LED_LEFT, MAX_LIGHT);
-            pwm_set_gpio_level_invert(GROUP_BlUE_LED_CENTER, MAX_LIGHT);
-
-            pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_1, 0);
-            pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_2, 0);
-            pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_3, 0);
-            pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_1, 0);
-            pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_2, 0);
-            pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_3, 0);
-        }
-        else {
             pwm_set_gpio_level_invert(GROUP_BlUE_LED_RIGHT, 0);
             pwm_set_gpio_level_invert(GROUP_BlUE_LED_LEFT, 0);
             pwm_set_gpio_level_invert(GROUP_BlUE_LED_CENTER, 0);
@@ -88,6 +76,18 @@ void led_loop() {
             pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_1, MAX_LIGHT);
             pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_2, MAX_LIGHT);
             pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_3, MAX_LIGHT);
+
+        }
+        else {
+            pwm_set_gpio_level_invert(GROUP_BlUE_LED_RIGHT, MAX_LIGHT);
+            pwm_set_gpio_level_invert(GROUP_BlUE_LED_LEFT, MAX_LIGHT);
+            pwm_set_gpio_level_invert(GROUP_BlUE_LED_CENTER, MAX_LIGHT);
+            pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_1, 0);
+            pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_2, 0);
+            pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_3, 0);
+            pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_1, 0);
+            pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_2, 0);
+            pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_3, 0);
         }
         return;
     }
