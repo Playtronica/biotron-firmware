@@ -15,5 +15,5 @@ add_library(PLSDK_lib STATIC
 )
 
 
-target_link_libraries(PLSDK_lib PUBLIC pico_stdlib tinyusb_device)
+target_link_libraries(PLSDK_lib PUBLIC pico_unique_id pico_stdlib tinyusb_device)
 target_include_directories(PLSDK_lib PUBLIC include)

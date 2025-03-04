@@ -23,6 +23,8 @@
  *
  */
 
+#include <malloc.h>
+#include <pico/unique_id.h>
 #include "tusb.h"
 
 /* A combination of interfaces must have a unique product id, since PC will save device driver after the first plug.
@@ -32,7 +34,7 @@
  *   [MSB]       MIDI | HID | MSC | CDC          [LSB]
  */
 #define _PID_MAP(itf, n)  ( (CFG_TUD_##itf) << (n) )
-#define USB_PID           (0x4000 | _PID_MAP(CDC, 0) | _PID_MAP(MSC, 1) | _PID_MAP(HID, 2) | \
+#define USB_PID           (0x3000 | _PID_MAP(CDC, 0) | _PID_MAP(MSC, 1) | _PID_MAP(HID, 2) | \
                            _PID_MAP(MIDI, 3) | _PID_MAP(VENDOR, 4) )
 
 #define USB_VID   0xCafe
@@ -230,14 +232,13 @@ uint8_t const * tud_descriptor_configuration_cb(uint8_t index)
 
 // array of pointer to string descriptors
 // array of pointer to string descriptors
-char const* string_desc_arr [] =
-        {
-                (const char[]) { 0x09, 0x04 },  // 0: is supported language is English (0x0409)
-                "Playtronica",                          // 1: Manufacturer
-                "Biotron", // 2: Product
-                "Bio5",                                 // 3: Serials, should use chip ID
-                "TinyUSB CDC"                           // 4: CDC Interface
-        };
+char * get_serial() {
+    char *serial = malloc(2 * PICO_UNIQUE_BOARD_ID_SIZE_BYTES + 1);
+
+    pico_get_unique_board_id_string(serial, 2 * PICO_UNIQUE_BOARD_ID_SIZE_BYTES + 1);
+    return serial;
+}
+
 
 static uint16_t _desc_str[32];
 
@@ -245,7 +246,18 @@ static uint16_t _desc_str[32];
 // Application return pointer to descriptor, whose contents must exist long enough for transfer to complete
 uint16_t const* tud_descriptor_string_cb(uint8_t index, uint16_t langid)
 {
+    char * serial = get_serial();
+    char const* string_desc_arr [] =
+            {
+                    (const char[]) { 0x09, 0x04 },  // 0: is supported language is English (0x0409)
+                    "Playtronica",                          // 1: Manufacturer
+                    "Biotron", // 2: Product
+                    serial,                                 // 3: Serials, should use chip ID
+                    "TinyUSB CDC"                           // 4: CDC Interface
+            };
+    free(serial);
     (void) langid;
+
 
     uint8_t chr_count;
 
