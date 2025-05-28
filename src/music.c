@@ -43,7 +43,7 @@ uint8_t get_CC(uint8_t currentNote) {
         lastCC -= (lastCC - target_CC) / 2;
     }
 
-    return lastCC;
+    return 127 - lastCC;
 }
 
 

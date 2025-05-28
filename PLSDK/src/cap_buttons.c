@@ -89,8 +89,10 @@ void buttons_task(){
         gpio_put(pulse, 0);
         _outVal = 0;
         for(int i = 0; i < _num_of_registered_buttons; i++){
+//            printf("%d\t", _buttons[i].interval);
             _check_button(&_buttons[i]);
         }
+//        printf("\n");
         return;
     }
 }
