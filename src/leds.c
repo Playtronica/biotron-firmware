@@ -151,12 +151,12 @@ void led_loop() {
                 || (value + led_step < MIN_LIGHT && led_step < 0)) {
                 led_step *= -1;
                 if (led_step < 0) {
-                    note_off(0, 91);
-                    note_on(0, 92, 90);
+                    note_off(settings.plant_channel, 91);
+                    note_on(settings.plant_channel, 92, 90);
                 }
                 else {
-                    note_off(0, 92);
-                    note_on(0, 91, 90);
+                    note_off(settings.plant_channel, 92);
+                    note_on(settings.plant_channel, 91, 90);
                 }
             }
 

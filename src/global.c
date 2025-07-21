@@ -148,8 +148,8 @@ void status_loop() {
                 average_delta_freq = 0;
                 average_freq = 0;
                 last_freq = 0;
-                note_off(0, 92);
-                note_off(0, 91);
+                note_off(settings.plant_channel, 92);
+                note_off(settings.plant_channel, 91);
                 status = Sleep;
                 plsdk_printf("[+] Change status: Stab -> Sleep\n");
                 break;
@@ -159,8 +159,8 @@ void status_loop() {
                 average_freq /= counter;
                 average_delta_freq /= counter;
                 counter = 0;
-                note_off(0, 92);
-                note_off(0, 91);
+                note_off(settings.plant_channel, 92);
+                note_off(settings.plant_channel, 91);
                 if (active_status == Active) {
                     add_repeating_timer_us(settings.BPM, play_music, NULL, &midi_timer);
                 }

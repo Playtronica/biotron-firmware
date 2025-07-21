@@ -1,3 +1,5 @@
+#include <pico/printf.h>
+#include <stdlib.h>
 #include "hardware/pwm.h"
 #include "hardware/gpio.h"
 #include "raw_plant.h"
@@ -20,16 +22,13 @@ static void _on_pwm_wrap() {
 }
 
 
-static uint32_t _pwm_read(uint sliceNum) {
-    uint32_t this_count = count;
-    uint16_t part_count = pwm_get_counter(sliceNum);
-    if (part_count < 100) {
-        this_count = count;
-    }
-    this_count += part_count;
-    uint32_t advance = (this_count - LastCount);
-    LastCount = this_count;
-    return advance;
+static uint16_t _pwm_read(uint sliceNum) {
+    static uint64_t last_count = 0;
+    uint64_t this_count = count + pwm_get_counter(sliceNum);
+    uint16_t res = this_count - last_count;
+    last_count = this_count;
+
+    return res;
 }
 
 
@@ -46,11 +45,13 @@ bool plant_is_ready() {
 
 
 uint32_t get_real_freq() {
+    static uint32_t old_one = 0;
     if (freq_ready) {
         freq_ready = false;
+        old_one = realFreq;
         return realFreq;
     }
-    return 0;
+    return old_one;
 }
 
 

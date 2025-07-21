@@ -15,13 +15,13 @@ uint8_t last_note_light = 0;
 
 struct repeating_timer plantNoteOffTimer;
 bool plant_note_off(struct repeating_timer *t) {
-    note_off(0, last_note_plant);
+    note_off(settings.plant_channel, last_note_plant);
     cancel_repeating_timer(&plantNoteOffTimer);
     return true;
 }
 
 void reset_plant_note_off() {
-    note_off(0, last_note_plant);
+    note_off(settings.plant_channel, last_note_plant);
     cancel_repeating_timer(&plantNoteOffTimer);
 }
 
@@ -118,14 +118,14 @@ void midi_plant() {
         }
 
         if (active_status == BPMClockActive) {
-            note_off(0, last_note_plant);
+            note_off(settings.plant_channel, last_note_plant);
         }
 
         uint8_t velocity = settings.isRandomPlantVelocity ?
                 rand() % (settings.maxPlantVelocity + 1 - settings.minPlantVelocity) + settings.minPlantVelocity :
                 settings.maxPlantVelocity;
 
-        note_on(0, currentNote, velocity);
+        note_on(settings.plant_channel, currentNote, velocity);
 
         if (active_status == Active) {
             add_repeating_timer_us(MAX(1, settings.BPM / settings.fraction_note_off), plant_note_off,
@@ -155,7 +155,7 @@ void midi_light() {
                                    calculate_note_by_scale(settings.middle_plant_note - LIGHT_DIFFERENCE, counter,
                                                            settings.scale)));
 
-    note_off(1, last_note_light);
+    note_off(settings.light_channel, last_note_light);
 
     if (abs((int)current_note - (int)last_note_light) < settings.same_note_light) {
         return;
@@ -165,7 +165,7 @@ void midi_light() {
         uint8_t vel = settings.isRandomLightVelocity ?
                 rand() % (settings.maxLightVelocity + 1 - settings.minLightVelocity) + settings.minLightVelocity :
                       settings.maxLightVelocity;
-        note_on(1, current_note, vel);
+        note_on(settings.light_channel, current_note, vel);
 
     }
     last_note_light = current_note;
@@ -177,7 +177,7 @@ void midi_light_pitch() {
 }
 
 void stop_midi() {
-    note_off(0, last_note_plant);
-    note_off(1, last_note_light);
+    note_off(settings.plant_channel, last_note_plant);
+    note_off(settings.light_channel, last_note_light);
     change_pitch(0, 63, 63);
 }

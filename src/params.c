@@ -9,6 +9,7 @@
 #include <hardware/flash.h>
 #include <hardware/sync.h>
 #include <pico/bootrom.h>
+#include <pico/printf.h>
 
 Settings_t settings;
 enum MuteState mute_state = MuteNone;
@@ -39,6 +40,8 @@ void default_settings() {
     settings.light_pitch_mode = DEF_LIGHT_PITCH_MODE;
     settings.performance_mode = DEF_STUCK_MODE;
     settings.middle_plant_note = MIDDLE_NOTE;
+    settings.plant_channel = 0;
+    settings.light_channel = 1;
 }
 
 
@@ -87,7 +90,6 @@ void change_plant_bpm(uint16_t bpm) {
     if (status == Active) {
         reset_bpm();
     }
-
 }
 
 void change_plant_bpm_sys_ex(const uint8_t data[], uint8_t len) {
@@ -321,6 +323,24 @@ void set_middle_plant_note_sys_ex(const uint8_t data[], uint8_t len) {
 void set_middle_plant_note_cc(uint8_t channel, uint8_t value) {
     settings.middle_plant_note = value;
 }
+
+void set_channel_sys_ex(const uint8_t data[], uint8_t len) {
+    printf("%d %d %d\n", len, data[0], data[1]);
+    if (len != 2)
+        return;
+
+    if (data[0] >= 2 || data[1] >= 16) {
+        return;
+    }
+
+    if (data[0] == 0) {
+        settings.plant_channel = data[1];
+    }
+    else {
+        settings.light_channel = data[1];
+    }
+
+}
 //endregion
 
 
@@ -378,6 +398,8 @@ void setup_commands() {
 
     add_sys_ex_com(set_middle_plant_note_sys_ex, 25);
     add_CC(set_middle_plant_note_cc, 85);
+
+    add_sys_ex_com(set_channel_sys_ex, 127);
 }
 
 

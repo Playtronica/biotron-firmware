@@ -57,6 +57,8 @@ typedef struct {
     bool light_pitch_mode;
     bool performance_mode;
     int middle_plant_note;
+    int plant_channel;
+    int light_channel;
 } Settings_t;
 
 extern Settings_t settings;

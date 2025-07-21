@@ -258,7 +258,6 @@ uint16_t const* tud_descriptor_string_cb(uint8_t index, uint16_t langid)
     free(serial);
     (void) langid;
 
-
     uint8_t chr_count;
 
     if ( index == 0)
