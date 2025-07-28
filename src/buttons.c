@@ -9,11 +9,12 @@ bool button_bottom_pressed = false;
 bool button_top_pressed = false;
 
 void change_preset() {
-    set_next_preset();
+    button_finger_pressed = true;
 }
 
 void release_finger() {
     button_finger_pressed = false;
+    set_next_preset();
 }
 
 void change_same_mode() {

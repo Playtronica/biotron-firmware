@@ -6,6 +6,7 @@
 #include "PLSDK/commands.h"
 #include "PLSDK/music.h"
 #include "music.h"
+#include "PLSDK.h"
 #include <hardware/flash.h>
 #include <hardware/sync.h>
 #include <pico/bootrom.h>
@@ -560,7 +561,17 @@ void get_sys_ex_and_behave() {
 void set_next_preset() {
     static uint counter = 0;
     settings = *order_of_presets[counter];
-    reset_bpm();
+    stop_bpm();
     counter = (counter + 1) % COUNT_OF_PRESETS;
     save_settings();
+
+    for (int counter = 0; counter < 4; counter++) {
+        uint note = calculate_note_by_scale(settings.middle_plant_note, counter, settings.scale);
+        note_on(settings.plant_channel, note, 127);
+        uint32_t time = time_us_32();
+        while (time_us_32() - time < 500000) remind_midi();
+        note_off(settings.plant_channel, note);
+    }
+
+    reset_bpm();
 }

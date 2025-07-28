@@ -74,13 +74,22 @@ void bpm_clock_control(bool enabled) {
     reset_plant_note_off();
 }
 
-void reset_bpm() {
+void stop_bpm() {
     if (status == Active) {
         reset_plant_note_off();
         cancel_repeating_timer(&midi_timer);
+    }
+}
+
+
+void reset_bpm() {
+    if (status == Active) {
+        stop_bpm();
         add_repeating_timer_us(settings.BPM, play_music, NULL, &midi_timer);
     }
 }
+
+
 
 void load_settings() {
     static bool is_stopped = false;
