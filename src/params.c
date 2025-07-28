@@ -16,6 +16,124 @@ enum MuteState mute_state = MuteNone;
 bool TestMode = false;
 bool isTestModeGreen = true;
 
+// region presets
+const Settings_t fast_role_preset = {
+        .BPM = BPM_TO_US(404),
+        .lightBPM = 8,
+        .fraction_note_off = 1,
+        .fibPower = 50,
+        .firstValue = 10,
+        .filterPercent = 0,
+        .scale = 3,
+        .minPlantVelocity = 0,
+        .maxPlantVelocity = 97,
+        .minLightVelocity = 0,
+        .maxLightVelocity = 68,
+        .random_note = true,
+        .same_note_plant = 0,
+        .same_note_light = 0,
+        .light_note_range = 12,
+        .light_pitch_mode = 0,
+        .isMutePlantVelocity = 0,
+        .isMuteLightVelocity = 0,
+        .isRandomPlantVelocity = true,
+        .isRandomLightVelocity = true,
+        .performance_mode = 0,
+        .middle_plant_note = 60,
+        .plant_channel = 1,
+        .light_channel = 2
+};
+
+const Settings_t the_performer_mode = {
+        .BPM = BPM_TO_US(404),
+        .lightBPM = 2,
+        .fraction_note_off = 2,
+        .fibPower = 50,
+        .firstValue = 10,
+        .filterPercent = 0,
+        .scale = 6,
+        .minPlantVelocity = 8,
+        .maxPlantVelocity = 97,
+        .minLightVelocity = 0,
+        .maxLightVelocity = 54,
+        .random_note = false,
+        .same_note_plant = 1,
+        .same_note_light = 0,
+        .light_note_range = 18,
+        .light_pitch_mode = false,
+        .isMutePlantVelocity = 0,
+        .isMuteLightVelocity = true,
+        .isRandomPlantVelocity = true,
+        .isRandomLightVelocity = true,
+        .performance_mode = true,
+        .middle_plant_note = 60,
+        .plant_channel = 1,
+        .light_channel = 2
+};
+
+const Settings_t in_discussion = {
+        .BPM = BPM_TO_US(404),
+        .lightBPM = 2,
+        .fraction_note_off = 1,
+        .fibPower = 50,
+        .firstValue = 10,
+        .filterPercent = 0,
+        .scale = 5,
+        .minPlantVelocity = 44,
+        .maxPlantVelocity = 97,
+        .minLightVelocity = 0,
+        .maxLightVelocity = 54,
+        .random_note = false,
+        .same_note_plant = 0,
+        .same_note_light = 0,
+        .light_note_range = 18,
+        .light_pitch_mode = false,
+        .isMutePlantVelocity = 0,
+        .isMuteLightVelocity = 0,
+        .isRandomPlantVelocity = true,
+        .isRandomLightVelocity = true,
+        .performance_mode = true,
+        .middle_plant_note = 60,
+        .plant_channel = 1,
+        .light_channel = 2
+};
+
+const Settings_t mixolyd = {
+        .BPM = BPM_TO_US(462),
+        .lightBPM = 4,
+        .fraction_note_off = 4,
+        .fibPower = 50,
+        .firstValue = 10,
+        .filterPercent = 0,
+        .scale = 4,
+        .minPlantVelocity = 8,
+        .maxPlantVelocity = 98,
+        .minLightVelocity = 74,
+        .maxLightVelocity = 75,
+        .random_note = 0,
+        .same_note_plant = 1,
+        .same_note_light = 0,
+        .light_note_range = 12,
+        .light_pitch_mode = 0,
+        .isMutePlantVelocity = 0,
+        .isMuteLightVelocity = true,
+        .isRandomPlantVelocity = true,
+        .isRandomLightVelocity = 0,
+        .performance_mode = true,
+        .middle_plant_note = 60,
+        .plant_channel = 1,
+        .light_channel = 2
+};
+
+#define COUNT_OF_PRESETS 4
+const Settings_t * order_of_presets[COUNT_OF_PRESETS] = {
+        &mixolyd,
+        &fast_role_preset,
+        &the_performer_mode,
+        &in_discussion
+};
+// endregion
+
 void default_settings() {
     settings.id = ID_FLASH;
     settings.BPM = DEF_TIMER_MIDI_US;
@@ -437,4 +555,12 @@ void get_sys_ex_and_behave() {
             bpm_clock_control(true);
             break;
     }
+}
+
+void set_next_preset() {
+    static uint counter = 0;
+    settings = *order_of_presets[counter];
+    reset_bpm();
+    counter = (counter + 1) % COUNT_OF_PRESETS;
+    save_settings();
 }
