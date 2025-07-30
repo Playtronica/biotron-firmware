@@ -32,7 +32,11 @@ add_definitions(-DPICO_XOSC_STARTUP_DELAY_MULTIPLIER=64)
 IF(DEFINED ENV{FLASH_ID_STARTUP})
         message("$ENV{FLASH_ID_STARTUP}")
         add_definitions(-DFLASH_ID_STARTUP=$ENV{FLASH_ID_STARTUP})
+        add_definitions(-DMAJOR_VERSION=$ENV{MAJOR_VERSION})
+        add_definitions(-DMINOR_VERSION=$ENV{MINOR_VERSION})
+        add_definitions(-DPATCH_VERSION=$ENV{PATCH_VERSION})
 ENDIF()
+
 
 pico_sdk_init()
 

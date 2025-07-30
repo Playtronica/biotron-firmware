@@ -136,31 +136,8 @@ const Settings_t * order_of_presets[COUNT_OF_PRESETS] = {
 // endregion
 
 void default_settings() {
-    settings.id = ID_FLASH;
-    settings.BPM = DEF_TIMER_MIDI_US;
-    settings.lightBPM = DEF_LIGHT_BPM;
-    settings.fibPower = DEF_FIB_POW;
-    settings.firstValue = DEF_FIB_FIRST;
-    settings.filterPercent = DEF_FILTER_PERCENT;
-    settings.scale = DEF_SCALE;
-    settings.isRandomPlantVelocity = DEF_RAND_PLANT_VEL;
-    settings.isMutePlantVelocity = DEF_MUTE_PLANT;
-    settings.minPlantVelocity = DEF_MIN_PLANT_VEL;
-    settings.maxPlantVelocity = DEF_MAX_PLANT_VEL;
-    settings.isRandomLightVelocity = DEF_RAND_LIGHT_VEL;
-    settings.isMuteLightVelocity = DEF_MUTE_LIGHT;
-    settings.minLightVelocity = DEF_MIN_LIGHT_VEL;
-    settings.maxLightVelocity = DEF_MAX_LIGHT_VEL;
-    settings.random_note = DEF_RANDOM_NOTE;
-    settings.same_note_plant = DEF_SANE_NOTE_PLANT;
-    settings.same_note_light = DEF_SANE_NOTE_LIGHT;
-    settings.fraction_note_off = DEF_PERCENT_NOTE_OFF;
-    settings.light_note_range = DEF_LIGHT_NOTE_RANGE;
-    settings.light_pitch_mode = DEF_LIGHT_PITCH_MODE;
-    settings.performance_mode = DEF_STUCK_MODE;
-    settings.middle_plant_note = MIDDLE_NOTE;
-    settings.plant_channel = 0;
-    settings.light_channel = 1;
+    settings = *order_of_presets[0];
+    reset_bpm();
 }
 
 
@@ -460,6 +437,15 @@ void set_channel_sys_ex(const uint8_t data[], uint8_t len) {
     }
 
 }
+
+void get_info_sys_ex(const uint8_t data[], uint8_t len) {
+    if (len != 1) return;
+
+    uint8_t sys_ex_info[] = {SYS_EX_START, PLAYTRONICA_SYS_KEY, 126, data[0],
+                             MAJOR_VERSION, MINOR_VERSION, PATCH_VERSION, SYS_EX_END};
+    print_pure(0, sys_ex_info, 8);
+    print_pure(1, sys_ex_info, 8);
+}
 //endregion
 
 
@@ -519,6 +505,7 @@ void setup_commands() {
     add_CC(set_middle_plant_note_cc, 85);
 
     add_sys_ex_com(set_channel_sys_ex, 127);
+    add_sys_ex_com(get_info_sys_ex, 126);
 }
 
 

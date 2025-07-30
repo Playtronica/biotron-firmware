@@ -6,6 +6,7 @@ IMAGE_ID = $(shell docker images -q $(IMAGE))
 
 PWD := $(shell pwd)
 
+
 TIMESTAMP := $(shell date "+%s")
 
 create_container: build_image
@@ -15,9 +16,18 @@ create_container: build_image
 
 build: create_container
 	mkdir -p output
-	echo $(TIMESTAMP)
-	docker exec -e FLASH_ID_STARTUP=$(TIMESTAMP) $(IMAGE_NAME) bash -c "cd build/output ; cmake .. ; make;"
+	docker exec $(IMAGE_NAME) bash -c "cd build/output ; cmake .. ; make;"
 	$(call stop_and_rm_container)
+
+release: create_container
+	mkdir -p output
+	echo $(TIMESTAMP)
+	docker exec \
+		-e FLASH_ID_STARTUP=$(TIMESTAMP) \
+		-e MAJOR_VERSION=$(MAJOR_VERSION) \
+		-e MINOR_VERSION=$(MINOR_VERSION) \
+		-e PATCH_VERSION=$(PATCH_VERSION) \
+	$(IMAGE_NAME) bash -c "cd build/output ; cmake .. ; make;"
 
 build_image:
 ifeq ($(IMAGE_ID),)
