@@ -33,8 +33,6 @@ jobs:
           MAJOR_VERSION=$(echo "$CLEAN_TAG" | cut -d '.' -f 1)
           MINOR_VERSION=$(echo "$CLEAN_TAG" | cut -d '.' -f 2)
           PATCH_VERSION=$(echo "$CLEAN_TAG" | cut -d '.' -f 3)
-          
-          PATCH_VERSION=$((PATCH_VERSION + 1))
 
           echo "$MAJOR_VERSION"
           echo "$MINOR_VERSION"
