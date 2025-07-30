@@ -33,7 +33,7 @@ jobs:
       - uses: winterjung/split@v2
         id: split
         with:
-          msg: ${{ steps.newtag.outputs.CLEAN_TAG }}
+          msg: "${{ steps.newtag.outputs.CLEAN_TAG }}"
           separator: '.'
           maxsplit: 3
           
