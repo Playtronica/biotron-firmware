@@ -39,12 +39,12 @@ jobs:
           echo "CLEAN_TAG=${CLEAN_TAG}" >> "$GITHUB_OUTPUT"
 
       - name: Check tag
-        run: echo "${{ steps.newtag.clean_tag.CLEAN_TAG }}"
+        run: echo "${{ steps.clean_tag.outputs.CLEAN_TAG }}"
         
       - uses: winterjung/split@v2
         id: split
         with:
-          msg: "${{ steps.newtag.clean_tag.CLEAN_TAG }}"
+          msg: "${{ steps.clean_tag.outputs.CLEAN_TAG }}"
           separator: '.'
           maxsplit: 3
           
