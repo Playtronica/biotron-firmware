@@ -28,7 +28,9 @@ jobs:
             echo "TAG_NAME=${{ steps.previoustag.outputs.tag }}" | awk -F. -v OFS=. '{$NF += 1 ; print}' >> "$GITHUB_OUTPUT"
           fi
 
-          echo "CLEAN_TAG=${TAG_NAME#v}" >> $GITHUB_ENV
+          CLEAN_TAG=${TAG_NAME#v}
+          echo ${CLEAN_TAG}
+          
 
       - name: Check vars
         run: echo ${{ steps.newtag.outputs.CLEAN_TAG }}
