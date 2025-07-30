@@ -30,6 +30,9 @@ jobs:
 
           echo "CLEAN_TAG=${TAG_NAME#v}" >> $GITHUB_ENV
 
+      - name: Check vars
+        run: echo ${{ steps.newtag.outputs.CLEAN_TAG }}
+
       - uses: winterjung/split@v2
         id: split
         with:
