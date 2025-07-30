@@ -38,6 +38,9 @@ jobs:
           echo ${CLEAN_TAG}
           echo "CLEAN_TAG=${CLEAN_TAG}" >> "$GITHUB_OUTPUT"
 
+      - name: Check tag
+        run: echo "${{ steps.newtag.clean_tag.CLEAN_TAG }}"
+        
       - uses: winterjung/split@v2
         id: split
         with:
