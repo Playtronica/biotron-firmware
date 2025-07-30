@@ -33,7 +33,10 @@ jobs:
           IFS='.' read -r MAJOR_VERSION MINOR_VERSION PATCH_VERSION <<< "$CLEAN_TAG"
       
           PATCH_VERSION=$((PATCH_VERSION + 1))
-      
+
+          echo "$MAJOR_VERSION"
+          echo "$MINOR_VERSION"
+          echo "$PATCH_VERSION"
 
           echo "MAJOR_VERSION=$MAJOR_VERSION" >> $GITHUB_ENV
           echo "MINOR_VERSION=$MINOR_VERSION" >> $GITHUB_ENV
@@ -41,9 +44,9 @@ jobs:
           
       - name: "Build Firmware"
         run: |
-          make release MAJOR_VERSION=${MAJOR_VERSION} \
-          MINOR_VERSION=${MINOR_VERSION} \
-          PATCH_VERSION=${PATCH_VERSION}
+          make release MAJOR_VERSION=${{ steps.newtag.outputs.MAJOR_VERSION }} \
+          MINOR_VERSION=${{ steps.newtag.outputs.MINOR_VERSION }} \
+          PATCH_VERSION=${{ steps.newtag.outputs.PATCH_VERSION }}
         
       - name: "Rename Firmware"
         run: cp output/*.uf2 ${{ github.event.repository.name }}_${{ steps.newtag.outputs.TAG_NAME }}.uf2
