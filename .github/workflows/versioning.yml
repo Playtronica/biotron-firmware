@@ -27,26 +27,21 @@ jobs:
           else
             echo "TAG_NAME=${{ steps.previoustag.outputs.tag }}" | awk -F. -v OFS=. '{$NF += 1 ; print}' >> "$GITHUB_OUTPUT"
           fi
-          
-          CLEAN_TAG=${TAG_NAME#v}
-      
-          MAJOR_VERSION=$(echo "$CLEAN_TAG" | cut -d '.' -f 1)
-          MINOR_VERSION=$(echo "$CLEAN_TAG" | cut -d '.' -f 2)
-          PATCH_VERSION=$(echo "$CLEAN_TAG" | cut -d '.' -f 3)
 
-          echo "$MAJOR_VERSION"
-          echo "$MINOR_VERSION"
-          echo "$PATCH_VERSION"
+          echo "CLEAN_TAG=${TAG_NAME#v}" >> $GITHUB_ENV
 
-          echo "MAJOR_VERSION=$MAJOR_VERSION" >> $GITHUB_ENV
-          echo "MINOR_VERSION=$MINOR_VERSION" >> $GITHUB_ENV
-          echo "PATCH_VERSION=$PATCH_VERSION" >> $GITHUB_ENV
+      - uses: winterjung/split@v2
+        id: split
+        with:
+          msg: ${{ steps.newtag.outputs.CLEAN_TAG }}
+          separator: '.'
+          maxsplit: 3
           
       - name: "Build Firmware"
         run: |
-          make release MAJOR_VERSION=${{ steps.newtag.outputs.MAJOR_VERSION }} \
-          MINOR_VERSION=${{ steps.newtag.outputs.MINOR_VERSION }} \
-          PATCH_VERSION=${{ steps.newtag.outputs.PATCH_VERSION }}
+          make release MAJOR_VERSION=${{ steps.split.outputs._0 }} \
+          MINOR_VERSION=${{ steps.split.outputs._1 }} \
+          PATCH_VERSION=${{ steps.split.outputs._2 }}
         
       - name: "Rename Firmware"
         run: cp output/*.uf2 ${{ github.event.repository.name }}_${{ steps.newtag.outputs.TAG_NAME }}.uf2
