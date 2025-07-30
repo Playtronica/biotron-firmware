@@ -27,18 +27,21 @@ jobs:
           else
             echo "TAG_NAME=${{ steps.previoustag.outputs.tag }}" | awk -F. -v OFS=. '{$NF += 1 ; print}' >> "$GITHUB_OUTPUT"
           fi
-
-          CLEAN_TAG=${TAG_NAME#v}
-          echo ${CLEAN_TAG}
           
 
-      - name: Check vars
-        run: echo ${{ steps.newtag.outputs.CLEAN_TAG }}
+      - name: Create clean tag
+        id: clean_tag
+        run: |
+          echo ${{ steps.newtag.outputs.TAG_NAME }}
+          TAG_NAME=${{ steps.newtag.outputs.TAG_NAME }}
+          CLEAN_TAG=${TAG_NAME#v}
+          echo ${CLEAN_TAG}
+          echo "CLEAN_TAG=${CLEAN_TAG}" >> "$GITHUB_OUTPUT"
 
       - uses: winterjung/split@v2
         id: split
         with:
-          msg: "${{ steps.newtag.outputs.CLEAN_TAG }}"
+          msg: "${{ steps.newtag.clean_tag.CLEAN_TAG }}"
           separator: '.'
           maxsplit: 3
           
