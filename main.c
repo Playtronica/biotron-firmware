@@ -1,4 +1,5 @@
 #include <hardware/adc.h>
+#include <pico/printf.h>
 #include "pico/stdlib.h"
 #include "PLSDK.h"
 #include "global.h"
@@ -35,7 +36,6 @@ int main(void)
         status_loop();
         led_loop();
         check_buttons();
-
         remind_midi();
         get_sys_ex_and_behave();
         sleep_ms(1);

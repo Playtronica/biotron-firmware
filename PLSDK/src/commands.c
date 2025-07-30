@@ -101,7 +101,6 @@ int read_sys_ex() {
                 return CUSTOM_COMMAND;
             }
         }
-        print_pure(CABLE_NUM_MAIN, res, len);
         return UNKNOWN;
     }
 
@@ -148,12 +147,7 @@ int read_sys_ex() {
                     return RESET_DEVICE;
             }
         }
-        print_pure(CABLE_NUM_EXTRA, res, len);
         return UNKNOWN;
-    }
-
-    if (res[0] >= VALUE_LIMIT) {
-        print_pure(CABLE_NUM_MAIN, res, len);
     }
     return UNKNOWN;
 }

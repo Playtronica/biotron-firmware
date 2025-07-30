@@ -9,6 +9,18 @@
 #define ID_FLASH 0
 #endif
 
+#ifndef MAJOR_VERSION
+#define MAJOR_VERSION 0
+#endif
+
+#ifndef MINOR_VERSION
+#define MINOR_VERSION 0
+#endif
+
+#ifndef PATCH_VERSION
+#define PATCH_VERSION 0
+#endif
+
 #include "PLSDK/constants.h"
 
 #define DEF_TIMER_MIDI_US BPM_TO_US(462)
@@ -78,6 +90,6 @@ void clear_flash();
 
 void setup_commands();
 void get_sys_ex_and_behave();
-
+void set_next_preset();
 
 #endif //BIOTRON_PARAMS_H

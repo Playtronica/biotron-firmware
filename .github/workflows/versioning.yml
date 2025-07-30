@@ -23,13 +23,29 @@ jobs:
         id: newtag
         run: |
           if [ "${{ steps.previoustag.outputs.tag }}" == "" ]; then
-            echo "TAG_NAME=v0.0.0" >> $GITHUB_OUTPUT
+            echo "TAG_NAME=v0.0.0" | awk -F. -v OFS=. '{$NF += 1 ; print}' >> "$GITHUB_OUTPUT"
           else
             echo "TAG_NAME=${{ steps.previoustag.outputs.tag }}" | awk -F. -v OFS=. '{$NF += 1 ; print}' >> "$GITHUB_OUTPUT"
           fi
           
+          CLEAN_TAG=${TAG_NAME#v}
+      
+          IFS='.' read -r MAJOR_VERSION MINOR_VERSION PATCH_VERSION <<< "$CLEAN_TAG"
+      
+          PATCH_VERSION=$((PATCH_VERSION + 1))
+      
+          NEW_TAG_NAME="v${MAJOR_VERSION}.${MINOR_VERSION}.${PATCH_VERSION}"
+      
+          echo "NEW_TAG_NAME=$NEW_TAG_NAME" >> $GITHUB_OUTPUT
+          echo "MAJOR_VERSION=$MAJOR_VERSION" >> $GITHUB_ENV
+          echo "MINOR_VERSION=$MINOR_VERSION" >> $GITHUB_ENV
+          echo "PATCH_VERSION=$PATCH_VERSION" >> $GITHUB_ENV
+          
       - name: "Build Firmaware"
-        run: make build
+        run: |
+          make release MAJOR_VERSION=${{ steps.newtag.outputs.MAJOR_VERSION }} \
+          MINOR_VERSION=${{ steps.newtag.outputs.MINOR_VERSION }} \
+          PATCH_VERSION=${{ steps.newtag.outputs.PATCH_VERSION }}
         
       - name: "Rename Firmware"
         run: cp output/*.uf2 ${{ github.event.repository.name }}_${{ steps.newtag.outputs.TAG_NAME }}.uf2

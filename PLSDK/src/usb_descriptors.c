@@ -64,7 +64,7 @@ tusb_desc_device_t const desc_device =
                 .iProduct           = 0x02,
                 .iSerialNumber      = 0x03,
 
-                .bNumConfigurations = 0x01
+                .bNumConfigurations = 0x01,
         };
 
 
@@ -231,7 +231,6 @@ uint8_t const * tud_descriptor_configuration_cb(uint8_t index)
 //--------------------------------------------------------------------+
 
 // array of pointer to string descriptors
-// array of pointer to string descriptors
 char * get_serial() {
     char *serial = malloc(2 * PICO_UNIQUE_BOARD_ID_SIZE_BYTES + 1);
 
@@ -253,7 +252,8 @@ uint16_t const* tud_descriptor_string_cb(uint8_t index, uint16_t langid)
                     "Playtronica",                          // 1: Manufacturer
                     "Biotron", // 2: Product
                     serial,                                 // 3: Serials, should use chip ID
-                    "TinyUSB CDC"                           // 4: CDC Interface
+                    "TinyUSB CDC",                          // 4: CDC Interface
+
             };
     free(serial);
     (void) langid;

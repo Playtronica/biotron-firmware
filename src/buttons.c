@@ -8,13 +8,13 @@ bool button_finger_pressed = false;
 bool button_bottom_pressed = false;
 bool button_top_pressed = false;
 
-void change_mute_mode() {
+void change_preset() {
     button_finger_pressed = true;
-    mute_state = (mute_state + 1) % 4;
 }
 
 void release_finger() {
     button_finger_pressed = false;
+    set_next_preset();
 }
 
 void change_same_mode() {
@@ -38,7 +38,7 @@ void release_top() {
 }
 
 void init_buttons() {
-    buttons_add_button(BUTTON_FINGER, 60,  change_mute_mode, NULL, release_finger);
+    buttons_add_button(BUTTON_FINGER, 60, change_preset, NULL, release_finger);
     buttons_add_button(BUTTON_BOTTOM, 40, change_same_mode, NULL, release_bottom);
     buttons_add_button(BUTTON_TOP, 40, change_scale, NULL, release_top);
 
