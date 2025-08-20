@@ -239,11 +239,11 @@ void set_filter_cc(uint8_t channel, uint8_t value) {
 }
 
 void set_scale_sys_ex(const uint8_t data[], uint8_t len) {
-    settings.scale = data[0] % 12;
+    settings.scale = data[0] % SCALES_COUNT;
 }
 
 void set_scale_cc(uint8_t channel, uint8_t value) {
-    settings.scale = (int)(value / (127.0 / 12));
+    settings.scale = (int)(value / (127.0 / SCALES_COUNT));
 }
 
 void set_max_plant_vel_sys_ex(const uint8_t data[], uint8_t len) {

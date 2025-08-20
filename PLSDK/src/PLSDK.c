@@ -2,7 +2,7 @@
 #include <stdarg.h>
 #include "PLSDK.h"
 
-bool LOGGER_FLAG = false;
+bool LOGGER_FLAG = true;
 
 
 void init_midi() {

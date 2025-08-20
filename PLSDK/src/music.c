@@ -17,6 +17,7 @@ const uint8_t majblues[] = { 2, 3, 4, 7, 9, 12 };
 const uint8_t minpen[] = { 3, 5, 7, 10, 12 };
 const uint8_t majpen[] = { 2, 4, 7, 9, 12 };
 const uint8_t diminished[] = { 2, 3, 5, 6, 8, 9, 11, 12 };
+const uint8_t hirajoshi[] = { 2, 3, 7, 8, 12};
 
 uint8_t len_of_custom = 7;
 uint16_t custom[71] = { 195, 289, 513, 686, 796, 1008, 1200};
@@ -33,7 +34,8 @@ const NotesScale_t scales[] = {
         {6,  majblues},
         {5,  minpen},
         {5,  majpen},
-        {8,  diminished}
+        {8,  diminished},
+        {5,  hirajoshi}
 };
 
 

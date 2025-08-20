@@ -10,6 +10,8 @@
 #ifndef PSDK_NOTES_H
 #define PSDK_NOTES_H
 
+#define SCALES_COUNT 13
+
 typedef enum{
     SCALE_MAJOR,
     SCALE_MINOR,
@@ -23,6 +25,7 @@ typedef enum{
     SCALE_MINPEN,
     SCALE_MAJPEN,
     SCALE_DIMINISHED,
+    SCALE_HIRAJOSHI,
     SCALE_CUSTOM
 } ScaleNums_t;
 
