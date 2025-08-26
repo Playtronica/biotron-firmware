@@ -19,7 +19,6 @@ uint32_t last_freq = 0;
 uint32_t average_freq = 0;
 uint32_t average_delta_freq = 0;
 
-
 uint32_t filter_freq(double val, double k) {
     static uint32_t filter_val = 0;
     if (filter_val == 0) {
@@ -34,12 +33,17 @@ uint32_t filter_freq(double val, double k) {
     return filter_val;
 }
 
-struct repeating_timer midi_timer;
-bool play_music() {
+
+int64_t play_music(alarm_id_t id, void *user_data) {
     static uint64_t time_log = 0;
     static uint8_t counter = 1;
+    static bool is_swing_note = false;
 
-    midi_plant();
+    double swing_modifier = is_swing_note ? 1.5 : 0.5;
+    int64_t to_the_next_beat = (int64_t)(settings.BPM * swing_modifier);
+    is_swing_note = !is_swing_note;
+
+    midi_plant(to_the_next_beat);
 
     if (settings.light_pitch_mode) midi_light_pitch();
     else if (counter++ >= settings.lightBPM) {
@@ -56,18 +60,29 @@ bool play_music() {
                average_freq, last_freq, last_note_plant, last_note_light);
         time_log = time_us_64();
     }
-    return true;
+    return to_the_next_beat;
+}
+
+alarm_id_t play_music_alarm_id;
+
+
+void start_music_alarm() {
+    play_music_alarm_id = add_alarm_in_us(settings.BPM, play_music, NULL, false);
+}
+
+void stop_music_alarm() {
+    cancel_alarm(play_music_alarm_id);
 }
 
 
 void bpm_clock_control(bool enabled) {
     if (enabled && status == Active) {
-        cancel_repeating_timer(&midi_timer);
+        stop_music_alarm();
         status = BPMClockActive;
 
     }
     else if (!enabled && status == BPMClockActive) {
-        add_repeating_timer_us(settings.BPM, play_music, NULL, &midi_timer);
+        start_music_alarm();
         status = Active;
     }
     active_status = enabled ? BPMClockActive : Active;
@@ -77,7 +92,7 @@ void bpm_clock_control(bool enabled) {
 void stop_bpm() {
     if (status == Active) {
         reset_plant_note_off();
-        cancel_repeating_timer(&midi_timer);
+        stop_music_alarm();
     }
 }
 
@@ -85,7 +100,7 @@ void stop_bpm() {
 void reset_bpm() {
     if (status == Active) {
         stop_bpm();
-        add_repeating_timer_us(settings.BPM, play_music, NULL, &midi_timer);
+        start_music_alarm();
     }
 }
 
@@ -95,12 +110,12 @@ void load_settings() {
     static bool is_stopped = false;
     if (is_stopped) {
         if (status == Active) {
-            add_repeating_timer_us(settings.BPM, play_music, NULL, &midi_timer);
+            start_music_alarm();
         }
 
     } else {
         if (status == Active) {
-            cancel_repeating_timer(&midi_timer);
+            stop_music_alarm();
             reset_plant_note_off();
         }
     }
@@ -171,7 +186,7 @@ void status_loop() {
                 note_off(settings.plant_channel, 92);
                 note_off(settings.plant_channel, 91);
                 if (active_status == Active) {
-                    add_repeating_timer_us(settings.BPM, play_music, NULL, &midi_timer);
+                    start_music_alarm();
                 }
                 status = active_status;
                 plsdk_printf("[+] Change status: Stab -> Active\n");
@@ -201,7 +216,7 @@ void status_loop() {
                 average_freq = 0;
                 average_delta_freq = 0;
                 if (status == Active) {
-                    cancel_repeating_timer(&midi_timer);
+                    stop_music_alarm();
                 }
                 status = Sleep;
                 filter_freq(0, 0);

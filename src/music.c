@@ -13,16 +13,18 @@ uint8_t last_note_plant = MIDDLE_NOTE;
 uint8_t last_note_light = 0;
 
 
-struct repeating_timer plantNoteOffTimer;
-bool plant_note_off(struct repeating_timer *t) {
+
+alarm_id_t note_off_alarm_id;
+
+
+int64_t plant_note_off(alarm_id_t id, void *user_data) {
     note_off(settings.plant_channel, last_note_plant);
-    cancel_repeating_timer(&plantNoteOffTimer);
-    return true;
+    return 0;
 }
 
 void reset_plant_note_off() {
     note_off(settings.plant_channel, last_note_plant);
-    cancel_repeating_timer(&plantNoteOffTimer);
+    cancel_alarm(note_off_alarm_id);
 }
 
 uint8_t get_CC(uint8_t currentNote) {
@@ -106,7 +108,9 @@ int get_plant_counter() {
 }
 
 
-void midi_plant() {
+
+
+void midi_plant(int64_t to_the_next_beat_us) {
     uint8_t currentNote = MAX(settings.middle_plant_note - LOWEST_NOTE_RANGE,
                               MIN(settings.middle_plant_note + HIGHEST_NOTE_RANGE,
                                   calculate_note_by_scale(settings.middle_plant_note,
@@ -128,8 +132,7 @@ void midi_plant() {
         note_on(settings.plant_channel, currentNote, velocity);
 
         if (active_status == Active) {
-            add_repeating_timer_us(MAX(1, settings.BPM / settings.fraction_note_off), plant_note_off,
-                                   NULL, &plantNoteOffTimer);
+            add_alarm_in_us(MAX(1, to_the_next_beat_us / settings.fraction_note_off), plant_note_off, NULL, false);
         }
     }
 
