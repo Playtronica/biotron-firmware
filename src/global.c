@@ -34,40 +34,22 @@ uint32_t filter_freq(double val, double k) {
 }
 
 
-int64_t play_music(alarm_id_t id, void *user_data) {
-    static uint64_t time_log = 0;
-    static uint8_t counter = 1;
+int64_t play_music_alarm(alarm_id_t id, void *user_data) {
     static bool is_swing_note = false;
-
     double swing_modifier = is_swing_note ? 1.5 : 0.5;
-    int64_t to_the_next_beat = (int64_t)(settings.BPM * swing_modifier);
+    int64_t to_the_next_beat_us = (int64_t)(settings.BPM * swing_modifier);
     is_swing_note = !is_swing_note;
 
-    midi_plant(to_the_next_beat);
+    play_music(to_the_next_beat_us);
 
-    if (settings.light_pitch_mode) midi_light_pitch();
-    else if (counter++ >= settings.lightBPM) {
-        midi_light();
-        light_note_observer();
-        counter = 1;
-    }
-
-    if (time_log == 0) {
-        time_log = time_us_64();
-    }
-    if (time_us_64() - time_log > 100000) {
-        plsdk_printf("{\"AverageFreq\": %d, \"Freq\": %d, \"PlantNote\": %d, \"LightNote\": %d }\n",
-               average_freq, last_freq, last_note_plant, last_note_light);
-        time_log = time_us_64();
-    }
-    return to_the_next_beat;
+    return to_the_next_beat_us;
 }
 
 alarm_id_t play_music_alarm_id;
 
 
 void start_music_alarm() {
-    play_music_alarm_id = add_alarm_in_us(settings.BPM, play_music, NULL, false);
+    play_music_alarm_id = add_alarm_in_us(settings.BPM, play_music_alarm, NULL, false);
 }
 
 void stop_music_alarm() {

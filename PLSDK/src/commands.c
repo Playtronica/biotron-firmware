@@ -43,8 +43,8 @@ void print_pure(uint8_t cable, const uint8_t data[], uint8_t len) {
 
 static uint16_t clk = 0;
 int midi_clock() {
-    if (clk++ < 25) return BPM_CLOCK_INACTIVE;
-    clk = 1;
+    if (clk++ < 24) return BPM_CLOCK_INACTIVE;
+    clk = 0;
     return BPM_CLOCK_PLAY;
 }
 

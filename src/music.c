@@ -8,6 +8,8 @@
 #include "global.h"
 #include "PLSDK/music.h"
 #include "PLSDK/commands.h"
+#include "leds.h"
+#include "PLSDK.h"
 
 uint8_t last_note_plant = MIDDLE_NOTE;
 uint8_t last_note_light = 0;
@@ -108,8 +110,6 @@ int get_plant_counter() {
 }
 
 
-
-
 void midi_plant(int64_t to_the_next_beat_us) {
     uint8_t currentNote = MAX(settings.middle_plant_note - LOWEST_NOTE_RANGE,
                               MIN(settings.middle_plant_note + HIGHEST_NOTE_RANGE,
@@ -183,4 +183,32 @@ void stop_midi() {
     note_off(settings.plant_channel, last_note_plant);
     note_off(settings.light_channel, last_note_light);
     change_pitch(0, 63, 63);
+}
+
+void play_music(int64_t to_the_next_beat) {
+    static uint64_t time_log = 0;
+    static uint8_t counter = 1;
+
+    midi_plant(to_the_next_beat);
+
+    if (settings.light_pitch_mode) midi_light_pitch();
+    else if (counter++ >= settings.lightBPM) {
+        midi_light();
+        light_note_observer();
+        counter = 1;
+    }
+
+    if (time_log == 0) {
+        time_log = time_us_64();
+    }
+    if (time_us_64() - time_log > 100000) {
+        plsdk_printf("{\"AverageFreq\": %d, \"Freq\": %d, \"PlantNote\": %d, \"LightNote\": %d }\n",
+                     average_freq, last_freq, last_note_plant, last_note_light);
+        time_log = time_us_64();
+    }
+}
+
+void play_music_bpm_clock() {
+    if (status != BPMClockActive) return;
+    play_music(0);
 }

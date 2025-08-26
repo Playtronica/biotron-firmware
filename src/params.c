@@ -534,7 +534,7 @@ void get_sys_ex_and_behave() {
             save_settings();
             break;
         case BPM_CLOCK_PLAY:
-            play_music();
+            play_music_bpm_clock();
             break;
         case BPM_CLOCK_DEACTIVATE:
             bpm_clock_control(false);
