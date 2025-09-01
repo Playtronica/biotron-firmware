@@ -36,7 +36,7 @@ uint32_t filter_freq(double val, double k) {
 
 int64_t play_music_alarm(alarm_id_t id, void *user_data) {
     static bool is_swing_note = false;
-    double swing_modifier = is_swing_note ? 1.5 : 0.5;
+    double swing_modifier = 1; // TODO Awaits swing implementation
     int64_t to_the_next_beat_us = (int64_t)(settings.BPM * swing_modifier);
     is_swing_note = !is_swing_note;
 

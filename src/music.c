@@ -15,7 +15,6 @@ uint8_t last_note_plant = MIDDLE_NOTE;
 uint8_t last_note_light = 0;
 
 
-
 alarm_id_t note_off_alarm_id;
 
 
@@ -101,7 +100,6 @@ int get_plant_counter() {
         second = extra;
         i++;
     }
-//    printf("%d %f\n", diff, settings.fibPower * (first + second));
 
     if (minus) {
         return -i + extra_counter;
