@@ -22,8 +22,6 @@ extern uint32_t last_freq;
 extern uint32_t average_freq;
 extern uint32_t average_delta_freq;
 
-bool play_music();
-
 void bpm_clock_control(bool enabled);
 void stop_bpm();
 void reset_bpm();

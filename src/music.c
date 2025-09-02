@@ -8,21 +8,24 @@
 #include "global.h"
 #include "PLSDK/music.h"
 #include "PLSDK/commands.h"
+#include "leds.h"
+#include "PLSDK.h"
 
 uint8_t last_note_plant = MIDDLE_NOTE;
 uint8_t last_note_light = 0;
 
 
-struct repeating_timer plantNoteOffTimer;
-bool plant_note_off(struct repeating_timer *t) {
+alarm_id_t note_off_alarm_id;
+
+
+int64_t plant_note_off(alarm_id_t id, void *user_data) {
     note_off(settings.plant_channel, last_note_plant);
-    cancel_repeating_timer(&plantNoteOffTimer);
-    return true;
+    return 0;
 }
 
 void reset_plant_note_off() {
     note_off(settings.plant_channel, last_note_plant);
-    cancel_repeating_timer(&plantNoteOffTimer);
+    cancel_alarm(note_off_alarm_id);
 }
 
 uint8_t get_CC(uint8_t currentNote) {
@@ -97,7 +100,6 @@ int get_plant_counter() {
         second = extra;
         i++;
     }
-//    printf("%d %f\n", diff, settings.fibPower * (first + second));
 
     if (minus) {
         return -i + extra_counter;
@@ -106,7 +108,7 @@ int get_plant_counter() {
 }
 
 
-void midi_plant() {
+void midi_plant(int64_t to_the_next_beat_us) {
     uint8_t currentNote = MAX(settings.middle_plant_note - LOWEST_NOTE_RANGE,
                               MIN(settings.middle_plant_note + HIGHEST_NOTE_RANGE,
                                   calculate_note_by_scale(settings.middle_plant_note,
@@ -128,8 +130,7 @@ void midi_plant() {
         note_on(settings.plant_channel, currentNote, velocity);
 
         if (active_status == Active) {
-            add_repeating_timer_us(MAX(1, settings.BPM / settings.fraction_note_off), plant_note_off,
-                                   NULL, &plantNoteOffTimer);
+            add_alarm_in_us(MAX(1, to_the_next_beat_us / settings.fraction_note_off), plant_note_off, NULL, false);
         }
     }
 
@@ -180,4 +181,32 @@ void stop_midi() {
     note_off(settings.plant_channel, last_note_plant);
     note_off(settings.light_channel, last_note_light);
     change_pitch(0, 63, 63);
+}
+
+void play_music(int64_t to_the_next_beat) {
+    static uint64_t time_log = 0;
+    static uint8_t counter = 1;
+
+    midi_plant(to_the_next_beat);
+
+    if (settings.light_pitch_mode) midi_light_pitch();
+    else if (counter++ >= settings.lightBPM) {
+        midi_light();
+        light_note_observer();
+        counter = 1;
+    }
+
+    if (time_log == 0) {
+        time_log = time_us_64();
+    }
+    if (time_us_64() - time_log > 100000) {
+        plsdk_printf("{\"AverageFreq\": %d, \"Freq\": %d, \"PlantNote\": %d, \"LightNote\": %d }\n",
+                     average_freq, last_freq, last_note_plant, last_note_light);
+        time_log = time_us_64();
+    }
+}
+
+void play_music_bpm_clock() {
+    if (status != BPMClockActive) return;
+    play_music(0);
 }
