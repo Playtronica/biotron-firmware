@@ -23,4 +23,6 @@ void stop_midi();
 void play_music(int64_t to_the_next_beat_us);
 void play_music_bpm_clock();
 
+void quint_reset();
+
 #endif //BIOTRON_MUSIC_H

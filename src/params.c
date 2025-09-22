@@ -414,10 +414,12 @@ void set_stuck_mode_cc(uint8_t channel, uint8_t value) {
 
 void set_middle_plant_note_sys_ex(const uint8_t data[], uint8_t len) {
     settings.middle_plant_note = data[0];
+    quint_reset();
 }
 
 void set_middle_plant_note_cc(uint8_t channel, uint8_t value) {
     settings.middle_plant_note = value;
+    quint_reset();
 }
 
 void set_channel_sys_ex(const uint8_t data[], uint8_t len) {

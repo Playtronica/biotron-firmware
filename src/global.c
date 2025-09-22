@@ -193,6 +193,7 @@ void status_loop() {
 
 
             if (counter > SLEEP_COUNTER || TestMode) {
+                quint_reset();
                 counter = 0;
                 last_freq = 0;
                 average_freq = 0;

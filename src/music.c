@@ -2,6 +2,7 @@
 #include <pico/time.h>
 #include <hardware/adc.h>
 #include <pico/printf.h>
+#include <pico/rand.h>
 #include "music.h"
 #include "pico/stdio.h"
 #include "params.h"
@@ -107,11 +108,46 @@ int get_plant_counter() {
     return i + extra_counter;
 }
 
+uint8_t quint_note_counter = 0;
+int8_t quint_value = 0;
+#define QUINT_STEP_SEPARATE 4
+#define QUINT_MINIMAL_COUNTER_POSSIBLE 16
+#define QUINT_RANGE 14
+
+void quint_control() {
+    quint_note_counter++;
+
+    if (quint_note_counter % QUINT_STEP_SEPARATE != 0) return;
+
+    int current_chance_to_change = ((quint_note_counter - QUINT_MINIMAL_COUNTER_POSSIBLE) / 4) * 25;
+    int rand_value = (int)(get_rand_32() % 100);
+
+    if (rand_value > current_chance_to_change) return;
+
+    int current_chance_to_change_lower = 50 + (quint_value * 50) / QUINT_RANGE;
+    printf("%d %d %d %d\n", quint_value, quint_note_counter, current_chance_to_change, current_chance_to_change_lower);
+    rand_value = (int)(get_rand_32() % 100);
+
+    if (rand_value > current_chance_to_change_lower) {
+        quint_value += 7;
+    }
+    else {
+        quint_value -= 7;
+    }
+
+    quint_note_counter = 0;
+}
+
+void quint_reset() {
+    quint_note_counter = 0;
+    quint_value = 0;
+}
+
 
 void midi_plant(int64_t to_the_next_beat_us) {
-    uint8_t currentNote = MAX(settings.middle_plant_note - LOWEST_NOTE_RANGE,
-                              MIN(settings.middle_plant_note + HIGHEST_NOTE_RANGE,
-                                  calculate_note_by_scale(settings.middle_plant_note,
+    uint8_t currentNote = MAX(settings.middle_plant_note - LOWEST_NOTE_RANGE + quint_value,
+                              MIN(settings.middle_plant_note + HIGHEST_NOTE_RANGE + quint_value,
+                                  calculate_note_by_scale(settings.middle_plant_note + quint_value,
                                                           get_plant_counter(), settings.scale)));
 
     if ((mute_state == MuteNone || mute_state == MuteLight) && !settings.isMutePlantVelocity) {
@@ -183,10 +219,13 @@ void stop_midi() {
     change_pitch(0, 63, 63);
 }
 
+
+
 void play_music(int64_t to_the_next_beat) {
     static uint64_t time_log = 0;
     static uint8_t counter = 1;
 
+    quint_control();
     midi_plant(to_the_next_beat);
 
     if (settings.light_pitch_mode) midi_light_pitch();
