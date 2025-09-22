@@ -44,6 +44,7 @@
 #define DEF_LIGHT_NOTE_RANGE 12
 #define DEF_LIGHT_PITCH_MODE false
 #define DEF_STUCK_MODE true
+#define DEF_SWING_FIRST_NOTE_PERCENT
 
 typedef struct {
     int id;
@@ -71,6 +72,7 @@ typedef struct {
     int middle_plant_note;
     int plant_channel;
     int light_channel;
+    int swing_first_note_percent;
 } Settings_t;
 
 extern Settings_t settings;

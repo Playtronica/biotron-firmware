@@ -42,7 +42,8 @@ const Settings_t fast_role_preset = {
         .performance_mode = 0,
         .middle_plant_note = 60,
         .plant_channel = 1,
-        .light_channel = 2
+        .light_channel = 2,
+        .swing_first_note_percent = 100,
 };
 
 const Settings_t the_performer_mode = {
@@ -69,7 +70,8 @@ const Settings_t the_performer_mode = {
         .performance_mode = true,
         .middle_plant_note = 60,
         .plant_channel = 1,
-        .light_channel = 2
+        .light_channel = 2,
+        .swing_first_note_percent = 100,
 };
 
 const Settings_t in_discussion = {
@@ -96,7 +98,8 @@ const Settings_t in_discussion = {
         .performance_mode = true,
         .middle_plant_note = 60,
         .plant_channel = 1,
-        .light_channel = 2
+        .light_channel = 2,
+        .swing_first_note_percent = 100,
 };
 
 const Settings_t mixolyd = {
@@ -123,7 +126,8 @@ const Settings_t mixolyd = {
         .performance_mode = true,
         .middle_plant_note = 60,
         .plant_channel = 1,
-        .light_channel = 2
+        .light_channel = 2,
+        .swing_first_note_percent = 100,
 };
 
 #define COUNT_OF_PRESETS 4
@@ -420,6 +424,15 @@ void set_middle_plant_note_cc(uint8_t channel, uint8_t value) {
     settings.middle_plant_note = value;
 }
 
+void set_swing_first_note_percent_sys_ex(const uint8_t data[], uint8_t len) {
+    if (len < 1 || data[0] > 100) return;
+    settings.swing_first_note_percent = MAX(1, data[0]);
+}
+
+void set_swing_first_note_percent_cc(uint8_t channel, uint8_t value) {
+    settings.swing_first_note_percent = MAX(1, value / 127.0 * 100);
+}
+
 void set_channel_sys_ex(const uint8_t data[], uint8_t len) {
     printf("%d %d %d\n", len, data[0], data[1]);
     if (len != 2)
@@ -435,7 +448,6 @@ void set_channel_sys_ex(const uint8_t data[], uint8_t len) {
     else {
         settings.light_channel = data[1];
     }
-
 }
 
 void get_info_sys_ex(const uint8_t data[], uint8_t len) {
@@ -503,6 +515,9 @@ void setup_commands() {
 
     add_sys_ex_com(set_middle_plant_note_sys_ex, 25);
     add_CC(set_middle_plant_note_cc, 85);
+
+    add_sys_ex_com(set_swing_first_note_percent_sys_ex, 26);
+    add_CC(set_swing_first_note_percent_cc, 86);
 
     add_sys_ex_com(set_channel_sys_ex, 127);
     add_sys_ex_com(get_info_sys_ex, 126);
