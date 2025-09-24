@@ -134,11 +134,10 @@ You should transfer the resulting .uf2 file to the removable media that appeared
 <p align="right">(<a href="#top">back to top</a>)</p>
 
 <!-- COMMANDS -->
-## Biotron's Continuous Controllers 
-**Continuous Controllers** - MIDI messages, 
-which are used to patch data for parameters.
+## Biotron's Continuous Controllers and SysEx
+**Continuous Controllers** and **SysEx** - MIDI messages, which are used to patch data for parameters.
 
-Get list of Biotron's CC [here](./CC.md)
+Get list of Biotron's CC and SysEx [here](SettingsDescription.md)
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
