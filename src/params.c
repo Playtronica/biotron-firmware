@@ -19,6 +19,7 @@ bool isTestModeGreen = true;
 
 // region presets
 const Settings_t fast_role_preset = {
+        .id = ID_FLASH,
         .BPM = BPM_TO_US(404),
         .lightBPM = 8,
         .fraction_note_off = 1,
@@ -47,6 +48,7 @@ const Settings_t fast_role_preset = {
 };
 
 const Settings_t the_performer_mode = {
+        .id = ID_FLASH,
         .BPM = BPM_TO_US(404),
         .lightBPM = 2,
         .fraction_note_off = 2,
@@ -75,6 +77,7 @@ const Settings_t the_performer_mode = {
 };
 
 const Settings_t in_discussion = {
+        .id = ID_FLASH,
         .BPM = BPM_TO_US(404),
         .lightBPM = 2,
         .fraction_note_off = 1,
@@ -103,6 +106,7 @@ const Settings_t in_discussion = {
 };
 
 const Settings_t mixolyd = {
+        .id = ID_FLASH,
         .BPM = BPM_TO_US(462),
         .lightBPM = 4,
         .fraction_note_off = 4,
