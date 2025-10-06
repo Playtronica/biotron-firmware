@@ -464,7 +464,7 @@ void get_info_sys_ex(const uint8_t data[], uint8_t len) {
 void setup_commands() {
     add_sys_ex_com(change_plant_bpm_sys_ex, 0);
     add_sys_ex_com(change_light_bpm_sys_ex, 9);
-//    add_CC(change_bpm_cc, 14);
+    add_CC(change_bpm_cc, 14);
 
     add_sys_ex_com(set_fib_power_sys_ex, 1);
     add_CC(set_fib_power_cc, 22);

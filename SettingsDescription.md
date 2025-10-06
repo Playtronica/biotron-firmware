@@ -25,8 +25,8 @@
 
 | WebMIDI Name          | Function                                                      | Sys Ex Number | CC Number |
 |-----------------------|---------------------------------------------------------------|:--------------|-----------|
-| The Beat (Plant)      | [set_plant_bpm](#set_plant_bpm)                               | 0             | -         |
-| The Beat (Light)      | [set_light_bpm](#set_light_bpm)                               | 9             | -         |
+| The Beat (Plant)      | [set_plant_bpm](#set_plant_bpm)                               | 0             | 14        |
+| The Beat (Light)      | [set_light_bpm](#set_light_bpm)                               | 9             | 14        |
 | Step Size             | [set_fib_power](#set_fib_power)                               | 1             | 22        |
 | Wake-Up               | [set_fib_first](#set_fib_first)                               | 2             | 23        |
 | Delay                 | [set_filter](#set_filter)                                     | 3             | 3         |
