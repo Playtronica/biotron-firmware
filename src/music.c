@@ -134,7 +134,7 @@ void midi_plant(int64_t to_the_next_beat_us) {
         }
     }
 
-    uint8_t note_cc[3] = {0xB0, 90, get_CC(currentNote)};
+    uint8_t note_cc[3] = {0xB0 | settings.plant_channel, 90, get_CC(currentNote)};
     print_pure(0, note_cc, 3);
 
     last_note_plant = currentNote;
