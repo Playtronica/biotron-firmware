@@ -39,7 +39,6 @@ int64_t play_music_alarm(alarm_id_t id, void *user_data) {
 
     int64_t to_the_next_beat_us = is_swing_note ? (int64_t)(settings.BPM * (settings.swing_first_note_percent / 100.0))
             : (int64_t)(settings.BPM * ((100 + (100 - settings.swing_first_note_percent)) / 100.0));
-    printf("%d %d %d\n", is_swing_note, to_the_next_beat_us, settings.swing_first_note_percent);
     is_swing_note = !is_swing_note;
 
     play_music(to_the_next_beat_us);

@@ -28,25 +28,25 @@ void reset_plant_note_off() {
     cancel_alarm(note_off_alarm_id);
 }
 
-uint8_t get_CC(uint8_t currentNote) {
-    static int lastCC = 127;
-    uint8_t buff = abs(MIDDLE_NOTE - currentNote);
-    uint8_t target_CC;
-    if (currentNote > MIDDLE_NOTE) {
-        target_CC = (1 - ((double )buff / HIGHEST_NOTE_RANGE)) * 127;
-    }
-    else {
-        target_CC = (1 - ((double )buff / LOWEST_NOTE_RANGE)) * 127;
-    }
+uint8_t get_CC(int counter) {
+//    static int lastCC = 127;
+//    uint8_t buff = abs(MIDDLE_NOTE - counter);
+//    uint8_t target_CC;
+//    if (counter > MIDDLE_NOTE) {
+//        target_CC = (1 - ((double )buff / HIGHEST_NOTE_RANGE)) * 127;
+//    }
+//    else {
+//        target_CC = (1 - ((double )buff / LOWEST_NOTE_RANGE)) * 127;
+//    }
+//
+//    if (target_CC > lastCC) {
+//        lastCC += (target_CC - lastCC) / 2;
+//    }
+//    else {
+//        lastCC -= (lastCC - target_CC) / 2;
+//    }
 
-    if (target_CC > lastCC) {
-        lastCC += (target_CC - lastCC) / 2;
-    }
-    else {
-        lastCC -= (lastCC - target_CC) / 2;
-    }
-
-    return 127 - lastCC;
+    return 63 + counter;
 }
 
 
@@ -109,12 +109,14 @@ int get_plant_counter() {
 
 
 void midi_plant(int64_t to_the_next_beat_us) {
+    int plant_counter = get_plant_counter();
+
     uint8_t currentNote = MAX(settings.middle_plant_note - LOWEST_NOTE_RANGE,
                               MIN(settings.middle_plant_note + HIGHEST_NOTE_RANGE,
                                   calculate_note_by_scale(settings.middle_plant_note,
-                                                          get_plant_counter(), settings.scale)));
+                                                          plant_counter, settings.scale)));
 
-    if ((mute_state == MuteNone || mute_state == MuteLight) && !settings.isMutePlantVelocity) {
+    if (!isMutedByButton && !settings.isMutePlantVelocity) {
         if (abs((int)currentNote - (int)last_note_plant) < settings.same_note_plant) {
             return;
         }
@@ -134,7 +136,7 @@ void midi_plant(int64_t to_the_next_beat_us) {
         }
     }
 
-    uint8_t note_cc[3] = {0xB0 | settings.plant_channel, 90, get_CC(currentNote)};
+    uint8_t note_cc[3] = {0xB0 | settings.plant_channel, 90, get_CC(plant_counter)};
     print_pure(0, note_cc, 3);
 
     last_note_plant = currentNote;
@@ -162,7 +164,7 @@ void midi_light() {
         return;
     }
 
-    if ((mute_state == MuteNone || mute_state == MutePlant) && !settings.isMuteLightVelocity) {
+    if (!isMutedByButton && !settings.isMuteLightVelocity) {
         uint8_t vel = settings.isRandomLightVelocity ?
                 rand() % (settings.maxLightVelocity + 1 - settings.minLightVelocity) + settings.minLightVelocity :
                       settings.maxLightVelocity;

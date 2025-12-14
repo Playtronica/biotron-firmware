@@ -20,11 +20,11 @@ const uint8_t LED_COUNT = 9;
 
 
 inline uint8_t mute_plant() {
-    return (mute_state == MutePlant || mute_state == MuteAll) ? 8 : 1;
+    return isMutedByButton ? 8 : 1;
 }
 
 inline uint8_t mute_light() {
-    return (mute_state == MuteLight || mute_state == MuteAll) ? 8 : 1;
+    return isMutedByButton ? 8 : 1;
 }
 
 

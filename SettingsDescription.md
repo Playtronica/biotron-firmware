@@ -49,6 +49,7 @@
 | Manual control        | [set_stuck_mode](#set_stuck_mode)                             | 21            | 30        |
 | Home Note             | [set_middle_plant_note](#set_middle_plant_note)               | 25            | 85        |
 | Swing Note            | [set_swing_first_note_percent](#set_swing_first_note_percent) | 26            | 86        |
+| Button Mute State     | [set_button_mode_state](#set_button_mode_state)               | 27            | 87        |
 | MIDI channel          | [set_channel](#set_channel)                                   | 127           | -         |
 
 
@@ -490,6 +491,22 @@ The `set_swing_first_note_percent` function adjusts the swing effect for the fir
 ### CC Format
 
 - CC messages facilitate adjustments to the swing effect, with values ranging from 0 to 127 (127 representing 100% swing).
+
+---
+
+## set_button_mode_state
+
+### Description
+
+The `set_button_mode_state` function controls the state of mute button.
+
+### Sys Ex Format
+
+- The `set_button_mode_state` function, in Sys Ex messages, uses a value greater than 0 to enable button, with 0 to disable button.
+
+### CC Format
+
+- For CC messages, values at or above 64 signify enabling button, while values below 64 disables button.
 
 
 ---

@@ -13,7 +13,7 @@
 #include <pico/printf.h>
 
 Settings_t settings;
-enum MuteState mute_state = MuteNone;
+bool isMutedByButton = false;
 bool TestMode = false;
 bool isTestModeGreen = true;
 
@@ -45,6 +45,7 @@ const Settings_t fast_role_preset = {
         .plant_channel = 1,
         .light_channel = 2,
         .swing_first_note_percent = 100,
+        .is_mute_button_active = false,
 };
 
 const Settings_t the_performer_mode = {
@@ -74,6 +75,7 @@ const Settings_t the_performer_mode = {
         .plant_channel = 1,
         .light_channel = 2,
         .swing_first_note_percent = 100,
+        .is_mute_button_active = false,
 };
 
 const Settings_t in_discussion = {
@@ -103,6 +105,7 @@ const Settings_t in_discussion = {
         .plant_channel = 1,
         .light_channel = 2,
         .swing_first_note_percent = 100,
+        .is_mute_button_active = false,
 };
 
 const Settings_t mixolyd = {
@@ -132,6 +135,7 @@ const Settings_t mixolyd = {
         .plant_channel = 1,
         .light_channel = 2,
         .swing_first_note_percent = 100,
+        .is_mute_button_active = false,
 };
 
 #define COUNT_OF_PRESETS 4
@@ -438,7 +442,7 @@ void set_swing_first_note_percent_cc(uint8_t channel, uint8_t value) {
 }
 
 void set_channel_sys_ex(const uint8_t data[], uint8_t len) {
-    printf("%d %d %d\n", len, data[0], data[1]);
+//    printf("%d %d %d\n", len, data[0], data[1]);
     if (len != 2)
         return;
 
@@ -461,6 +465,23 @@ void get_info_sys_ex(const uint8_t data[], uint8_t len) {
                              MAJOR_VERSION, MINOR_VERSION, PATCH_VERSION, SYS_EX_END};
     print_pure(0, sys_ex_info, 8);
     print_pure(1, sys_ex_info, 8);
+}
+
+
+void set_button_mode_state_sys_ex(const uint8_t data[], uint8_t len) {
+    if (len != 1) return;
+    settings.is_mute_button_active = data[0];
+    if (!settings.is_mute_button_active) {
+        isMutedByButton = false;
+    }
+
+}
+
+void set_button_mode_state_cc(uint8_t channel, uint8_t value) {
+    settings.is_mute_button_active = value > 63;
+    if (!settings.is_mute_button_active) {
+        isMutedByButton = false;
+    }
 }
 //endregion
 
@@ -522,6 +543,9 @@ void setup_commands() {
 
     add_sys_ex_com(set_swing_first_note_percent_sys_ex, 26);
     add_CC(set_swing_first_note_percent_cc, 86);
+
+    add_sys_ex_com(set_button_mode_state_sys_ex, 27);
+    add_CC(set_button_mode_state_cc, 87);
 
     add_sys_ex_com(set_channel_sys_ex, 127);
     add_sys_ex_com(get_info_sys_ex, 126);

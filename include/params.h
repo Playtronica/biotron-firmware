@@ -73,15 +73,11 @@ typedef struct {
     int plant_channel;
     int light_channel;
     int swing_first_note_percent;
+    bool is_mute_button_active;
 } Settings_t;
 
 extern Settings_t settings;
-extern enum MuteState {
-    MuteNone,
-    MutePlant,
-    MuteLight,
-    MuteAll
-} mute_state;
+extern bool isMutedByButton;
 extern bool TestMode;
 extern bool isTestModeGreen;
 
