@@ -1,6 +1,7 @@
 #include "pico/stdlib.h"
 #include "PLSDK/commands.h"
 #include "PLSDK/constants.h"
+#include "PLSDK/midi_parser.h"
 #include "PLSDK.h"
 #include "tusb.h"
 
@@ -12,6 +13,7 @@ uint8_t length_sys = 0;
 
 
 void add_CC(void action(uint8_t channel, uint8_t value), uint8_t num) {
+    if (length_cc >= MAX_COUNT_COMMANDS || action == NULL) return;
     CC_command_s new_CC;
     new_CC.num = num;
     new_CC.action = action;
@@ -19,6 +21,7 @@ void add_CC(void action(uint8_t channel, uint8_t value), uint8_t num) {
 }
 
 void add_sys_ex_com(void action(const uint8_t data[], uint8_t len), uint8_t num) {
+    if (length_sys >= MAX_COUNT_COMMANDS || action == NULL) return;
     sys_ex_command_s new_sys_ex_com;
     new_sys_ex_com.num = num;
     new_sys_ex_com.action = action;
@@ -50,40 +53,36 @@ int midi_clock() {
 
 
 int read_sys_ex() {
-    uint8_t res[300];
+    static midi_parser_t parser;
+    static bool parser_initialized = false;
     uint8_t buff[4];
-    uint32_t len = 0;
+    midi_event_t event;
     static uint8_t bpm_clock_prepare = BPM_CLOCK_STOP_BYTE;
 
-
-    while (tud_midi_packet_read(buff)) {
-        remind_midi();
-        for (int i = 1; i < 4; ++i) {
-            res[len++] = buff[i];
-            if (buff[i] == SYS_EX_END ||
-                buff[i] == BPM_CLOCK_STOP_BYTE ||
-                buff[i] == BPM_CLOCK_START_BYTE ||
-                buff[i] == BPM_CLOCK_BYTE) break;
-        }
+    if (!parser_initialized) {
+        midi_parser_init(&parser);
+        parser_initialized = true;
     }
+    if (!tud_midi_packet_read(buff)) return UNKNOWN;
+    remind_midi();
+    midi_event_kind_t kind = midi_parser_feed_usb_packet(&parser, buff, &event);
+    if (kind == MIDI_EVENT_NONE || kind == MIDI_EVENT_MALFORMED) return UNKNOWN;
+    const uint8_t *res = event.data;
+    const size_t len = event.len;
 
-    if (len == 0) {
-        return UNKNOWN;
-    }
-
-    if (res[0] == BPM_CLOCK_START_BYTE || res[0] == MUSIC_SELECT) {
+    if (len >= 1 && (res[0] == BPM_CLOCK_START_BYTE || res[0] == MUSIC_SELECT)) {
         printf("START\n");
         bpm_clock_prepare = BPM_CLOCK_START_BYTE;
         return BPM_CLOCK_INACTIVE;
     }
 
-    if (res[0] == BPM_CLOCK_STOP_BYTE) {
+    if (len >= 1 && res[0] == BPM_CLOCK_STOP_BYTE) {
         printf("END\n");
         bpm_clock_prepare = BPM_CLOCK_STOP_BYTE;
         return BPM_CLOCK_DEACTIVATE;
     }
 
-    if (res[0] == BPM_CLOCK_BYTE &&
+    if (len >= 1 && res[0] == BPM_CLOCK_BYTE &&
         (bpm_clock_prepare == BPM_CLOCK_START_BYTE || bpm_clock_prepare == BPM_CLOCK_BYTE)) {
         if (bpm_clock_prepare == BPM_CLOCK_START_BYTE) {
             clk = 0;
@@ -94,7 +93,7 @@ int read_sys_ex() {
     }
 
 
-    if (res[0] >= CC_START && res[0] <= CC_END) {
+    if (len >= CC_LENGTH && res[0] >= CC_START && res[0] <= CC_END) {
         for (int i = 0; i < length_cc; i++) {
             if (CC[i].num == res[1]) {
                 CC[i].action(res[0] - CC_START, res[2]);
@@ -105,20 +104,17 @@ int read_sys_ex() {
     }
 
 
-    if (res[0] == SYS_EX_START) {
-        if (res[1] == PLAYTRONICA_KEY_FIRST && res[2] == PLAYTRONICA_KEY_SECOND) {
+    if (kind == MIDI_EVENT_SYSEX && len >= 2 && res[0] == SYS_EX_START && res[len - 1] == SYS_EX_END) {
+        if (len >= 5 && len - 5 <= UINT8_MAX &&
+            res[1] == PLAYTRONICA_KEY_FIRST && res[2] == PLAYTRONICA_KEY_SECOND) {
             for (int i = 0; i < length_sys; i++) {
                 if (sys_com[i].num == res[3]) {
-                    uint8_t data[len - 5];
-                    for (int j = 4; j < len - 1; j++) {
-                        data[j - 4] = res[j];
-                    }
-                    sys_com[i].action(data, len - 5);
+                    sys_com[i].action(&res[4], (uint8_t)(len - 5));
                     return CUSTOM_COMMAND;
                 }
             }
         }
-        if (res[1] == PLAYTRONICA_SYS_KEY && res[2] == PLAYTRONICA_KEY_FIRST && res[3] == PLAYTRONICA_KEY_SECOND) {
+        if (len >= 6 && res[1] == PLAYTRONICA_SYS_KEY && res[2] == PLAYTRONICA_KEY_FIRST && res[3] == PLAYTRONICA_KEY_SECOND) {
             switch (res[4]) {
                 case 0:
                     plsdk_printf("Device is in TEST GREEN mode\n");
