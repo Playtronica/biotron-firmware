@@ -255,7 +255,8 @@ void set_scale_sys_ex(const uint8_t data[], uint8_t len) {
 }
 
 void set_scale_cc(uint8_t channel, uint8_t value) {
-    settings.scale = (int)(value / (127.0 / SCALES_COUNT));
+    // Map the complete 0..127 CC domain into valid scale indexes 0..12.
+    settings.scale = ((uint16_t)value * SCALES_COUNT) / 128;
 }
 
 void set_max_plant_vel_sys_ex(const uint8_t data[], uint8_t len) {
@@ -553,6 +554,9 @@ void setup_commands() {
 
 
 void get_sys_ex_and_behave() {
+    static bool cc_save_pending = false;
+    static uint64_t last_cc_change_us = 0;
+    const uint64_t cc_save_debounce_us = 1000000;
     int sys_ex_status = read_sys_ex();
 
     switch (sys_ex_status) {
@@ -576,6 +580,13 @@ void get_sys_ex_and_behave() {
         case CUSTOM_COMMAND:
             save_settings();
             break;
+        case CUSTOM_CC_COMMAND:
+            // CC faders can generate hundreds of messages per second. Apply
+            // changes in RAM immediately, but coalesce flash persistence until
+            // the controller has been idle for one second.
+            cc_save_pending = true;
+            last_cc_change_us = time_us_64();
+            break;
         case BPM_CLOCK_PLAY:
             play_music_bpm_clock();
             break;
@@ -585,6 +596,11 @@ void get_sys_ex_and_behave() {
         case BPM_CLOCK_ACTIVATE:
             bpm_clock_control(true);
             break;
+    }
+
+    if (cc_save_pending && time_us_64() - last_cc_change_us >= cc_save_debounce_us) {
+        save_settings();
+        cc_save_pending = false;
     }
 }
 

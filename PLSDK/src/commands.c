@@ -98,7 +98,7 @@ int read_sys_ex() {
         for (int i = 0; i < length_cc; i++) {
             if (CC[i].num == res[1]) {
                 CC[i].action(res[0] - CC_START, res[2]);
-                return CUSTOM_COMMAND;
+                return CUSTOM_CC_COMMAND;
             }
         }
         return UNKNOWN;
@@ -151,4 +151,3 @@ int read_sys_ex() {
     }
     return UNKNOWN;
 }
-
