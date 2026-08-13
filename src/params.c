@@ -7,6 +7,8 @@
 #include "PLSDK/music.h"
 #include "music.h"
 #include "PLSDK.h"
+#include "persistence_scheduler.h"
+#include "settings_storage.h"
 #include <hardware/flash.h>
 #include <hardware/sync.h>
 #include <pico/bootrom.h>
@@ -147,6 +149,18 @@ const Settings_t * order_of_presets[COUNT_OF_PRESETS] = {
 };
 // endregion
 
+enum {
+    SETTINGS_PROGRAM_BYTES = STORAGE_ROUND_UP(sizeof(Settings_t), FLASH_PAGE_SIZE),
+    SETTINGS_ERASE_BYTES = STORAGE_ROUND_UP(SETTINGS_PROGRAM_BYTES, FLASH_SECTOR_SIZE),
+};
+
+_Static_assert(SETTINGS_PROGRAM_BYTES >= sizeof(Settings_t),
+               "settings program buffer must contain Settings_t");
+_Static_assert(SETTINGS_PROGRAM_BYTES % FLASH_PAGE_SIZE == 0,
+               "settings program size must be page aligned");
+_Static_assert(SETTINGS_ERASE_BYTES % FLASH_SECTOR_SIZE == 0,
+               "settings erase size must be sector aligned");
+
 void default_settings() {
     settings = *order_of_presets[0];
     reset_bpm();
@@ -154,15 +168,13 @@ void default_settings() {
 
 
 void save_settings() {
-    uint8_t* settingsAsBytes = (uint8_t*) &settings;
-    int settingsSize = sizeof(settings);
-
-    int writeSize = (settingsSize / FLASH_PAGE_SIZE) + 1;
-    int sectorCount = ((writeSize * FLASH_PAGE_SIZE) / FLASH_SECTOR_SIZE) + 1;
+    uint8_t program_data[SETTINGS_PROGRAM_BYTES];
+    if (!settings_storage_pack(program_data, sizeof(program_data),
+                               &settings, sizeof(settings))) return;
 
     uint32_t interrupts = save_and_disable_interrupts();
-    flash_range_erase(FLASH_TARGET_OFFSET, FLASH_SECTOR_SIZE * sectorCount);
-    flash_range_program(FLASH_TARGET_OFFSET, settingsAsBytes, FLASH_PAGE_SIZE * writeSize);
+    flash_range_erase(FLASH_TARGET_OFFSET, SETTINGS_ERASE_BYTES);
+    flash_range_program(FLASH_TARGET_OFFSET, program_data, sizeof(program_data));
     restore_interrupts(interrupts);
 }
 
@@ -179,13 +191,8 @@ void read_settings() {
 }
 
 void clear_flash() {
-    int settingsSize = sizeof(settings);
-
-    int writeSize = (settingsSize / FLASH_PAGE_SIZE) + 1;
-    int sectorCount = ((writeSize * FLASH_PAGE_SIZE) / FLASH_SECTOR_SIZE) + 1;
-
     uint32_t interrupts = save_and_disable_interrupts();
-    flash_range_erase(FLASH_TARGET_OFFSET, FLASH_SECTOR_SIZE * sectorCount);
+    flash_range_erase(FLASH_TARGET_OFFSET, SETTINGS_ERASE_BYTES);
     restore_interrupts(interrupts);
 }
 
@@ -554,9 +561,11 @@ void setup_commands() {
 
 
 void get_sys_ex_and_behave() {
-    static bool cc_save_pending = false;
-    static uint64_t last_cc_change_us = 0;
-    const uint64_t cc_save_debounce_us = 1000000;
+    static persistence_scheduler_t cc_save = {
+        .pending = false,
+        .last_change_us = 0,
+        .debounce_us = 1000000,
+    };
     int sys_ex_status = read_sys_ex();
 
     switch (sys_ex_status) {
@@ -579,13 +588,14 @@ void get_sys_ex_and_behave() {
             break;
         case CUSTOM_COMMAND:
             save_settings();
+            // The immediate save includes any pending live CC changes.
+            persistence_note_saved(&cc_save);
             break;
         case CUSTOM_CC_COMMAND:
             // CC faders can generate hundreds of messages per second. Apply
             // changes in RAM immediately, but coalesce flash persistence until
             // the controller has been idle for one second.
-            cc_save_pending = true;
-            last_cc_change_us = time_us_64();
+            persistence_note_change(&cc_save, time_us_64());
             break;
         case BPM_CLOCK_PLAY:
             play_music_bpm_clock();
@@ -598,9 +608,9 @@ void get_sys_ex_and_behave() {
             break;
     }
 
-    if (cc_save_pending && time_us_64() - last_cc_change_us >= cc_save_debounce_us) {
+    if (persistence_is_due(&cc_save, time_us_64())) {
         save_settings();
-        cc_save_pending = false;
+        persistence_note_saved(&cc_save);
     }
 }
 

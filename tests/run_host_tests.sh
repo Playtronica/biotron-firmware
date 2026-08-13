@@ -29,3 +29,14 @@ compiler="${CC:-cc}"
   PLSDK/src/commands.c tests/test_commands_integration.c \
   -o "$test_dir/commands-optimized"
 "$test_dir/commands-optimized"
+
+"$compiler" -std=c11 -O1 -g -Wall -Wextra -Werror -pedantic \
+  -fno-omit-frame-pointer -fsanitize=address,undefined \
+  -I include tests/test_persistence.c \
+  -o "$test_dir/persistence-sanitized"
+"$test_dir/persistence-sanitized"
+
+"$compiler" -std=c11 -O2 -Wall -Wextra -Werror -pedantic \
+  -I include tests/test_persistence.c \
+  -o "$test_dir/persistence-optimized"
+"$test_dir/persistence-optimized"
