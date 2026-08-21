@@ -10,22 +10,31 @@
 #include "PLSDK/commands.h"
 #include "leds.h"
 #include "PLSDK.h"
+#include "midi_note_lifecycle.h"
+#include "midi_value_safety.h"
 
 uint8_t last_note_plant = MIDDLE_NOTE;
 uint8_t last_note_light = 0;
 
 
-alarm_id_t note_off_alarm_id;
+alarm_id_t note_off_alarm_id = -1;
 
 
 int64_t plant_note_off(alarm_id_t id, void *user_data) {
-    note_off(settings.plant_channel, last_note_plant);
+    const uintptr_t identity = (uintptr_t)user_data;
+    note_off(midi_note_identity_channel(identity),
+             midi_note_identity_note(identity));
+    if (note_off_alarm_id == id) note_off_alarm_id = -1;
     return 0;
 }
 
 void reset_plant_note_off() {
     note_off(settings.plant_channel, last_note_plant);
-    cancel_alarm(note_off_alarm_id);
+    stop_all_notes(settings.plant_channel);
+    if (note_off_alarm_id >= 0) {
+        cancel_alarm(note_off_alarm_id);
+        note_off_alarm_id = -1;
+    }
 }
 
 uint8_t get_CC(int counter) {
@@ -126,13 +135,23 @@ void midi_plant(int64_t to_the_next_beat_us) {
         }
 
         uint8_t velocity = settings.isRandomPlantVelocity ?
-                rand() % (settings.maxPlantVelocity + 1 - settings.minPlantVelocity) + settings.minPlantVelocity :
-                settings.maxPlantVelocity;
+                midi_random_velocity((uint32_t)rand(), settings.minPlantVelocity,
+                                     settings.maxPlantVelocity) :
+                midi_clamp_7bit(settings.maxPlantVelocity);
 
         note_on(settings.plant_channel, currentNote, velocity);
 
         if (active_status == Active) {
-            add_alarm_in_us(MAX(1, to_the_next_beat_us / settings.fraction_note_off), plant_note_off, NULL, false);
+            const uintptr_t identity = midi_note_identity_pack(
+                    settings.plant_channel, currentNote);
+            note_off_alarm_id = add_alarm_in_us(
+                    MAX(1, to_the_next_beat_us / MAX(1, settings.fraction_note_off)),
+                    plant_note_off, (void *)identity, false);
+            if (note_off_alarm_id < 0) {
+                // Failing silent here leaves a synth note held forever. A
+                // short note is safer than a missing Note Off.
+                note_off(settings.plant_channel, currentNote);
+            }
         }
     }
 
@@ -145,7 +164,8 @@ void midi_plant(int64_t to_the_next_beat_us) {
 
 void midi_light() {
     uint16_t adc = MIN(adc_read(), MAX_OF_LIGHT);
-    uint16_t step = MAX_OF_LIGHT / (settings.light_note_range * 2);
+    const uint8_t light_note_range = midi_nonzero_range(settings.light_note_range);
+    uint16_t step = MAX_OF_LIGHT / (light_note_range * 2);
 
     int counter = abs(MAX_OF_LIGHT / 2 - (int)adc) / step;
     if (adc > MAX_OF_LIGHT / 2) {
@@ -153,8 +173,8 @@ void midi_light() {
     }
 
 
-    uint8_t current_note = MAX(settings.middle_plant_note - LIGHT_DIFFERENCE - settings.light_note_range,
-                               MIN(settings.middle_plant_note - LIGHT_DIFFERENCE + settings.light_note_range,
+    uint8_t current_note = MAX(settings.middle_plant_note - LIGHT_DIFFERENCE - light_note_range,
+                               MIN(settings.middle_plant_note - LIGHT_DIFFERENCE + light_note_range,
                                    calculate_note_by_scale(settings.middle_plant_note - LIGHT_DIFFERENCE, counter,
                                                            settings.scale)));
 
@@ -166,8 +186,9 @@ void midi_light() {
 
     if (!isMutedByButton && !settings.isMuteLightVelocity) {
         uint8_t vel = settings.isRandomLightVelocity ?
-                rand() % (settings.maxLightVelocity + 1 - settings.minLightVelocity) + settings.minLightVelocity :
-                      settings.maxLightVelocity;
+                midi_random_velocity((uint32_t)rand(), settings.minLightVelocity,
+                                     settings.maxLightVelocity) :
+                midi_clamp_7bit(settings.maxLightVelocity);
         note_on(settings.light_channel, current_note, vel);
 
     }
@@ -182,6 +203,8 @@ void midi_light_pitch() {
 void stop_midi() {
     note_off(settings.plant_channel, last_note_plant);
     note_off(settings.light_channel, last_note_light);
+    stop_all_notes(settings.plant_channel);
+    stop_all_notes(settings.light_channel);
     change_pitch(0, 63, 63);
 }
 

@@ -94,14 +94,35 @@ static void test_queued_cc_order_and_count(void) {
     assert(remind_calls == 1000);
 }
 
+static void test_bounded_batch_drain_contract(void) {
+    const size_t calls_before = cc_calls;
+    expected_cc_index = 0;
+    for (size_t i = 0; i < 1000; ++i) {
+        const uint8_t channel = (uint8_t)(i & 1u);
+        enqueue(0x0b, (uint8_t)(CC_START + channel), 7,
+                (uint8_t)(i & 0x7fu));
+    }
+    size_t service_calls = 0;
+    while (queue_read != queue_write) {
+        for (size_t packet = 0; packet < 32; ++packet) {
+            const int status = read_sys_ex();
+            if (status == UNKNOWN) break;
+        }
+        ++service_calls;
+    }
+    assert(service_calls == 32);
+    assert(cc_calls == calls_before + 1000);
+    assert(expected_cc_index == 1000 && cc_mismatches == 0);
+}
+
 static void test_sysex_with_interleaved_realtime(void) {
     add_sys_ex_com(capture_sysex, 42);
     enqueue(0x04, 0xf0, PLAYTRONICA_KEY_FIRST, PLAYTRONICA_KEY_SECOND);
     enqueue(0x0f, BPM_CLOCK_BYTE, 0, 0);
     enqueue(0x07, 42, 99, 0xf7);
 
-    assert(read_sys_ex() == UNKNOWN);
-    assert(read_sys_ex() == UNKNOWN);
+    assert(read_sys_ex() == MIDI_PACKET_IGNORED);
+    assert(read_sys_ex() == MIDI_PACKET_IGNORED);
     assert(read_sys_ex() == CUSTOM_COMMAND);
     assert(sysex_calls == 1 && sysex_value == 99);
 }
@@ -111,9 +132,28 @@ static void test_malformed_packet_does_not_poison_next_cc(void) {
     expected_cc_index = 0;
     enqueue(0x00, 0, 0, 0);
     enqueue(0x0b, 0xb0, 7, 0);
-    assert(read_sys_ex() == UNKNOWN);
+    assert(read_sys_ex() == MIDI_PACKET_IGNORED);
     assert(read_sys_ex() == CUSTOM_CC_COMMAND);
     assert(cc_calls == calls_before + 1 && cc_mismatches == 0);
+}
+
+static void test_clock_counts_exactly_24_pulses_and_ignores_song_position(void) {
+    enqueue(0x03, MIDI_SONG_POSITION_BYTE, 0, 0);
+    assert(read_sys_ex() == MIDI_PACKET_IGNORED);
+
+    enqueue(0x0f, BPM_CLOCK_START_BYTE, 0, 0);
+    assert(read_sys_ex() == BPM_CLOCK_ACTIVATE);
+    for (int pulse = 1; pulse < 24; ++pulse) {
+        enqueue(0x0f, BPM_CLOCK_BYTE, 0, 0);
+        assert(read_sys_ex() == BPM_CLOCK_INACTIVE);
+    }
+    enqueue(0x0f, BPM_CLOCK_BYTE, 0, 0);
+    assert(read_sys_ex() == BPM_CLOCK_PLAY);
+
+    enqueue(0x0f, BPM_CLOCK_STOP_BYTE, 0, 0);
+    assert(read_sys_ex() == BPM_CLOCK_DEACTIVATE);
+    enqueue(0x0f, BPM_CLOCK_BYTE, 0, 0);
+    assert(read_sys_ex() == MIDI_PACKET_IGNORED);
 }
 
 static void test_command_registries_fail_closed_at_capacity(void) {
@@ -131,8 +171,10 @@ static void test_command_registries_fail_closed_at_capacity(void) {
 
 int main(void) {
     test_queued_cc_order_and_count();
+    test_bounded_batch_drain_contract();
     test_sysex_with_interleaved_realtime();
     test_malformed_packet_does_not_poison_next_cc();
+    test_clock_counts_exactly_24_pulses_and_ignores_song_position();
     test_command_registries_fail_closed_at_capacity();
     puts("commands: all deterministic integration tests passed");
     return 0;

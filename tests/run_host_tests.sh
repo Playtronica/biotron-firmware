@@ -40,3 +40,38 @@ compiler="${CC:-cc}"
   -I include tests/test_persistence.c \
   -o "$test_dir/persistence-optimized"
 "$test_dir/persistence-optimized"
+
+"$compiler" -std=c11 -O1 -g -Wall -Wextra -Werror -pedantic \
+  -fno-omit-frame-pointer -fsanitize=address,undefined \
+  -I include tests/test_note_lifecycle.c \
+  -o "$test_dir/note-lifecycle-sanitized"
+"$test_dir/note-lifecycle-sanitized"
+
+"$compiler" -std=c11 -O2 -Wall -Wextra -Werror -pedantic \
+  -I include tests/test_note_lifecycle.c \
+  -o "$test_dir/note-lifecycle-optimized"
+"$test_dir/note-lifecycle-optimized"
+
+"$compiler" -std=c11 -O1 -g -Wall -Wextra -Werror -pedantic \
+  -fno-omit-frame-pointer -fsanitize=address,undefined \
+  -I tests/stubs -I include -I PLSDK/include \
+  PLSDK/src/music.c tests/test_music_messages.c \
+  -o "$test_dir/music-messages-sanitized"
+"$test_dir/music-messages-sanitized"
+
+"$compiler" -std=c11 -O2 -Wall -Wextra -Werror -pedantic \
+  -I tests/stubs -I include -I PLSDK/include \
+  PLSDK/src/music.c tests/test_music_messages.c \
+  -o "$test_dir/music-messages-optimized"
+"$test_dir/music-messages-optimized"
+
+"$compiler" -std=c11 -O1 -g -Wall -Wextra -Werror -pedantic \
+  -fno-omit-frame-pointer -fsanitize=address,undefined \
+  -I include tests/test_midi_value_safety.c \
+  -o "$test_dir/midi-value-safety-sanitized"
+"$test_dir/midi-value-safety-sanitized"
+
+"$compiler" -std=c11 -O2 -Wall -Wextra -Werror -pedantic \
+  -I include tests/test_midi_value_safety.c \
+  -o "$test_dir/midi-value-safety-optimized"
+"$test_dir/midi-value-safety-optimized"

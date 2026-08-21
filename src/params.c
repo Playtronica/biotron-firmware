@@ -9,6 +9,7 @@
 #include "PLSDK.h"
 #include "persistence_scheduler.h"
 #include "settings_storage.h"
+#include "midi_value_safety.h"
 #include <hardware/flash.h>
 #include <hardware/sync.h>
 #include <pico/bootrom.h>
@@ -44,8 +45,8 @@ const Settings_t fast_role_preset = {
         .isRandomLightVelocity = true,
         .performance_mode = 0,
         .middle_plant_note = 60,
-        .plant_channel = 1,
-        .light_channel = 2,
+        .plant_channel = DEFAULT_PLANT_MIDI_CHANNEL,
+        .light_channel = DEFAULT_LIGHT_MIDI_CHANNEL,
         .swing_first_note_percent = 100,
         .is_mute_button_active = false,
 };
@@ -74,8 +75,8 @@ const Settings_t the_performer_mode = {
         .isRandomLightVelocity = true,
         .performance_mode = true,
         .middle_plant_note = 60,
-        .plant_channel = 1,
-        .light_channel = 2,
+        .plant_channel = DEFAULT_PLANT_MIDI_CHANNEL,
+        .light_channel = DEFAULT_LIGHT_MIDI_CHANNEL,
         .swing_first_note_percent = 100,
         .is_mute_button_active = false,
 };
@@ -104,8 +105,8 @@ const Settings_t in_discussion = {
         .isRandomLightVelocity = true,
         .performance_mode = true,
         .middle_plant_note = 60,
-        .plant_channel = 1,
-        .light_channel = 2,
+        .plant_channel = DEFAULT_PLANT_MIDI_CHANNEL,
+        .light_channel = DEFAULT_LIGHT_MIDI_CHANNEL,
         .swing_first_note_percent = 100,
         .is_mute_button_active = false,
 };
@@ -134,8 +135,8 @@ const Settings_t mixolyd = {
         .isRandomLightVelocity = 0,
         .performance_mode = true,
         .middle_plant_note = 60,
-        .plant_channel = 1,
-        .light_channel = 2,
+        .plant_channel = DEFAULT_PLANT_MIDI_CHANNEL,
+        .light_channel = DEFAULT_LIGHT_MIDI_CHANNEL,
         .swing_first_note_percent = 100,
         .is_mute_button_active = false,
 };
@@ -167,7 +168,7 @@ void default_settings() {
 }
 
 
-void save_settings() {
+void save_settings(void) {
     uint8_t program_data[SETTINGS_PROGRAM_BYTES];
     if (!settings_storage_pack(program_data, sizeof(program_data),
                                &settings, sizeof(settings))) return;
@@ -178,7 +179,7 @@ void save_settings() {
     restore_interrupts(interrupts);
 }
 
-void read_settings() {
+void read_settings(void) {
     const uint8_t* flash_target_contents = (const uint8_t *) (XIP_BASE + FLASH_TARGET_OFFSET);
     memcpy(&settings, flash_target_contents, sizeof(settings));
 
@@ -190,7 +191,7 @@ void read_settings() {
     }
 }
 
-void clear_flash() {
+void clear_flash(void) {
     uint32_t interrupts = save_and_disable_interrupts();
     flash_range_erase(FLASH_TARGET_OFFSET, SETTINGS_ERASE_BYTES);
     restore_interrupts(interrupts);
@@ -217,6 +218,7 @@ void change_plant_bpm_sys_ex(const uint8_t data[], uint8_t len) {
 
 
 void change_light_bpm_sys_ex(const uint8_t data[], uint8_t len) {
+    if (len < 1) return;
     settings.lightBPM = data[0];
 }
 
@@ -234,6 +236,7 @@ void change_bpm_cc(uint8_t channel, uint8_t value) {
 }
 
 void set_fib_power_sys_ex(const uint8_t data[], uint8_t len) {
+    if (len < 1) return;
     settings.fibPower = (double )data[0] / 100;
 }
 
@@ -242,6 +245,7 @@ void set_fib_power_cc(uint8_t channel, uint8_t value) {
 }
 
 void set_fib_first_sys_ex(const uint8_t data[], uint8_t len) {
+    if (len < 1) return;
     settings.firstValue = (double )data[0] / 100;
 }
 
@@ -250,6 +254,7 @@ void set_fib_first_cc(uint8_t channel, uint8_t value) {
 }
 
 void set_filter_sys_ex(const uint8_t data[], uint8_t len) {
+    if (len < 1) return;
     settings.filterPercent = (double )data[0] / 100;
 }
 
@@ -258,6 +263,7 @@ void set_filter_cc(uint8_t channel, uint8_t value) {
 }
 
 void set_scale_sys_ex(const uint8_t data[], uint8_t len) {
+    if (len < 1) return;
     settings.scale = data[0] % SCALES_COUNT;
 }
 
@@ -267,34 +273,54 @@ void set_scale_cc(uint8_t channel, uint8_t value) {
 }
 
 void set_max_plant_vel_sys_ex(const uint8_t data[], uint8_t len) {
+    if (len < 1) return;
     settings.maxPlantVelocity = data[0];
+    if (settings.minPlantVelocity > settings.maxPlantVelocity) {
+        settings.minPlantVelocity = settings.maxPlantVelocity;
+    }
 }
 
 void set_min_plant_vel_sys_ex(const uint8_t data[], uint8_t len) {
+    if (len < 1) return;
     settings.minPlantVelocity = data[0];
+    if (settings.maxPlantVelocity < settings.minPlantVelocity) {
+        settings.maxPlantVelocity = settings.minPlantVelocity;
+    }
 }
 
 void set_random_plant_vel_sys_ex(const uint8_t data[], uint8_t len) {
+    if (len < 1) return;
     settings.isRandomPlantVelocity = data[0] > 0;
 }
 
 void set_max_light_vel_sys_ex(const uint8_t data[], uint8_t len) {
+    if (len < 1) return;
     settings.maxLightVelocity = data[0];
+    if (settings.minLightVelocity > settings.maxLightVelocity) {
+        settings.minLightVelocity = settings.maxLightVelocity;
+    }
 }
 
 void set_min_light_vel_sys_ex(const uint8_t data[], uint8_t len) {
+    if (len < 1) return;
     settings.minLightVelocity = data[0];
+    if (settings.maxLightVelocity < settings.minLightVelocity) {
+        settings.maxLightVelocity = settings.minLightVelocity;
+    }
 }
 
 void set_random_light_vel_sys_ex(const uint8_t data[], uint8_t len) {
+    if (len < 1) return;
     settings.isRandomLightVelocity = data[0] > 0;
 }
 
 void set_mute_plant_vel_sys_ex(const uint8_t data[], uint8_t len) {
+    if (len < 1) return;
     settings.isMutePlantVelocity = data[0] > 0;
 }
 
 void set_mute_light_vel_sys_ex(const uint8_t data[], uint8_t len) {
+    if (len < 1) return;
     settings.isMuteLightVelocity = data[0] > 0;
 }
 
@@ -303,9 +329,11 @@ void set_max_vel_cc(uint8_t channel, uint8_t value) {
     switch (channel) {
         case 0:
             settings.maxPlantVelocity = value;
+            if (settings.minPlantVelocity > settings.maxPlantVelocity) settings.minPlantVelocity = value;
             break;
         case 1:
             settings.maxLightVelocity = value;
+            if (settings.minLightVelocity > settings.maxLightVelocity) settings.minLightVelocity = value;
             break;
         default:
             break;
@@ -316,9 +344,11 @@ void set_min_vel_cc(uint8_t channel, uint8_t value) {
     switch (channel) {
         case 0:
             settings.minPlantVelocity = value;
+            if (settings.maxPlantVelocity < settings.minPlantVelocity) settings.maxPlantVelocity = value;
             break;
         case 1:
             settings.minLightVelocity = value;
+            if (settings.maxLightVelocity < settings.minLightVelocity) settings.maxLightVelocity = value;
             break;
         default:
             break;
@@ -358,6 +388,7 @@ void set_default_sys_ex(const uint8_t data[], uint8_t len) {
 }
 
 void set_random_note_sys_ex(const uint8_t data[], uint8_t len) {
+    if (len < 1) return;
     settings.random_note = data[0] > 0;
 }
 
@@ -366,10 +397,12 @@ void set_random_note_cc(uint8_t channel, uint8_t value) {
 }
 
 void set_same_note_plant_sys_ex(const uint8_t data[], uint8_t len) {
+    if (len < 1) return;
     settings.same_note_plant = data[0];
 }
 
 void set_same_note_light_sys_ex(const uint8_t data[], uint8_t len) {
+    if (len < 1) return;
     settings.same_note_light = data[0];
 }
 
@@ -393,6 +426,7 @@ static const int POSSIBLE_NOTE_FRACTION[LENGTH_POSSIBLE_NOTE_FRACTION] = {
 };
 
 void set_note_off_percent_sys_ex(const uint8_t data[], uint8_t len) {
+    if (len < 1) return;
     for (int i = 0; i < LENGTH_POSSIBLE_NOTE_FRACTION; i++) {
         if (data[0] == POSSIBLE_NOTE_FRACTION[i]) {
             settings.fraction_note_off = data[0];
@@ -407,14 +441,16 @@ void set_note_off_percent_cc(uint8_t channel, uint8_t value) {
 }
 
 void set_light_range_sys_ex(const uint8_t data[], uint8_t len) {
-    settings.light_note_range = data[0];
+    if (len < 1) return;
+    settings.light_note_range = midi_nonzero_range(data[0]);
 }
 
 void set_light_range_cc(const uint8_t channel, uint8_t value) {
-    settings.light_note_range = value;
+    settings.light_note_range = midi_nonzero_range(value);
 }
 
 void set_light_pitch_mode_sys_ex(const uint8_t data[], uint8_t len) {
+    if (len < 1) return;
     settings.light_pitch_mode = data[0] > 0;
     change_pitch(0, 63, 63);
 }
@@ -425,6 +461,7 @@ void set_light_pitch_mode_cc(uint8_t channel, uint8_t value) {
 }
 
 void set_stuck_mode_sys_ex(const uint8_t data[], uint8_t len) {
+    if (len < 1) return;
     settings.performance_mode = data[0] > 0;
 }
 
@@ -433,6 +470,7 @@ void set_stuck_mode_cc(uint8_t channel, uint8_t value) {
 }
 
 void set_middle_plant_note_sys_ex(const uint8_t data[], uint8_t len) {
+    if (len < 1) return;
     settings.middle_plant_note = data[0];
 }
 
@@ -494,7 +532,7 @@ void set_button_mode_state_cc(uint8_t channel, uint8_t value) {
 //endregion
 
 
-void setup_commands() {
+void setup_commands(void) {
     add_sys_ex_com(change_plant_bpm_sys_ex, 0);
     add_sys_ex_com(change_light_bpm_sys_ex, 9);
     add_CC(change_bpm_cc, 14);
@@ -560,15 +598,21 @@ void setup_commands() {
 }
 
 
-void get_sys_ex_and_behave() {
+void get_sys_ex_and_behave(void) {
     static persistence_scheduler_t cc_save = {
         .pending = false,
         .last_change_us = 0,
         .debounce_us = 1000000,
     };
-    int sys_ex_status = read_sys_ex();
+    // Drain a bounded batch so a fader or MIDI Clock burst is not serviced at
+    // only one USB packet per 1 ms main-loop sleep. The cap preserves time for
+    // sensor, LED and button work on every loop iteration.
+    enum { MIDI_PACKETS_PER_LOOP = 32 };
+    for (uint8_t packet = 0; packet < MIDI_PACKETS_PER_LOOP; ++packet) {
+        int sys_ex_status = read_sys_ex();
+        if (sys_ex_status == UNKNOWN) break;
 
-    switch (sys_ex_status) {
+        switch (sys_ex_status) {
         case RESET_DEVICE:
             clear_flash();
             reset_usb_boot(0, 0);
@@ -606,6 +650,11 @@ void get_sys_ex_and_behave() {
         case BPM_CLOCK_ACTIVATE:
             bpm_clock_control(true);
             break;
+        case MIDI_PACKET_IGNORED:
+        case BPM_CLOCK_INACTIVE:
+        case UNKNOWN:
+            break;
+        }
     }
 
     if (persistence_is_due(&cc_save, time_us_64())) {
@@ -614,7 +663,7 @@ void get_sys_ex_and_behave() {
     }
 }
 
-void set_next_preset() {
+void set_next_preset(void) {
     static uint counter = 0;
     settings = *order_of_presets[counter];
     stop_bpm();

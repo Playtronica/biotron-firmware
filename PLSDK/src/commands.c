@@ -44,20 +44,15 @@ void print_pure(uint8_t cable, const uint8_t data[], uint8_t len) {
     tud_midi_stream_write(cable, data, len);
 }
 
-static uint16_t clk = 0;
-int midi_clock() {
-    if (clk++ < 24) return BPM_CLOCK_INACTIVE;
-    clk = 0;
-    return BPM_CLOCK_PLAY;
-}
+static uint8_t clocks_since_beat = 0;
+static bool midi_clock_running = false;
 
 
-int read_sys_ex() {
+int read_sys_ex(void) {
     static midi_parser_t parser;
     static bool parser_initialized = false;
     uint8_t buff[4];
     midi_event_t event;
-    static uint8_t bpm_clock_prepare = BPM_CLOCK_STOP_BYTE;
 
     if (!parser_initialized) {
         midi_parser_init(&parser);
@@ -66,30 +61,36 @@ int read_sys_ex() {
     if (!tud_midi_packet_read(buff)) return UNKNOWN;
     remind_midi();
     midi_event_kind_t kind = midi_parser_feed_usb_packet(&parser, buff, &event);
-    if (kind == MIDI_EVENT_NONE || kind == MIDI_EVENT_MALFORMED) return UNKNOWN;
+    if (kind == MIDI_EVENT_NONE || kind == MIDI_EVENT_MALFORMED) return MIDI_PACKET_IGNORED;
     const uint8_t *res = event.data;
     const size_t len = event.len;
 
-    if (len >= 1 && (res[0] == BPM_CLOCK_START_BYTE || res[0] == MUSIC_SELECT)) {
+    if (len >= 1 && res[0] == BPM_CLOCK_START_BYTE) {
         printf("START\n");
-        bpm_clock_prepare = BPM_CLOCK_START_BYTE;
-        return BPM_CLOCK_INACTIVE;
+        clocks_since_beat = 0;
+        midi_clock_running = true;
+        return BPM_CLOCK_ACTIVATE;
+    }
+
+    if (len >= 1 && res[0] == BPM_CLOCK_CONTINUE_BYTE) {
+        printf("CONTINUE\n");
+        clocks_since_beat = 0;
+        midi_clock_running = true;
+        return BPM_CLOCK_ACTIVATE;
     }
 
     if (len >= 1 && res[0] == BPM_CLOCK_STOP_BYTE) {
         printf("END\n");
-        bpm_clock_prepare = BPM_CLOCK_STOP_BYTE;
+        clocks_since_beat = 0;
+        midi_clock_running = false;
         return BPM_CLOCK_DEACTIVATE;
     }
 
-    if (len >= 1 && res[0] == BPM_CLOCK_BYTE &&
-        (bpm_clock_prepare == BPM_CLOCK_START_BYTE || bpm_clock_prepare == BPM_CLOCK_BYTE)) {
-        if (bpm_clock_prepare == BPM_CLOCK_START_BYTE) {
-            clk = 0;
-            bpm_clock_prepare = BPM_CLOCK_BYTE;
-            return BPM_CLOCK_ACTIVATE;
-        }
-        return midi_clock();
+    if (len >= 1 && res[0] == BPM_CLOCK_BYTE) {
+        if (!midi_clock_running) return MIDI_PACKET_IGNORED;
+        if (++clocks_since_beat < 24) return BPM_CLOCK_INACTIVE;
+        clocks_since_beat = 0;
+        return BPM_CLOCK_PLAY;
     }
 
 
@@ -100,7 +101,7 @@ int read_sys_ex() {
                 return CUSTOM_CC_COMMAND;
             }
         }
-        return UNKNOWN;
+        return MIDI_PACKET_IGNORED;
     }
 
 
@@ -143,7 +144,7 @@ int read_sys_ex() {
                     return RESET_DEVICE;
             }
         }
-        return UNKNOWN;
+        return MIDI_PACKET_IGNORED;
     }
-    return UNKNOWN;
+    return MIDI_PACKET_IGNORED;
 }

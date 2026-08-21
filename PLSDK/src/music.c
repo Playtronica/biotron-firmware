@@ -1,5 +1,4 @@
 #include <pico/printf.h>
-#include <malloc.h>
 #include "PLSDK/commands.h"
 #include "PLSDK/constants.h"
 #include "PLSDK/music.h"
@@ -40,6 +39,7 @@ const NotesScale_t scales[] = {
 
 
 int calculate_note_by_scale(uint8_t start_note, int counter, ScaleNums_t scale) {
+    if ((unsigned int)scale >= SCALES_COUNT) scale = SCALE_MAJOR;
     NotesScale_t _scale = scales[scale];
 
     if (counter < 0) {
@@ -79,9 +79,6 @@ void change_pitch(uint8_t channel_id, uint8_t lsb, uint8_t msb) {
 }
 
 void stop_all_notes(uint8_t channel_id) {
-    uint8_t stop_all_notes[3] = {CC_START | channel_id, CC_STOP_ALL_NOTES};
+    uint8_t stop_all_notes[3] = {CC_START | channel_id, CC_STOP_ALL_NOTES, 0};
     print_pure(CABLE_NUM_MAIN, stop_all_notes, 3);
 }
-
-
-
