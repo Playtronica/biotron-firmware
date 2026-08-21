@@ -13,11 +13,13 @@
 #ifndef PLSDK_COMMANDS_H
 #define PLSDK_COMMANDS_H
 
+#include <stdint.h>
 
 #define MAX_COUNT_COMMANDS 50
 
 enum SYS_EX_RESPONSE {
     CUSTOM_COMMAND,
+    CUSTOM_CC_COMMAND,
     BPM_CLOCK_ACTIVATE,
     BPM_CLOCK_DEACTIVATE,
     BPM_CLOCK_PLAY,
@@ -31,6 +33,9 @@ enum SYS_EX_RESPONSE {
     LOGGER_DEACTIVATE,
     LIST_OF_COMMANDS_ACTION,
     RESET_DEVICE,
+    // A USB-MIDI packet was consumed but did not produce an application
+    // action. UNKNOWN is reserved for an empty TinyUSB receive queue.
+    MIDI_PACKET_IGNORED,
 };
 
 
@@ -49,7 +54,7 @@ typedef struct sys_ex_command_s {
  * @note
  * Activates after command midi_init, so it useless for single use.
  * */
-void init_commands();
+void init_commands(void);
 
 /**
  * @brief Create new CC commands
@@ -111,7 +116,7 @@ void print_sys_ex(const uint8_t data[], uint8_t len);
  * */
 void print_pure(uint8_t cable, const uint8_t data[], uint8_t len);
 
-int read_sys_ex();
+int read_sys_ex(void);
 
 
 #endif //PLSDK_COMMANDS_H

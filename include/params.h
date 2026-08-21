@@ -1,6 +1,8 @@
 #ifndef BIOTRON_PARAMS_H
 #define BIOTRON_PARAMS_H
 
+#include <stdbool.h>
+
 #define FLASH_TARGET_OFFSET (512 * 1024)
 
 #ifdef FLASH_ID_STARTUP
@@ -46,6 +48,10 @@
 #define DEF_STUCK_MODE true
 #define DEF_SWING_FIRST_NOTE_PERCENT
 
+// MIDI status bytes encode channels as 0..15. The UI presents them as 1..16.
+#define DEFAULT_PLANT_MIDI_CHANNEL 0
+#define DEFAULT_LIGHT_MIDI_CHANNEL 1
+
 typedef struct {
     int id;
     int BPM;
@@ -82,12 +88,12 @@ extern bool TestMode;
 extern bool isTestModeGreen;
 
 
-void save_settings();
-void read_settings();
-void clear_flash();
+void save_settings(void);
+void read_settings(void);
+void clear_flash(void);
 
-void setup_commands();
-void get_sys_ex_and_behave();
-void set_next_preset();
+void setup_commands(void);
+void get_sys_ex_and_behave(void);
+void set_next_preset(void);
 
 #endif //BIOTRON_PARAMS_H

@@ -10,6 +10,8 @@
 #ifndef PSDK_NOTES_H
 #define PSDK_NOTES_H
 
+#include <stdint.h>
+
 #define SCALES_COUNT 13
 
 typedef enum{
