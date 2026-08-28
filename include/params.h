@@ -2,13 +2,14 @@
 #define BIOTRON_PARAMS_H
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #define FLASH_TARGET_OFFSET (512 * 1024)
 
 #ifdef FLASH_ID_STARTUP
-#define ID_FLASH FLASH_ID_STARTUP
+#define ID_FLASH ((uint32_t)(FLASH_ID_STARTUP))
 #else
-#define ID_FLASH 0
+#define ID_FLASH UINT32_C(0)
 #endif
 
 #ifndef MAJOR_VERSION
@@ -53,7 +54,7 @@
 #define DEFAULT_LIGHT_MIDI_CHANNEL 1
 
 typedef struct {
-    int id;
+    uint32_t id;
     int BPM;
     int lightBPM;
     double fibPower;
@@ -81,6 +82,9 @@ typedef struct {
     int swing_first_note_percent;
     bool is_mute_button_active;
 } Settings_t;
+
+_Static_assert(sizeof(((Settings_t *)0)->id) == sizeof(uint32_t),
+               "persisted settings id must remain exactly 32 bits");
 
 extern Settings_t settings;
 extern bool isMutedByButton;

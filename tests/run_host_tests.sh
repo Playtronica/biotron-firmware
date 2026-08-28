@@ -75,3 +75,15 @@ compiler="${CC:-cc}"
   -I include tests/test_midi_value_safety.c \
   -o "$test_dir/midi-value-safety-optimized"
 "$test_dir/midi-value-safety-optimized"
+
+"$compiler" -std=c11 -O1 -g -Wall -Wextra -Werror -pedantic \
+  -DFLASH_ID_STARTUP=33150528105ULL \
+  -I include -I PLSDK/include tests/test_settings_identity.c \
+  -o "$test_dir/settings-identity-sanitized"
+"$test_dir/settings-identity-sanitized"
+
+"$compiler" -std=c11 -O2 -Wall -Wextra -Werror -pedantic \
+  -DFLASH_ID_STARTUP=33150528105ULL \
+  -I include -I PLSDK/include tests/test_settings_identity.c \
+  -o "$test_dir/settings-identity-optimized"
+"$test_dir/settings-identity-optimized"
