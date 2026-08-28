@@ -38,6 +38,10 @@ run_pair midi-diagnostics \
   -I PLSDK/include \
   PLSDK/src/midi_diagnostics.c tests/test_midi_diagnostics.c
 
+run_pair midi-health \
+  -I PLSDK/include \
+  PLSDK/src/midi_health.c tests/test_midi_health.c
+
 # These syntax checks make sure the production translation units compile with
 # the host stubs even when their focused runtime test links only selected code.
 "$compiler" -std=c11 -Wall -Wextra -Werror -Wno-strict-prototypes \

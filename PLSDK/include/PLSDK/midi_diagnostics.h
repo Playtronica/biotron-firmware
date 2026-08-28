@@ -17,7 +17,22 @@ typedef enum {
     MIDI_DIAGNOSTICS_SYSEX_ABORTED,
 } midi_diagnostics_rx_kind_t;
 
+typedef enum {
+    MIDI_DIAGNOSTICS_USB_MOUNT = 0,
+    MIDI_DIAGNOSTICS_USB_UNMOUNT,
+    MIDI_DIAGNOSTICS_USB_SUSPEND,
+    MIDI_DIAGNOSTICS_USB_RESUME,
+} midi_diagnostics_usb_event_t;
+
 typedef struct {
+    uint64_t uptime_us;
+    uint32_t usb_mount_count;
+    uint32_t usb_unmount_count;
+    uint32_t usb_suspend_count;
+    uint32_t usb_resume_count;
+    bool usb_mounted;
+    bool usb_suspended;
+    bool usb_remote_wakeup_enabled;
     uint32_t usb_packets_rx[MIDI_DIAGNOSTICS_CABLES];
     uint32_t parsed_channel[MIDI_DIAGNOSTICS_CABLES];
     uint32_t parsed_system_common[MIDI_DIAGNOSTICS_CABLES];
@@ -58,7 +73,9 @@ typedef struct {
 void midi_diagnostics_reset(void);
 void midi_diagnostics_snapshot(midi_diagnostics_snapshot_t *snapshot);
 
-void midi_diagnostics_service(uint32_t now_us, uint32_t rx_backlog_bytes);
+void midi_diagnostics_service(uint64_t now_us, uint32_t rx_backlog_bytes);
+void midi_diagnostics_usb_event(midi_diagnostics_usb_event_t event,
+                                bool remote_wakeup_enabled);
 void midi_diagnostics_rx_packet(uint8_t cable);
 void midi_diagnostics_rx_event(uint8_t cable,
                                midi_diagnostics_rx_kind_t kind);

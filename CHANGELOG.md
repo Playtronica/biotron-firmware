@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 
 This section describes candidate `cf264aa`; it is not a published release.
 
+### Post-F1 diagnostic lab branch
+
+- RAM-only counters now record MIDI RX/parser/TX/persistence/service timing and
+  USB mount/unmount/suspend/resume lifecycle without changing settings;
+- provisional read-only vendor SysEx query `124` returns four versioned,
+  paged, 7-bit-clean health payloads on the existing service cable;
+- this append-only query is for owner review and internal hardware diagnosis.
+  It is not part of candidate `cf264aa` and is not approved for release.
+
 ### Fixed
 
 - bounded, cable-local USB MIDI parsing with malformed/overflow recovery;

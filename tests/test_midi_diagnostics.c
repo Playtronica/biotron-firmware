@@ -6,8 +6,12 @@
 
 int main(void) {
     midi_diagnostics_reset();
-    midi_diagnostics_service(UINT32_MAX - 5u, 12);
-    midi_diagnostics_service(9, 48);
+    midi_diagnostics_service((uint64_t)UINT32_MAX - 5u, 12);
+    midi_diagnostics_service((uint64_t)UINT32_MAX + 10u, 48);
+    midi_diagnostics_usb_event(MIDI_DIAGNOSTICS_USB_MOUNT, false);
+    midi_diagnostics_usb_event(MIDI_DIAGNOSTICS_USB_SUSPEND, true);
+    midi_diagnostics_usb_event(MIDI_DIAGNOSTICS_USB_RESUME, false);
+    midi_diagnostics_usb_event(MIDI_DIAGNOSTICS_USB_UNMOUNT, false);
     midi_diagnostics_rx_packet(0);
     midi_diagnostics_rx_packet(1);
     midi_diagnostics_rx_packet(2);
@@ -36,6 +40,14 @@ int main(void) {
     midi_diagnostics_snapshot(&snapshot);
     assert(snapshot.midi_service_gap_max_us == 15);
     assert(snapshot.rx_backlog_high_water_bytes == 48);
+    assert(snapshot.uptime_us == (uint64_t)UINT32_MAX + 10u);
+    assert(snapshot.usb_mount_count == 1);
+    assert(snapshot.usb_unmount_count == 1);
+    assert(snapshot.usb_suspend_count == 1);
+    assert(snapshot.usb_resume_count == 1);
+    assert(!snapshot.usb_mounted);
+    assert(!snapshot.usb_suspended);
+    assert(!snapshot.usb_remote_wakeup_enabled);
     assert(snapshot.usb_packets_rx[0] == 1);
     assert(snapshot.usb_packets_rx[1] == 1);
     assert(snapshot.ignored_cable_packets == 1);
@@ -72,6 +84,8 @@ int main(void) {
 
     midi_diagnostics_reset();
     midi_diagnostics_snapshot(&snapshot);
+    assert(snapshot.uptime_us == 0);
+    assert(snapshot.usb_mount_count == 0);
     assert(snapshot.usb_packets_rx[0] == 0);
     assert(snapshot.tx_enqueued == 0);
     assert(snapshot.flash_save_count == 0);

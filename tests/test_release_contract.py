@@ -52,7 +52,8 @@ def main() -> None:
         (7, 0), (10, 1), (11, 1), (24, 1), (12, 1), (13, 1), (19, 1),
         (21, 1), (25, 1), (26, 1), (27, 1), (127, 2),
     ]
-    assert length_registrations(params, "add_sys_ex_query_len") == [(126, 1)]
+    assert length_registrations(params, "add_sys_ex_query_len") == [(124, 1), (126, 1)]
+    assert "add_sys_ex_query_len(get_health_sys_ex, 124, 1);" in params
 
     # Shipping 1.8.2 stores zero-based 1/2 and therefore emits human MIDI 2/3.
     assert len(re.findall(r"\.plant_channel\s*=\s*1\s*,", params)) == 4
@@ -66,6 +67,19 @@ def main() -> None:
     assert main_source.index("read_settings();") < main_source.index("init_plant();")
 
     dispatcher = simple_function_body(params, "void get_sys_ex_and_behave()")
+    health_query = simple_function_body(
+        params, "void get_health_sys_ex(const uint8_t data[], uint8_t len)"
+    )
+    assert "midi_diagnostics_snapshot" in health_query
+    assert "midi_health_encode_page" in health_query
+    assert "print_sys_ex" in health_query
+    for forbidden in ("save_settings", "schedule_settings_save", "clear_flash", "reset_usb_boot"):
+        assert forbidden not in health_query
+    query_case = re.search(
+        r"case CUSTOM_QUERY_COMMAND:\s*(.*?)\s*break;", dispatcher, re.S
+    )
+    assert query_case is not None
+    assert "schedule_settings_save" not in query_case.group(1)
     reset_case = re.search(
         r"case RESET_DEVICE:\s*(.*?)\s*return;", dispatcher, re.S
     )
@@ -132,7 +146,7 @@ def main() -> None:
     ):
         assert required in settings_guide, required
     assert re.findall(r"^run_pair ([a-z0-9-]+)", host_runner, re.M) == [
-        "midi-parser", "commands", "midi-diagnostics", "runtime-safety", "usb-string",
+        "midi-parser", "commands", "midi-diagnostics", "midi-health", "runtime-safety", "usb-string",
         "settings-storage", "persistence-scheduler", "storage-v1",
         "music-v1", "note-lifecycle", "music-scheduler", "raw-plant",
         "midi-tx",

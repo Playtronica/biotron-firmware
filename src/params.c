@@ -5,6 +5,7 @@
 #include "global.h"
 #include "PLSDK/commands.h"
 #include "PLSDK/midi_diagnostics.h"
+#include "PLSDK/midi_health.h"
 #include "PLSDK/music.h"
 #include "music.h"
 #include "PLSDK.h"
@@ -533,6 +534,18 @@ void get_info_sys_ex(const uint8_t data[], uint8_t len) {
     print_pure(1, sys_ex_info, 8);
 }
 
+void get_health_sys_ex(const uint8_t data[], uint8_t len) {
+    if (len != 1 || data[0] >= MIDI_HEALTH_PAGE_COUNT) return;
+    midi_diagnostics_snapshot_t snapshot;
+    uint8_t payload[MIDI_HEALTH_MAX_PAYLOAD_BYTES];
+    midi_diagnostics_snapshot(&snapshot);
+    const size_t payload_length = midi_health_encode_page(
+            &snapshot, data[0], payload, sizeof payload);
+    if (payload_length > 0 && payload_length <= UINT8_MAX) {
+        print_sys_ex(payload, (uint8_t)payload_length);
+    }
+}
+
 
 void set_button_mode_state_sys_ex(const uint8_t data[], uint8_t len) {
     if (len != 1) return;
@@ -614,12 +627,13 @@ void setup_commands() {
     add_CC(set_button_mode_state_cc, 87);
 
     add_sys_ex_com_len(set_channel_sys_ex, 127, 2);
+    add_sys_ex_query_len(get_health_sys_ex, 124, 1);
     add_sys_ex_query_len(get_info_sys_ex, 126, 1);
 }
 
 
 void get_sys_ex_and_behave() {
-    midi_diagnostics_service(time_us_32(), tud_midi_available());
+    midi_diagnostics_service(time_us_64(), tud_midi_available());
     for (uint8_t packet = 0; packet < 32; ++packet) {
         const int sys_ex_status = read_sys_ex();
         if (sys_ex_status == UNKNOWN) return;

@@ -4,7 +4,7 @@
 #include "PLSDK/midi_diagnostics.h"
 
 static midi_diagnostics_snapshot_t counters;
-static uint32_t last_service_us;
+static uint64_t last_service_us;
 static bool service_seen;
 
 static void increment(uint32_t *value) {
@@ -21,9 +21,12 @@ void midi_diagnostics_snapshot(midi_diagnostics_snapshot_t *snapshot) {
     if (snapshot != NULL) *snapshot = counters;
 }
 
-void midi_diagnostics_service(uint32_t now_us, uint32_t rx_backlog_bytes) {
+void midi_diagnostics_service(uint64_t now_us, uint32_t rx_backlog_bytes) {
+    counters.uptime_us = now_us;
     if (service_seen) {
-        const uint32_t gap = now_us - last_service_us;
+        const uint64_t gap64 = now_us - last_service_us;
+        const uint32_t gap = gap64 > UINT32_MAX ? UINT32_MAX :
+                (uint32_t)gap64;
         if (gap > counters.midi_service_gap_max_us) {
             counters.midi_service_gap_max_us = gap;
         }
@@ -32,6 +35,34 @@ void midi_diagnostics_service(uint32_t now_us, uint32_t rx_backlog_bytes) {
     last_service_us = now_us;
     if (rx_backlog_bytes > counters.rx_backlog_high_water_bytes) {
         counters.rx_backlog_high_water_bytes = rx_backlog_bytes;
+    }
+}
+
+void midi_diagnostics_usb_event(midi_diagnostics_usb_event_t event,
+                                bool remote_wakeup_enabled) {
+    switch (event) {
+        case MIDI_DIAGNOSTICS_USB_MOUNT:
+            increment(&counters.usb_mount_count);
+            counters.usb_mounted = true;
+            counters.usb_suspended = false;
+            counters.usb_remote_wakeup_enabled = false;
+            break;
+        case MIDI_DIAGNOSTICS_USB_UNMOUNT:
+            increment(&counters.usb_unmount_count);
+            counters.usb_mounted = false;
+            counters.usb_suspended = false;
+            counters.usb_remote_wakeup_enabled = false;
+            break;
+        case MIDI_DIAGNOSTICS_USB_SUSPEND:
+            increment(&counters.usb_suspend_count);
+            counters.usb_suspended = true;
+            counters.usb_remote_wakeup_enabled = remote_wakeup_enabled;
+            break;
+        case MIDI_DIAGNOSTICS_USB_RESUME:
+            increment(&counters.usb_resume_count);
+            counters.usb_suspended = false;
+            counters.usb_remote_wakeup_enabled = false;
+            break;
     }
 }
 
