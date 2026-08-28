@@ -38,6 +38,11 @@ void midi_diagnostics_service(uint64_t now_us, uint32_t rx_backlog_bytes) {
     }
 }
 
+void midi_diagnostics_set_reset_reason(
+        midi_diagnostics_reset_reason_t reset_reason) {
+    counters.last_reset_reason = reset_reason;
+}
+
 void midi_diagnostics_usb_event(midi_diagnostics_usb_event_t event,
                                 bool remote_wakeup_enabled) {
     switch (event) {

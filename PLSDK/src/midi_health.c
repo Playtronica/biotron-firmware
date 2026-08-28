@@ -15,6 +15,7 @@ enum {
     FIELD_FLASH_CRITICAL_MAX_US = 10,
     FIELD_TX_REJECTED = 11,
     FIELD_TX_RECOVERY_PANIC = 12,
+    FIELD_LAST_RESET_REASON = 13,
 
     FIELD_RX_CABLE0_BASE = 20,
     FIELD_RX_CABLE1_BASE = 40,
@@ -76,7 +77,7 @@ size_t midi_health_encode_page(const midi_diagnostics_snapshot_t *snapshot,
         return 0;
     }
 
-    health_field_t fields[12];
+    health_field_t fields[13];
     size_t field_count = 0;
     switch (page) {
         case 0:
@@ -104,6 +105,8 @@ size_t midi_health_encode_page(const midi_diagnostics_snapshot_t *snapshot,
                                                      snapshot->tx_rejected};
             fields[field_count++] = (health_field_t){FIELD_TX_RECOVERY_PANIC,
                                                      snapshot->tx_recovery_panic};
+            fields[field_count++] = (health_field_t){FIELD_LAST_RESET_REASON,
+                                                     snapshot->last_reset_reason};
             break;
         case 1:
             field_count = rx_fields(snapshot, 0, fields);

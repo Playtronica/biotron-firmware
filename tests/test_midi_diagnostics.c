@@ -8,6 +8,8 @@ int main(void) {
     midi_diagnostics_reset();
     midi_diagnostics_service((uint64_t)UINT32_MAX - 5u, 12);
     midi_diagnostics_service((uint64_t)UINT32_MAX + 10u, 48);
+    midi_diagnostics_set_reset_reason(
+            MIDI_DIAGNOSTICS_RESET_FORCED_OR_BOOTROM);
     midi_diagnostics_usb_event(MIDI_DIAGNOSTICS_USB_MOUNT, false);
     midi_diagnostics_usb_event(MIDI_DIAGNOSTICS_USB_SUSPEND, true);
     midi_diagnostics_usb_event(MIDI_DIAGNOSTICS_USB_RESUME, false);
@@ -41,6 +43,8 @@ int main(void) {
     assert(snapshot.midi_service_gap_max_us == 15);
     assert(snapshot.rx_backlog_high_water_bytes == 48);
     assert(snapshot.uptime_us == (uint64_t)UINT32_MAX + 10u);
+    assert(snapshot.last_reset_reason ==
+           MIDI_DIAGNOSTICS_RESET_FORCED_OR_BOOTROM);
     assert(snapshot.usb_mount_count == 1);
     assert(snapshot.usb_unmount_count == 1);
     assert(snapshot.usb_suspend_count == 1);
@@ -85,6 +89,7 @@ int main(void) {
     midi_diagnostics_reset();
     midi_diagnostics_snapshot(&snapshot);
     assert(snapshot.uptime_us == 0);
+    assert(snapshot.last_reset_reason == MIDI_DIAGNOSTICS_RESET_POWER_OR_RUN);
     assert(snapshot.usb_mount_count == 0);
     assert(snapshot.usb_packets_rx[0] == 0);
     assert(snapshot.tx_enqueued == 0);

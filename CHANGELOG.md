@@ -8,7 +8,8 @@ This section describes candidate `cf264aa`; it is not a published release.
 ### Post-F1 diagnostic lab branch
 
 - RAM-only counters now record MIDI RX/parser/TX/persistence/service timing and
-  USB mount/unmount/suspend/resume lifecycle without changing settings;
+  USB mount/unmount/suspend/resume lifecycle plus the previous reset class
+  without changing settings or enabling a watchdog;
 - provisional read-only vendor SysEx query `124` returns four versioned,
   paged, 7-bit-clean health payloads on the existing service cable;
 - this append-only query is for owner review and internal hardware diagnosis.

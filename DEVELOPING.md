@@ -23,6 +23,8 @@ Read it before changing MIDI, USB, settings, timers or BOOT.
   TX completion means a full message was handed to TinyUSB, not delivered to a
   host. The counters are RAM-only and query `124` only snapshots them; it does
   not save, reset, enter BOOT or clear counters.
+  Reset reason distinguishes power/RUN, watchdog-enable timeout and
+  forced/bootrom reset. No watchdog is enabled by this branch.
 - The exact `cf264aa` UF2 has passed Mac USB/version, bounded CC liveness,
   settings-preserving software BOOT on both MIDI outputs and exact legacy-unit
   rollback. It has not passed the complete Windows/REAPER/hardware matrix.

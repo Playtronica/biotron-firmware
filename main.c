@@ -1,4 +1,5 @@
 #include <hardware/adc.h>
+#include <hardware/watchdog.h>
 #include <pico/printf.h>
 #include "pico/stdlib.h"
 #include "PLSDK.h"
@@ -9,11 +10,18 @@
 #include "params.h"
 #include "music.h"
 #include "PLSDK/midi_tx.h"
+#include "PLSDK/midi_diagnostics.h"
 
 
 
 void setup() {
     stdio_init_all();
+    midi_diagnostics_set_reset_reason(
+            watchdog_enable_caused_reboot() ?
+            MIDI_DIAGNOSTICS_RESET_WATCHDOG_TIMEOUT :
+            watchdog_caused_reboot() ?
+            MIDI_DIAGNOSTICS_RESET_FORCED_OR_BOOTROM :
+            MIDI_DIAGNOSTICS_RESET_POWER_OR_RUN);
     // Load settings before USB callbacks, button IRQs or plant timers observe
     // the zero-initialized global settings object.
     read_settings();

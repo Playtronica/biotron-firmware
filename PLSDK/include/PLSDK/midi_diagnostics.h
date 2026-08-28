@@ -24,8 +24,15 @@ typedef enum {
     MIDI_DIAGNOSTICS_USB_RESUME,
 } midi_diagnostics_usb_event_t;
 
+typedef enum {
+    MIDI_DIAGNOSTICS_RESET_POWER_OR_RUN = 0,
+    MIDI_DIAGNOSTICS_RESET_WATCHDOG_TIMEOUT = 1,
+    MIDI_DIAGNOSTICS_RESET_FORCED_OR_BOOTROM = 2,
+} midi_diagnostics_reset_reason_t;
+
 typedef struct {
     uint64_t uptime_us;
+    midi_diagnostics_reset_reason_t last_reset_reason;
     uint32_t usb_mount_count;
     uint32_t usb_unmount_count;
     uint32_t usb_suspend_count;
@@ -74,6 +81,8 @@ void midi_diagnostics_reset(void);
 void midi_diagnostics_snapshot(midi_diagnostics_snapshot_t *snapshot);
 
 void midi_diagnostics_service(uint64_t now_us, uint32_t rx_backlog_bytes);
+void midi_diagnostics_set_reset_reason(
+        midi_diagnostics_reset_reason_t reset_reason);
 void midi_diagnostics_usb_event(midi_diagnostics_usb_event_t event,
                                 bool remote_wakeup_enabled);
 void midi_diagnostics_rx_packet(uint8_t cable);

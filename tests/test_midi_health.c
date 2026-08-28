@@ -28,6 +28,7 @@ static uint32_t field_value(const uint8_t payload[], size_t length,
 int main(void) {
     midi_diagnostics_snapshot_t snapshot = {0};
     snapshot.uptime_us = UINT64_C(123456789000000);
+    snapshot.last_reset_reason = MIDI_DIAGNOSTICS_RESET_FORCED_OR_BOOTROM;
     snapshot.usb_mount_count = 3;
     snapshot.usb_unmount_count = 2;
     snapshot.usb_suspend_count = 7;
@@ -62,6 +63,8 @@ int main(void) {
     assert(field_value(payload, length, 2) == 7u);
     assert(field_value(payload, length, 3) == 3u);
     assert(field_value(payload, length, 7) == UINT32_MAX);
+    assert(field_value(payload, length, 13) ==
+           MIDI_DIAGNOSTICS_RESET_FORCED_OR_BOOTROM);
 
     length = midi_health_encode_page(&snapshot, 1, payload, sizeof payload);
     assert(field_value(payload, length, 20) == 1000u);
