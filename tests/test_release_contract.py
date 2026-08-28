@@ -39,6 +39,7 @@ def main() -> None:
     raw_plant = source("src/raw_plant.c")
     global_source = source("src/global.c")
     developer_guide = source("DEVELOPING.md")
+    settings_guide = source("SettingsDescription.md")
     changelog = source("CHANGELOG.md")
     host_runner = source("tests/run_host_tests.sh")
 
@@ -122,9 +123,14 @@ def main() -> None:
     # a test group silently.
     for required in (
         "cf264aa", "1765723554", "0x3011", "human MIDI channels\n   `2/3`",
-        "F0 0B 14 0D 7F F7", "customer is last",
+        "F0 0B 14 0D 7F F7", "customer is last", "`lightBPM = 0` behaves as `1`",
+        "bottom pad currently changes only its",
     ):
         assert required in developer_guide, required
+    for required in (
+        "values 0 and 1 both mean", "There is no \"disable light\" value",
+    ):
+        assert required in settings_guide, required
     assert re.findall(r"^run_pair ([a-z0-9-]+)", host_runner, re.M) == [
         "midi-parser", "commands", "runtime-safety", "usb-string",
         "settings-storage", "persistence-scheduler", "storage-v1",

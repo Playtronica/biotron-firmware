@@ -132,6 +132,27 @@ produce a new candidate SHA. Do not debug by repeatedly flashing `latest`.
 
 Review in that order. Each commit answers one risk and has a nearby test.
 
+## Known compatibility quirks
+
+These are intentional F1 compatibility constraints, not invitations for a
+drive-by cleanup:
+
+- `lightBPM = 0` behaves as `1`: the light path runs on every plant beat. An
+  older copy of `SettingsDescription.md` called zero "inactive", but that was
+  not the shipped 1.8.2 behavior. Changing it needs a product decision and a
+  separate migration release.
+- Presets store zero-based channels `1/2`, so users see MIDI channels `2/3`.
+  Keep the storage values and the wire output unchanged in F1.
+- The fingerprint pad advances the preset on release. The top pad toggles mute
+  only when Button Mute is enabled. The bottom pad currently changes only its
+  pressed/LED state; its old settings action remains commented out. Do not
+  document or restore a bottom-pad musical action without a product decision.
+- `button_states` in factory JSON contains raw pulse intervals, not debounced
+  booleans. Use a human-observed pad/LED/note check for F1 acceptance.
+
+When documentation and executable 1.8.2 behavior disagree, characterize both,
+preserve the executable behavior in F1, and open a named migration decision.
+
 ## Known diagnostic caveat
 
 Candidate factory commands are:
