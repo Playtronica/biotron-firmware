@@ -2,6 +2,7 @@
 #include <pico/stdlib.h>
 #include <pico/time.h>
 #include <hardware/adc.h>
+#include <hardware/sync.h>
 
 #include "PLSDK/music.h"
 #include "PLSDK.h"
@@ -36,23 +37,39 @@ uint32_t filter_freq(double val, double k) {
 
 
 static volatile bool music_alarm_due = false;
-static bool is_swing_note = false;
+static volatile bool next_is_swing_note = false;
+static volatile int64_t due_music_interval_us = 1;
+static volatile int64_t short_music_interval_us = 1;
+static volatile int64_t long_music_interval_us = 1;
 alarm_id_t play_music_alarm_id = -1;
 
 
 int64_t play_music_alarm(alarm_id_t id, void *user_data) {
     (void)user_data;
     if (play_music_alarm_id != id) return 0;
-    play_music_alarm_id = -1;
     // Alarm callbacks run in IRQ context. Only publish work here; all settings
     // reads, music calculations and TinyUSB writes happen in the main loop.
+    const int64_t interval_us = next_is_swing_note ?
+            short_music_interval_us : long_music_interval_us;
+    next_is_swing_note = !next_is_swing_note;
+    due_music_interval_us = interval_us;
     music_alarm_due = true;
-    return 0;
+    return interval_us;
 }
 
-static alarm_id_t schedule_music_alarm(int64_t delay_us) {
-    return add_alarm_in_us(delay_us > 0 ? delay_us : 1,
-                           play_music_alarm, NULL, false);
+void refresh_music_alarm_timing(void) {
+    const int64_t bpm_us = settings.BPM > 0 ? settings.BPM : 1;
+    const int swing_percent = settings.swing_first_note_percent < 1 ? 1 :
+            settings.swing_first_note_percent > 100 ? 100 :
+            settings.swing_first_note_percent;
+    const int64_t short_interval =
+            (bpm_us * swing_percent) / 100;
+    const int64_t long_interval =
+            (bpm_us * (200 - swing_percent)) / 100;
+    const uint32_t irq_state = save_and_disable_interrupts();
+    short_music_interval_us = short_interval > 0 ? short_interval : 1;
+    long_music_interval_us = long_interval > 0 ? long_interval : 1;
+    restore_interrupts(irq_state);
 }
 
 void service_music_alarm(void) {
@@ -60,24 +77,17 @@ void service_music_alarm(void) {
     music_alarm_due = false;
     if (status != Active) return;
 
-    const int64_t to_the_next_beat_us = is_swing_note ?
-            (int64_t)(settings.BPM *
-                    (settings.swing_first_note_percent / 100.0)) :
-            (int64_t)(settings.BPM *
-                    ((100 + (100 - settings.swing_first_note_percent)) /
-                     100.0));
-    is_swing_note = !is_swing_note;
+    const int64_t to_the_next_beat_us = due_music_interval_us;
     play_music(to_the_next_beat_us > 0 ? to_the_next_beat_us : 1);
-    if (status == Active) {
-        play_music_alarm_id = schedule_music_alarm(to_the_next_beat_us);
-    }
 }
 
 
 void start_music_alarm() {
     music_alarm_due = false;
     if (play_music_alarm_id >= 0) cancel_alarm(play_music_alarm_id);
-    play_music_alarm_id = schedule_music_alarm(settings.BPM);
+    refresh_music_alarm_timing();
+    play_music_alarm_id = add_alarm_in_us(settings.BPM > 0 ? settings.BPM : 1,
+                                          play_music_alarm, NULL, false);
 }
 
 void stop_music_alarm() {

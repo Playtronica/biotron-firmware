@@ -22,6 +22,8 @@ static size_t schedule_count = 0;
 static size_t cancel_count = 0;
 static int64_t played_intervals[8];
 static size_t play_count = 0;
+static size_t critical_entries = 0;
+static size_t critical_exits = 0;
 
 extern void start_music_alarm(void);
 extern void stop_music_alarm(void);
@@ -57,13 +59,21 @@ void note_off(uint8_t channel, uint8_t note) {
     (void)note;
 }
 void plsdk_printf(const char *format, ...) { (void)format; }
+uint32_t save_and_disable_interrupts(void) {
+    ++critical_entries;
+    return 99;
+}
+void restore_interrupts(uint32_t state) {
+    assert(state == 99);
+    ++critical_exits;
+}
 
 uint64_t time_us_64(void) { return 0; }
 uint32_t time_us_32(void) { return 0; }
 
-static void fire_alarm(void) {
+static int64_t fire_alarm(void) {
     assert(scheduled_callback != NULL);
-    scheduled_callback(scheduled_id, scheduled_user_data);
+    return scheduled_callback(scheduled_id, scheduled_user_data);
 }
 
 int main(void) {
@@ -78,32 +88,35 @@ int main(void) {
     assert(scheduled_delay == 1000);
     assert(play_count == 0);
 
-    fire_alarm();
+    assert(fire_alarm() == 1400);
     assert(play_count == 0);
     service_music_alarm();
     assert(play_count == 1);
     assert(played_intervals[0] == 1400);
-    assert(scheduled_delay == 1400);
+    assert(schedule_count == 1);
 
-    fire_alarm();
+    assert(fire_alarm() == 600);
     service_music_alarm();
     assert(play_count == 2);
     assert(played_intervals[1] == 600);
-    assert(scheduled_delay == 600);
+    assert(schedule_count == 1);
 
-    fire_alarm();
+    assert(fire_alarm() == 1400);
     status = Sleep;
     service_music_alarm();
     assert(play_count == 2);
-    assert(schedule_count == 3);
+    assert(schedule_count == 1);
 
     status = Active;
     start_music_alarm();
+    assert(schedule_count == 2);
     stop_music_alarm();
-    assert(cancel_count == 1);
-    fire_alarm();
+    assert(cancel_count == 2);
+    assert(fire_alarm() == 0);
     service_music_alarm();
     assert(play_count == 2);
+    assert(critical_entries == critical_exits);
+    assert(critical_entries >= 2);
 
     puts("music_scheduler: IRQ deferral and swing cadence passed");
     return 0;

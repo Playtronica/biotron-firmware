@@ -489,10 +489,12 @@ void set_middle_plant_note_cc(uint8_t channel, uint8_t value) {
 void set_swing_first_note_percent_sys_ex(const uint8_t data[], uint8_t len) {
     if (len < 1 || data[0] > 100) return;
     settings.swing_first_note_percent = MAX(1, data[0]);
+    refresh_music_alarm_timing();
 }
 
 void set_swing_first_note_percent_cc(uint8_t channel, uint8_t value) {
     settings.swing_first_note_percent = MAX(1, value / 127.0 * 100);
+    refresh_music_alarm_timing();
 }
 
 void set_channel_sys_ex(const uint8_t data[], uint8_t len) {

@@ -27,5 +27,6 @@ void stop_bpm();
 void reset_bpm();
 void load_settings();
 void service_music_alarm(void);
+void refresh_music_alarm_timing(void);
 
 #endif //BIOTRON_GLOBAL_H
