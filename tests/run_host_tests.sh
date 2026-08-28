@@ -7,6 +7,30 @@ compiler="${CC:-cc}"
 
 python3 tests/test_release_contract.py
 
+"$compiler" -std=c11 -O1 -g -Wall -Wextra -Werror -pedantic \
+  -fno-omit-frame-pointer -fsanitize=address,undefined \
+  -I PLSDK/include PLSDK/src/midi_parser.c tests/test_midi_parser.c \
+  -o "$test_dir/midi-parser-sanitized"
+"$test_dir/midi-parser-sanitized"
+
+"$compiler" -std=c11 -O2 -Wall -Wextra -Werror -pedantic \
+  -I PLSDK/include PLSDK/src/midi_parser.c tests/test_midi_parser.c \
+  -o "$test_dir/midi-parser-optimized"
+"$test_dir/midi-parser-optimized"
+
+"$compiler" -std=c11 -O1 -g -Wall -Wextra -Werror -pedantic \
+  -Wno-strict-prototypes -fno-omit-frame-pointer \
+  -fsanitize=address,undefined -I tests/stubs -I PLSDK/include \
+  PLSDK/src/midi_parser.c PLSDK/src/commands.c \
+  tests/test_commands_integration.c -o "$test_dir/commands-sanitized"
+"$test_dir/commands-sanitized"
+
+"$compiler" -std=c11 -O2 -Wall -Wextra -Werror -pedantic \
+  -Wno-strict-prototypes -I tests/stubs -I PLSDK/include \
+  PLSDK/src/midi_parser.c PLSDK/src/commands.c \
+  tests/test_commands_integration.c -o "$test_dir/commands-optimized"
+"$test_dir/commands-optimized"
+
 "$compiler" -std=c11 -Wall -Wextra -Werror -Wno-strict-prototypes \
   -Wno-unused-parameter -pedantic -fsyntax-only \
   -I tests/stubs -I include -I PLSDK/include src/music.c

@@ -1,6 +1,7 @@
 #include "pico/stdlib.h"
 #include "PLSDK/commands.h"
 #include "PLSDK/constants.h"
+#include "PLSDK/midi_parser.h"
 #include "PLSDK.h"
 #include "tusb.h"
 
@@ -12,17 +13,29 @@ uint8_t length_sys = 0;
 
 
 void add_CC(void action(uint8_t channel, uint8_t value), uint8_t num) {
+    if (length_cc >= MAX_COUNT_COMMANDS || action == NULL) return;
     CC_command_s new_CC;
     new_CC.num = num;
     new_CC.action = action;
     CC[length_cc++] = new_CC;
 }
 
-void add_sys_ex_com(void action(const uint8_t data[], uint8_t len), uint8_t num) {
+static void add_sys_ex_command(void action(const uint8_t data[], uint8_t len),
+                               uint8_t num, bool persists) {
+    if (length_sys >= MAX_COUNT_COMMANDS || action == NULL) return;
     sys_ex_command_s new_sys_ex_com;
     new_sys_ex_com.num = num;
     new_sys_ex_com.action = action;
+    new_sys_ex_com.persists = persists;
     sys_com[length_sys++] = new_sys_ex_com;
+}
+
+void add_sys_ex_com(void action(const uint8_t data[], uint8_t len), uint8_t num) {
+    add_sys_ex_command(action, num, true);
+}
+
+void add_sys_ex_query(void action(const uint8_t data[], uint8_t len), uint8_t num) {
+    add_sys_ex_command(action, num, false);
 }
 
 void print_sys_ex(const uint8_t data[], uint8_t len) {
@@ -41,84 +54,84 @@ void print_pure(uint8_t cable, const uint8_t data[], uint8_t len) {
     tud_midi_stream_write(cable, data, len);
 }
 
-static uint16_t clk = 0;
-int midi_clock() {
-    if (clk++ < 24) return BPM_CLOCK_INACTIVE;
-    clk = 0;
-    return BPM_CLOCK_PLAY;
+static uint8_t clocks_since_beat = 0;
+static bool midi_clock_running = false;
+static midi_parser_t cable_parsers[CABLE_NUM_EXTRA + 1];
+static bool parsers_initialized = false;
+
+static void init_parsers_once(void) {
+    if (parsers_initialized) return;
+    for (size_t cable = 0; cable <= CABLE_NUM_EXTRA; ++cable) {
+        midi_parser_init(&cable_parsers[cable]);
+    }
+    parsers_initialized = true;
 }
 
+int read_sys_ex(void) {
+    uint8_t packet[4];
+    midi_event_t event;
+    init_parsers_once();
+    if (!tud_midi_packet_read(packet)) return UNKNOWN;
+    remind_midi();
 
-int read_sys_ex() {
-    uint8_t res[300];
-    uint8_t buff[4];
-    uint32_t len = 0;
-    static uint8_t bpm_clock_prepare = BPM_CLOCK_STOP_BYTE;
-
-
-    while (tud_midi_packet_read(buff)) {
-        remind_midi();
-        for (int i = 1; i < 4; ++i) {
-            res[len++] = buff[i];
-            if (buff[i] == SYS_EX_END ||
-                buff[i] == BPM_CLOCK_STOP_BYTE ||
-                buff[i] == BPM_CLOCK_START_BYTE ||
-                buff[i] == BPM_CLOCK_BYTE) break;
-        }
+    const uint8_t cable = (packet[0] >> 4) & 0x0f;
+    if (cable > CABLE_NUM_EXTRA) return MIDI_PACKET_IGNORED;
+    const midi_event_kind_t kind = midi_parser_feed_usb_packet(
+            &cable_parsers[cable], packet, &event);
+    if (kind == MIDI_EVENT_NONE || kind == MIDI_EVENT_MALFORMED) {
+        return MIDI_PACKET_IGNORED;
     }
+    const uint8_t *res = event.data;
+    const size_t len = event.len;
 
-    if (len == 0) {
-        return UNKNOWN;
+    if (len >= 1 && res[0] == BPM_CLOCK_START_BYTE) {
+        clocks_since_beat = 0;
+        midi_clock_running = true;
+        return BPM_CLOCK_ACTIVATE;
     }
-
-    if (res[0] == BPM_CLOCK_START_BYTE || res[0] == MUSIC_SELECT) {
-        printf("START\n");
-        bpm_clock_prepare = BPM_CLOCK_START_BYTE;
-        return BPM_CLOCK_INACTIVE;
+    if (len >= 1 && res[0] == BPM_CLOCK_CONTINUE_BYTE) {
+        clocks_since_beat = 0;
+        midi_clock_running = true;
+        return BPM_CLOCK_ACTIVATE;
     }
-
-    if (res[0] == BPM_CLOCK_STOP_BYTE) {
-        printf("END\n");
-        bpm_clock_prepare = BPM_CLOCK_STOP_BYTE;
+    if (len >= 1 && res[0] == BPM_CLOCK_STOP_BYTE) {
+        clocks_since_beat = 0;
+        midi_clock_running = false;
         return BPM_CLOCK_DEACTIVATE;
     }
-
-    if (res[0] == BPM_CLOCK_BYTE &&
-        (bpm_clock_prepare == BPM_CLOCK_START_BYTE || bpm_clock_prepare == BPM_CLOCK_BYTE)) {
-        if (bpm_clock_prepare == BPM_CLOCK_START_BYTE) {
-            clk = 0;
-            bpm_clock_prepare = BPM_CLOCK_BYTE;
-            return BPM_CLOCK_ACTIVATE;
-        }
-        return midi_clock();
+    if (len >= 1 && res[0] == BPM_CLOCK_BYTE) {
+        if (!midi_clock_running) return MIDI_PACKET_IGNORED;
+        if (++clocks_since_beat < 24) return BPM_CLOCK_INACTIVE;
+        clocks_since_beat = 0;
+        return BPM_CLOCK_PLAY;
     }
 
-
-    if (res[0] >= CC_START && res[0] <= CC_END) {
-        for (int i = 0; i < length_cc; i++) {
+    if (len >= CC_LENGTH && res[0] >= CC_START && res[0] <= CC_END) {
+        for (int i = 0; i < length_cc; ++i) {
             if (CC[i].num == res[1]) {
                 CC[i].action(res[0] - CC_START, res[2]);
-                return CUSTOM_COMMAND;
+                return CUSTOM_CC_COMMAND;
             }
         }
-        return UNKNOWN;
+        return MIDI_PACKET_IGNORED;
     }
 
-
-    if (res[0] == SYS_EX_START) {
-        if (res[1] == PLAYTRONICA_KEY_FIRST && res[2] == PLAYTRONICA_KEY_SECOND) {
-            for (int i = 0; i < length_sys; i++) {
+    if (kind == MIDI_EVENT_SYSEX && len >= 2 && res[0] == SYS_EX_START &&
+        res[len - 1] == SYS_EX_END) {
+        if (len >= 5 && len - 5 <= UINT8_MAX &&
+            res[1] == PLAYTRONICA_KEY_FIRST &&
+            res[2] == PLAYTRONICA_KEY_SECOND) {
+            for (int i = 0; i < length_sys; ++i) {
                 if (sys_com[i].num == res[3]) {
-                    uint8_t data[len - 5];
-                    for (int j = 4; j < len - 1; j++) {
-                        data[j - 4] = res[j];
-                    }
-                    sys_com[i].action(data, len - 5);
-                    return CUSTOM_COMMAND;
+                    sys_com[i].action(&res[4], (uint8_t)(len - 5));
+                    return sys_com[i].persists ? CUSTOM_COMMAND :
+                           CUSTOM_QUERY_COMMAND;
                 }
             }
         }
-        if (res[1] == PLAYTRONICA_SYS_KEY && res[2] == PLAYTRONICA_KEY_FIRST && res[3] == PLAYTRONICA_KEY_SECOND) {
+        if (len >= 6 && res[1] == PLAYTRONICA_SYS_KEY &&
+            res[2] == PLAYTRONICA_KEY_FIRST &&
+            res[3] == PLAYTRONICA_KEY_SECOND) {
             switch (res[4]) {
                 case 0:
                     plsdk_printf("Device is in TEST GREEN mode\n");
@@ -134,21 +147,17 @@ int read_sys_ex() {
                     plsdk_printf("Log is working\n");
                     return LOGGER_ACTIVATE;
                 case 4:
-                    plsdk_printf("Log won't work\n");
                     LOGGER_FLAG = false;
+                    plsdk_printf("Log won't work\n");
                     return LOGGER_DEACTIVATE;
                 case 125:
-                    // TODO Scala reader
                     break;
-                case 126: {
+                case 126:
                     return LIST_OF_COMMANDS_ACTION;
-                }
                 case 127:
                     return RESET_DEVICE;
             }
         }
-        return UNKNOWN;
     }
-    return UNKNOWN;
+    return MIDI_PACKET_IGNORED;
 }
-

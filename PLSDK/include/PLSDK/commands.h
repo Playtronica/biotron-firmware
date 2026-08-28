@@ -13,11 +13,16 @@
 #ifndef PLSDK_COMMANDS_H
 #define PLSDK_COMMANDS_H
 
+#include <stdbool.h>
+#include <stdint.h>
 
 #define MAX_COUNT_COMMANDS 50
 
 enum SYS_EX_RESPONSE {
     CUSTOM_COMMAND,
+    CUSTOM_CC_COMMAND,
+    CUSTOM_QUERY_COMMAND,
+    MIDI_PACKET_IGNORED,
     BPM_CLOCK_ACTIVATE,
     BPM_CLOCK_DEACTIVATE,
     BPM_CLOCK_PLAY,
@@ -42,6 +47,7 @@ typedef struct CC_command_s {
 typedef struct sys_ex_command_s {
     void (*action)(const uint8_t data[], uint8_t len);
     uint8_t num;
+    bool persists;
 } sys_ex_command_s;
 
 
@@ -72,6 +78,7 @@ void add_CC(void action(uint8_t channel, uint8_t value), uint8_t num);
  * void action(uint8_t data[], uint8_t len)
  * */
 void add_sys_ex_com(void action(const uint8_t data[], uint8_t len), uint8_t num);
+void add_sys_ex_query(void action(const uint8_t data[], uint8_t len), uint8_t num);
 
 /**
  * @brief Parse value to sys ex format

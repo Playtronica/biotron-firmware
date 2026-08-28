@@ -560,43 +560,54 @@ void setup_commands() {
     add_CC(set_button_mode_state_cc, 87);
 
     add_sys_ex_com(set_channel_sys_ex, 127);
-    add_sys_ex_com(get_info_sys_ex, 126);
+    add_sys_ex_query(get_info_sys_ex, 126);
 }
 
 
 void get_sys_ex_and_behave() {
-    int sys_ex_status = read_sys_ex();
+    for (uint8_t packet = 0; packet < 32; ++packet) {
+        const int sys_ex_status = read_sys_ex();
+        if (sys_ex_status == UNKNOWN) return;
 
-    switch (sys_ex_status) {
-        case RESET_DEVICE:
-            clear_flash();
-            reset_usb_boot(0, 0);
-        case TEST_MODE_BLUE_ACTIVATE:
-            TestMode = true;
-            isTestModeGreen = false;
-            break;
-        case TEST_MODE_GREEN_ACTIVATE:
-            TestMode = true;
-            isTestModeGreen = true;
-            break;
-        case TEST_MODE_DEACTIVATE:
-            TestMode = false;
-            break;
-        case LIST_OF_COMMANDS_ACTION:
-            load_settings();
-            break;
-        case CUSTOM_COMMAND:
-            save_settings();
-            break;
-        case BPM_CLOCK_PLAY:
-            play_music_bpm_clock();
-            break;
-        case BPM_CLOCK_DEACTIVATE:
-            bpm_clock_control(false);
-            break;
-        case BPM_CLOCK_ACTIVATE:
-            bpm_clock_control(true);
-            break;
+        switch (sys_ex_status) {
+            case RESET_DEVICE:
+                // Entering BOOT for an update must not erase user settings.
+                reset_usb_boot(0, 0);
+                return;
+            case TEST_MODE_BLUE_ACTIVATE:
+                TestMode = true;
+                isTestModeGreen = false;
+                break;
+            case TEST_MODE_GREEN_ACTIVATE:
+                TestMode = true;
+                isTestModeGreen = true;
+                break;
+            case TEST_MODE_DEACTIVATE:
+                TestMode = false;
+                break;
+            case LIST_OF_COMMANDS_ACTION:
+                load_settings();
+                break;
+            case CUSTOM_COMMAND:
+            case CUSTOM_CC_COMMAND:
+                save_settings();
+                break;
+            case CUSTOM_QUERY_COMMAND:
+            case MIDI_PACKET_IGNORED:
+            case BPM_CLOCK_INACTIVE:
+                break;
+            case BPM_CLOCK_PLAY:
+                play_music_bpm_clock();
+                break;
+            case BPM_CLOCK_DEACTIVATE:
+                bpm_clock_control(false);
+                break;
+            case BPM_CLOCK_ACTIVATE:
+                bpm_clock_control(true);
+                break;
+            default:
+                break;
+        }
     }
 }
 

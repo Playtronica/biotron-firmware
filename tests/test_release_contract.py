@@ -31,8 +31,9 @@ def main() -> None:
     ]
     assert decimal_arguments(params, "add_sys_ex_com") == [
         0, 9, 1, 2, 3, 4, 5, 6, 15, 17, 16, 18, 22, 23, 7, 10, 11, 24,
-        12, 13, 19, 21, 25, 26, 27, 127, 126,
+        12, 13, 19, 21, 25, 26, 27, 127,
     ]
+    assert decimal_arguments(params, "add_sys_ex_query") == [126]
 
     # Shipping 1.8.2 stores zero-based 1/2 and therefore emits human MIDI 2/3.
     assert len(re.findall(r"\.plant_channel\s*=\s*1\s*,", params)) == 4
