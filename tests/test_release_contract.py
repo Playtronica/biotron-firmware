@@ -38,6 +38,9 @@ def main() -> None:
     main_source = source("main.c")
     raw_plant = source("src/raw_plant.c")
     global_source = source("src/global.c")
+    developer_guide = source("DEVELOPING.md")
+    changelog = source("CHANGELOG.md")
+    host_runner = source("tests/run_host_tests.sh")
 
     assert decimal_arguments(params, "add_CC") == [
         14, 22, 23, 3, 24, 9, 25, 26, 31, 15, 20, 21, 28, 27, 30, 85, 86, 87,
@@ -114,7 +117,24 @@ def main() -> None:
     assert "TUD_MIDI_JACKID_OUT_EMB(1)" in descriptors
     assert "TUD_MIDI_JACKID_OUT_EMB(2)" in descriptors
 
-    print("release_contract: v1 registry, storage and USB source snapshots passed")
+    # Keep the maintainer entry point synchronized with the production
+    # compatibility values and make sure harness simplification does not drop
+    # a test group silently.
+    for required in (
+        "cf264aa", "1765723554", "0x3011", "human MIDI channels\n   `2/3`",
+        "F0 0B 14 0D 7F F7", "customer is last",
+    ):
+        assert required in developer_guide, required
+    assert re.findall(r"^run_pair ([a-z0-9-]+)", host_runner, re.M) == [
+        "midi-parser", "commands", "runtime-safety", "usb-string",
+        "settings-storage", "persistence-scheduler", "storage-v1",
+        "music-v1", "note-lifecycle", "music-scheduler", "raw-plant",
+        "midi-tx",
+    ]
+    for required in ("cf264aa", "1765723554", "human MIDI channels 2/3"):
+        assert required in changelog, required
+
+    print("release_contract: v1 registry, storage, USB and developer map passed")
 
 
 if __name__ == "__main__":

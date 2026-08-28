@@ -38,6 +38,21 @@
   </p>
 </div>
 
+## Developer quick start
+
+Maintainers working on the compatible `1.8.3` stabilization should start with
+[`DEVELOPING.md`](DEVELOPING.md). It explains the runtime ownership model,
+compatibility rules, commit stack, exact build identity, test map and the
+boundary between firmware, Windows/REAPER, offline Settings and Help.
+
+```bash
+./tests/run_host_tests.sh
+```
+
+Current candidate code is `cf264aa`; later commits on the safety branch are
+tests/docs/tooling unless a new immutable candidate is explicitly declared.
+Passing host tests does not by itself authorize a merge or release.
+
 
 
 <!-- TABLE OF CONTENTS -->
@@ -102,13 +117,17 @@ Biotron provides a unique fusion of nature and technology, turning the life proc
 
 2. Clone the repo
    ```sh
-   git clone https://github.com/Playtronica/Biotron.git
+   git clone https://github.com/Playtronica/biotron-firmware.git
    ```
-3. Setup build image and build binary
+3. Run the host safety suite
    ```sh
-   make build
+   ./tests/run_host_tests.sh
    ```
-4. Get your firmware file in output directory (file with extension uf2)
+4. Configure/build with an explicit firmware version and the existing settings
+   compatibility ID. See [`DEVELOPING.md`](DEVELOPING.md) for the exact command.
+
+Do not use a timestamp as `FLASH_ID_STARTUP`: changing the settings identity
+silently resets user presets.
 
 
 ### Load Firmware
@@ -116,16 +135,18 @@ Biotron provides a unique fusion of nature and technology, turning the life proc
 For loading device you need firmware file. You can get it in different ways:
 1) Build firmware by yourself. How to do it, you can read [here](#build-firmware-file)
 2) Load firmware from [releases](https://github.com/Playtronica/biotron-firmware/releases/latest)
-3) Open [WebMidi](https://playtronica.github.io/WebMidiVue/#/biotron) and press "Update Firmware". 
-(It also change device state in boot mode)
+3) Use only a team-tested, version-aware Settings beta whose exact artifact is
+recorded in the test manifest. Do not use an updater which selects `latest`
+without validating the UF2 hash/version first.
 
 After that you need to turn on boot mode on device:
 
-1) If your device is already have one of the latest firmwares - 
-Open [WebMidi](https://playtronica.github.io/WebMidiVue/#/biotron) and press "Update Firmware" 
-(You also get the latest firmware)
-2) If your firmware version is not latest, or you have problems with first method -
-while you are connecting device to PC, lock boot pins
+1) A supported firmware can enter BOOT through the exact system SysEx described
+in [`DEVELOPING.md`](DEVELOPING.md); the updater must download and validate the
+artifact before sending BOOT.
+2) Unknown/older firmware must follow the version-specific Help procedure.
+Some old families cannot enter BOOT by MIDI; others reset stored settings.
+Use physical BOOT contacts only with the revision-correct guide.
 
 The device will be displayed as removable media (like a USB flash drive).
 You should transfer the resulting .uf2 file to the removable media that appeared.
@@ -196,4 +217,3 @@ Don't forget to give the project a star! Thanks again!
 [license-url]: https://github.com/Playtronica/Biotron/blob/master/LICENSE.txt
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: https://linkedin.com/in/linkedin_username
-
