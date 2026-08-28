@@ -1,4 +1,3 @@
-#include <pico/printf.h>
 #include <assert.h>
 #include <stdlib.h>
 #include "hardware/pwm.h"

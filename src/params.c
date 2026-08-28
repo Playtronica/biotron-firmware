@@ -202,7 +202,6 @@ void read_settings() {
     memcpy(&settings, flash_target_contents, sizeof(settings));
 
     if (settings.id != ID_FLASH) {
-        clear_flash();
         default_settings();
         save_settings();
         return;
@@ -235,17 +234,6 @@ static void save_pending_settings_now(void) {
 void service_settings_persistence(void) {
     if (!persistence_is_due(&settings_save_scheduler, time_us_64())) return;
     save_pending_settings_now();
-}
-
-void clear_flash() {
-    int settingsSize = sizeof(settings);
-
-    int writeSize = (settingsSize / FLASH_PAGE_SIZE) + 1;
-    int sectorCount = ((writeSize * FLASH_PAGE_SIZE) / FLASH_SECTOR_SIZE) + 1;
-
-    uint32_t interrupts = save_and_disable_interrupts();
-    flash_range_erase(FLASH_TARGET_OFFSET, FLASH_SECTOR_SIZE * sectorCount);
-    restore_interrupts(interrupts);
 }
 
 //region MIDI commands

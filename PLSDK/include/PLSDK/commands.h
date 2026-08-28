@@ -86,19 +86,6 @@ void add_sys_ex_query_len(void action(const uint8_t data[], uint8_t len),
                           uint8_t num, uint8_t minimum_length);
 
 /**
- * @brief Parse value to sys ex format
- *
- * @param data - unsigned num
- *
- * @return Array with 3 nums.
- *
- * @note
- * To convert to a readable number - multiply first on 127^2,
- * second on 127, sum them and add third value
- * */
-uint8_t *parse_value_to_sys_ex(uint32_t data);
-
-/**
  * @brief Print info in MIDI + Playtronica format
  *
  * @param data - array with nums (range from 0 to 126 includes)

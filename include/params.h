@@ -84,7 +84,6 @@ extern bool isTestModeGreen;
 
 void save_settings();
 void read_settings();
-void clear_flash();
 
 void setup_commands();
 void get_sys_ex_and_behave();

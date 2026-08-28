@@ -1,7 +1,6 @@
 #include <hardware/gpio.h>
 #include <hardware/pwm.h>
 #include <pico/time.h>
-#include <pico/printf.h>
 #include "leds.h"
 #include "raw_plant.h"
 #include "global.h"

@@ -1,5 +1,4 @@
 #include <pico/printf.h>
-#include <malloc.h>
 #include "PLSDK/commands.h"
 #include "PLSDK/constants.h"
 #include "PLSDK/music.h"
@@ -87,5 +86,3 @@ void stop_all_notes(uint8_t channel_id) {
                                  CC_STOP_ALL_NOTES, 0};
     print_pure(CABLE_NUM_MAIN, stop_all_notes, 3);
 }
-
-

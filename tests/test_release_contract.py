@@ -63,6 +63,7 @@ def main() -> None:
     assert re.search(r"typedef struct\s*\{.*?int id;.*?\}\s*Settings_t;", params_h, re.S)
     assert "flash_range_erase(FLASH_TARGET_OFFSET" in params
     assert "flash_range_program(FLASH_TARGET_OFFSET" in params
+    assert "clear_flash" not in params
     assert main_source.index("read_settings();") < main_source.index("init_midi();")
     assert main_source.index("read_settings();") < main_source.index("init_plant();")
 
