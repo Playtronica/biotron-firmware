@@ -35,6 +35,11 @@ python3 tests/test_release_contract.py
   -Wno-unused-parameter -pedantic -fsyntax-only \
   -I tests/stubs -I include -I PLSDK/include src/music.c
 
+"$compiler" -std=c11 -Wall -Wextra -Werror -Wno-strict-prototypes \
+  -Wno-unused-parameter -pedantic -fsyntax-only \
+  -DFLASH_ID_STARTUP=1720000000 -I tests/stubs -I include -I PLSDK/include \
+  src/params.c
+
 "$compiler" -std=c11 -O1 -g -Wall -Wextra -Werror -pedantic \
   -fno-omit-frame-pointer -fsanitize=address,undefined \
   -I include tests/test_runtime_safety.c \
@@ -69,6 +74,17 @@ python3 tests/test_release_contract.py
   -I include tests/test_settings_storage.c \
   -o "$test_dir/settings-storage-optimized"
 "$test_dir/settings-storage-optimized"
+
+"$compiler" -std=c11 -O1 -g -Wall -Wextra -Werror -pedantic \
+  -fno-omit-frame-pointer -fsanitize=address,undefined \
+  -I include tests/test_persistence_scheduler.c \
+  -o "$test_dir/persistence-scheduler-sanitized"
+"$test_dir/persistence-scheduler-sanitized"
+
+"$compiler" -std=c11 -O2 -Wall -Wextra -Werror -pedantic \
+  -I include tests/test_persistence_scheduler.c \
+  -o "$test_dir/persistence-scheduler-optimized"
+"$test_dir/persistence-scheduler-optimized"
 
 "$compiler" -std=c11 -O1 -g -Wall -Wextra -Werror -Wno-strict-prototypes -pedantic \
   -fno-omit-frame-pointer -fsanitize=address,undefined \

@@ -13,11 +13,22 @@
 #include <pico/printf.h>
 #include "runtime_safety.h"
 #include "settings_storage.h"
+#include "persistence_scheduler.h"
 
 Settings_t settings;
 bool isMutedByButton = false;
 bool TestMode = false;
 bool isTestModeGreen = true;
+
+#define SETTINGS_SAVE_DEBOUNCE_US UINT64_C(1000000)
+
+static Settings_t persisted_settings_snapshot;
+static bool persisted_settings_snapshot_valid = false;
+static persistence_scheduler_t settings_save_scheduler = {
+        .pending = false,
+        .last_change_us = 0,
+        .debounce_us = SETTINGS_SAVE_DEBOUNCE_US,
+};
 
 // region presets
 const Settings_t fast_role_preset = {
@@ -176,6 +187,9 @@ void save_settings() {
     flash_range_erase(FLASH_TARGET_OFFSET, SETTINGS_ERASE_BYTES);
     flash_range_program(FLASH_TARGET_OFFSET, program_data, sizeof(program_data));
     restore_interrupts(interrupts);
+    persisted_settings_snapshot = settings;
+    persisted_settings_snapshot_valid = true;
+    persistence_note_saved(&settings_save_scheduler);
 }
 
 void read_settings() {
@@ -188,6 +202,30 @@ void read_settings() {
         save_settings();
         return;
     }
+    persisted_settings_snapshot = settings;
+    persisted_settings_snapshot_valid = true;
+    persistence_note_saved(&settings_save_scheduler);
+}
+
+static bool settings_differ_from_persisted(void) {
+    return !persisted_settings_snapshot_valid ||
+           memcmp(&settings, &persisted_settings_snapshot, sizeof(settings)) != 0;
+}
+
+static void schedule_settings_save(void) {
+    if (settings_differ_from_persisted()) {
+        persistence_note_change(&settings_save_scheduler, time_us_64());
+    }
+}
+
+static void save_pending_settings_now(void) {
+    if (settings_differ_from_persisted()) save_settings();
+    else persistence_note_saved(&settings_save_scheduler);
+}
+
+void service_settings_persistence(void) {
+    if (!persistence_is_due(&settings_save_scheduler, time_us_64())) return;
+    save_pending_settings_now();
 }
 
 void clear_flash() {
@@ -572,6 +610,7 @@ void get_sys_ex_and_behave() {
         switch (sys_ex_status) {
             case RESET_DEVICE:
                 // Entering BOOT for an update must not erase user settings.
+                save_pending_settings_now();
                 reset_usb_boot(0, 0);
                 return;
             case TEST_MODE_BLUE_ACTIVATE:
@@ -590,7 +629,7 @@ void get_sys_ex_and_behave() {
                 break;
             case CUSTOM_COMMAND:
             case CUSTOM_CC_COMMAND:
-                save_settings();
+                schedule_settings_save();
                 break;
             case CUSTOM_QUERY_COMMAND:
             case MIDI_PACKET_IGNORED:

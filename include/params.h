@@ -89,5 +89,6 @@ void clear_flash();
 void setup_commands();
 void get_sys_ex_and_behave();
 void set_next_preset();
+void service_settings_persistence(void);
 
 #endif //BIOTRON_PARAMS_H

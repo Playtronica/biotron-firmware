@@ -40,6 +40,7 @@ int main(void)
         check_buttons();
         remind_midi();
         get_sys_ex_and_behave();
+        service_settings_persistence();
         sleep_ms(1);
     }
 }
