@@ -51,7 +51,7 @@ void add_sys_ex_query_len(void action(const uint8_t data[], uint8_t len),
     add_sys_ex_command(action, num, false, minimum_length);
 }
 
-void print_sys_ex(const uint8_t data[], uint8_t len) {
+bool print_sys_ex(const uint8_t data[], uint8_t len) {
     uint8_t message[4 + len];
     message[0] = SYS_EX_START;
     message[1] = PLAYTRONICA_KEY_FIRST;
@@ -60,13 +60,18 @@ void print_sys_ex(const uint8_t data[], uint8_t len) {
         message[3 + i] = data[i];
     }
     message[3 + len] = SYS_EX_END;
-    midi_tx_enqueue(CABLE_NUM_EXTRA, message, (uint16_t)(4u + len));
     service_midi_tx();
+    const bool accepted = midi_tx_enqueue(
+            CABLE_NUM_EXTRA, message, (uint16_t)(4u + len));
+    service_midi_tx();
+    return accepted;
 }
 
-void print_pure(uint8_t cable, const uint8_t data[], uint8_t len) {
-    midi_tx_enqueue(cable, data, len);
+bool print_pure(uint8_t cable, const uint8_t data[], uint8_t len) {
     service_midi_tx();
+    const bool accepted = midi_tx_enqueue(cable, data, len);
+    service_midi_tx();
+    return accepted;
 }
 
 static uint8_t clocks_since_beat = 0;

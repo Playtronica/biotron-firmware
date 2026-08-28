@@ -13,5 +13,6 @@ bool midi_tx_enqueue(uint8_t cable, const uint8_t data[], uint16_t length);
 void service_midi_tx(void);
 size_t midi_tx_pending(void);
 uint32_t midi_tx_dropped(void);
+size_t midi_tx_recovery_pending(void);
 
 #endif

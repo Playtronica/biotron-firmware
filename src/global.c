@@ -73,29 +73,32 @@ void refresh_music_alarm_timing(void) {
 }
 
 void service_music_alarm(void) {
-    if (!music_alarm_due) return;
-    music_alarm_due = false;
-    if (status != Active) return;
-
+    const uint32_t irq_state = save_and_disable_interrupts();
+    const bool due = music_alarm_due;
     const int64_t to_the_next_beat_us = due_music_interval_us;
+    music_alarm_due = false;
+    restore_interrupts(irq_state);
+    if (!due) return;
+    if (status != Active) return;
     play_music(to_the_next_beat_us > 0 ? to_the_next_beat_us : 1);
 }
 
+void stop_music_alarm(void);
 
 void start_music_alarm() {
-    music_alarm_due = false;
-    if (play_music_alarm_id >= 0) cancel_alarm(play_music_alarm_id);
+    stop_music_alarm();
     refresh_music_alarm_timing();
     play_music_alarm_id = add_alarm_in_us(settings.BPM > 0 ? settings.BPM : 1,
                                           play_music_alarm, NULL, false);
 }
 
 void stop_music_alarm() {
+    const uint32_t irq_state = save_and_disable_interrupts();
+    const alarm_id_t alarm_id = play_music_alarm_id;
+    play_music_alarm_id = -1;
     music_alarm_due = false;
-    if (play_music_alarm_id >= 0) {
-        cancel_alarm(play_music_alarm_id);
-        play_music_alarm_id = -1;
-    }
+    restore_interrupts(irq_state);
+    if (alarm_id >= 0) cancel_alarm(alarm_id);
 }
 
 

@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -10,11 +11,12 @@ static uint8_t captured_cable;
 static uint8_t captured[3];
 static uint8_t captured_length;
 
-void print_pure(uint8_t cable, const uint8_t data[], uint8_t length) {
+bool print_pure(uint8_t cable, const uint8_t data[], uint8_t length) {
     assert(length <= sizeof(captured));
     captured_cable = cable;
     captured_length = length;
     memcpy(captured, data, length);
+    return true;
 }
 
 static void expect(uint8_t status, uint8_t data1, uint8_t data2) {

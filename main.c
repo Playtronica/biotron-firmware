@@ -7,6 +7,7 @@
 #include "leds.h"
 #include "raw_plant.h"
 #include "params.h"
+#include "music.h"
 #include "PLSDK/midi_tx.h"
 
 

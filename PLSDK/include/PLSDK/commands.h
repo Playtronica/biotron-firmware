@@ -104,12 +104,12 @@ uint8_t *parse_value_to_sys_ex(uint32_t data);
  * @param data - array with nums (range from 0 to 126 includes)
  * @param len - len of array
  *
- * @return Nothing
+ * @return true when the complete message was accepted by the bounded TX queue
  *
  * @note
  * Sends data only on 2 MIDI cable. Also sends data in Playtronica format
  * */
-void print_sys_ex(const uint8_t data[], uint8_t len);
+bool print_sys_ex(const uint8_t data[], uint8_t len);
 
 /**
  * @brief Print info in MIDI format
@@ -118,10 +118,10 @@ void print_sys_ex(const uint8_t data[], uint8_t len);
  * @param data - array with nums (range from 0 to 126 includes)
  * @param len - len of array
  *
- * @return Nothing
+ * @return true when the complete message was accepted by the bounded TX queue
  *
  * */
-void print_pure(uint8_t cable, const uint8_t data[], uint8_t len);
+bool print_pure(uint8_t cable, const uint8_t data[], uint8_t len);
 
 int read_sys_ex();
 

@@ -64,10 +64,11 @@ uint32_t time_us_32(void) { return 1000; }
 uint16_t adc_read(void) { return 1600; }
 void light_note_observer(void) {}
 void plsdk_printf(const char *format, ...) { (void)format; }
-void print_pure(uint8_t cable, const uint8_t data[], uint8_t len) {
+bool print_pure(uint8_t cable, const uint8_t data[], uint8_t len) {
     (void)cable;
     (void)data;
     (void)len;
+    return true;
 }
 
 alarm_id_t add_alarm_in_us(int64_t delay_us, alarm_callback_t callback,
