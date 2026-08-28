@@ -153,6 +153,13 @@ static void test_query_status_and_malformed_recovery(void) {
 }
 
 static void test_system_boot_command_on_service_cable(void) {
+    /* Web updater sends this first for v1.2.2-v1.2.5 compatibility. The
+       current parser must ignore it safely, then accept the namespaced frame. */
+    enqueue(0x14, 0xf0, PLAYTRONICA_SYS_KEY, 127);
+    enqueue(0x15, 0xf7, 0, 0);
+    assert(read_sys_ex() == MIDI_PACKET_IGNORED);
+    assert(read_sys_ex() == MIDI_PACKET_IGNORED);
+
     enqueue(0x14, 0xf0, PLAYTRONICA_SYS_KEY, PLAYTRONICA_KEY_FIRST);
     enqueue(0x17, PLAYTRONICA_KEY_SECOND, 127, 0xf7);
     assert(read_sys_ex() == MIDI_PACKET_IGNORED);
