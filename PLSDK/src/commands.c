@@ -20,12 +20,22 @@ void add_CC(void action(uint8_t channel, uint8_t value), uint8_t num) {
     CC[length_cc++] = new_CC;
 }
 
-void add_sys_ex_com(void action(const uint8_t data[], uint8_t len), uint8_t num) {
+static void add_sys_ex_command(void action(const uint8_t data[], uint8_t len),
+                               uint8_t num, bool persists) {
     if (length_sys >= MAX_COUNT_COMMANDS || action == NULL) return;
     sys_ex_command_s new_sys_ex_com;
     new_sys_ex_com.num = num;
     new_sys_ex_com.action = action;
+    new_sys_ex_com.persists = persists;
     sys_com[length_sys++] = new_sys_ex_com;
+}
+
+void add_sys_ex_com(void action(const uint8_t data[], uint8_t len), uint8_t num) {
+    add_sys_ex_command(action, num, true);
+}
+
+void add_sys_ex_query(void action(const uint8_t data[], uint8_t len), uint8_t num) {
+    add_sys_ex_command(action, num, false);
 }
 
 void print_sys_ex(const uint8_t data[], uint8_t len) {
@@ -111,7 +121,7 @@ int read_sys_ex(void) {
             for (int i = 0; i < length_sys; i++) {
                 if (sys_com[i].num == res[3]) {
                     sys_com[i].action(&res[4], (uint8_t)(len - 5));
-                    return CUSTOM_COMMAND;
+                    return sys_com[i].persists ? CUSTOM_COMMAND : CUSTOM_QUERY_COMMAND;
                 }
             }
         }

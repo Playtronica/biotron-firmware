@@ -25,6 +25,7 @@ static size_t cc_mismatches = 0;
 static size_t expected_cc_index = 0;
 static size_t sysex_calls = 0;
 static uint8_t sysex_value = 0;
+static size_t query_calls = 0;
 
 static void enqueue(uint8_t header, uint8_t a, uint8_t b, uint8_t c) {
     assert(queue_write < QUEUE_CAPACITY);
@@ -65,6 +66,12 @@ static void capture_sysex(const uint8_t data[], uint8_t length) {
     assert(length == 1);
     sysex_value = data[0];
     ++sysex_calls;
+}
+
+static void capture_query(const uint8_t data[], uint8_t length) {
+    assert(length == 1);
+    assert(data[0] == 77);
+    ++query_calls;
 }
 
 static void ignored_cc(uint8_t channel, uint8_t value) {
@@ -127,6 +134,16 @@ static void test_sysex_with_interleaved_realtime(void) {
     assert(sysex_calls == 1 && sysex_value == 99);
 }
 
+static void test_read_only_sysex_has_distinct_status(void) {
+    add_sys_ex_query(capture_query, 43);
+    enqueue(0x04, 0xf0, PLAYTRONICA_KEY_FIRST, PLAYTRONICA_KEY_SECOND);
+    enqueue(0x07, 43, 77, 0xf7);
+
+    assert(read_sys_ex() == MIDI_PACKET_IGNORED);
+    assert(read_sys_ex() == CUSTOM_QUERY_COMMAND);
+    assert(query_calls == 1);
+}
+
 static void test_malformed_packet_does_not_poison_next_cc(void) {
     const size_t calls_before = cc_calls;
     expected_cc_index = 0;
@@ -173,6 +190,7 @@ int main(void) {
     test_queued_cc_order_and_count();
     test_bounded_batch_drain_contract();
     test_sysex_with_interleaved_realtime();
+    test_read_only_sysex_has_distinct_status();
     test_malformed_packet_does_not_poison_next_cc();
     test_clock_counts_exactly_24_pulses_and_ignores_song_position();
     test_command_registries_fail_closed_at_capacity();
