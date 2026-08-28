@@ -594,7 +594,7 @@ void setup_commands(void) {
     add_CC(set_button_mode_state_cc, 87);
 
     add_sys_ex_com(set_channel_sys_ex, 127);
-    add_sys_ex_com(get_info_sys_ex, 126);
+    add_sys_ex_query(get_info_sys_ex, 126);
 }
 
 
@@ -634,6 +634,9 @@ void get_sys_ex_and_behave(void) {
             save_settings();
             // The immediate save includes any pending live CC changes.
             persistence_note_saved(&cc_save);
+            break;
+        case CUSTOM_QUERY_COMMAND:
+            // Queries may send a response but must never erase/program flash.
             break;
         case CUSTOM_CC_COMMAND:
             // CC faders can generate hundreds of messages per second. Apply
