@@ -152,6 +152,13 @@ static void test_query_status_and_malformed_recovery(void) {
     assert(cc_calls == 1001);
 }
 
+static void test_system_boot_command_on_service_cable(void) {
+    enqueue(0x14, 0xf0, PLAYTRONICA_SYS_KEY, PLAYTRONICA_KEY_FIRST);
+    enqueue(0x17, PLAYTRONICA_KEY_SECOND, 127, 0xf7);
+    assert(read_sys_ex() == MIDI_PACKET_IGNORED);
+    assert(read_sys_ex() == RESET_DEVICE);
+}
+
 static void test_clock_is_exactly_24_ppqn(void) {
     enqueue(0x0f, BPM_CLOCK_START_BYTE, 0, 0);
     assert(read_sys_ex() == BPM_CLOCK_ACTIVATE);
@@ -183,6 +190,7 @@ int main(void) {
     test_1000_cc_are_not_dropped();
     test_two_cable_sysex_isolation_and_realtime();
     test_query_status_and_malformed_recovery();
+    test_system_boot_command_on_service_cable();
     test_sysex_minimum_payload_is_enforced();
     test_clock_is_exactly_24_ppqn();
     test_registries_fail_closed_at_capacity();

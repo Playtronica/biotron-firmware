@@ -61,6 +61,17 @@ def main() -> None:
     assert main_source.index("read_settings();") < main_source.index("init_midi();")
     assert main_source.index("read_settings();") < main_source.index("init_plant();")
 
+    dispatcher = simple_function_body(params, "void get_sys_ex_and_behave()")
+    reset_case = re.search(
+        r"case RESET_DEVICE:\s*(.*?)\s*return;", dispatcher, re.S
+    )
+    assert reset_case is not None
+    assert "save_pending_settings_now();" in reset_case.group(1)
+    assert "clear_flash" not in reset_case.group(1)
+    assert reset_case.group(1).index("save_pending_settings_now();") < (
+        reset_case.group(1).index("reset_usb_boot(0, 0);")
+    )
+
     # IRQ callbacks may publish bounded work only. Settings, randomness, music
     # calculation and USB MIDI writes belong to the main loop.
     raw_timer = simple_function_body(
