@@ -24,6 +24,7 @@ def main() -> None:
     params_h = source("include/params.h")
     descriptors = source("PLSDK/src/usb_descriptors.c")
     tusb_config = source("PLSDK/include/tusb_config.h")
+    main_source = source("main.c")
 
     assert decimal_arguments(params, "add_CC") == [
         14, 22, 23, 3, 24, 9, 25, 26, 31, 15, 20, 21, 28, 27, 30, 85, 86, 87,
@@ -41,6 +42,8 @@ def main() -> None:
     assert re.search(r"typedef struct\s*\{.*?int id;.*?\}\s*Settings_t;", params_h, re.S)
     assert "flash_range_erase(FLASH_TARGET_OFFSET" in params
     assert "flash_range_program(FLASH_TARGET_OFFSET" in params
+    assert main_source.index("read_settings();") < main_source.index("init_midi();")
+    assert main_source.index("read_settings();") < main_source.index("init_plant();")
 
     assert "#define USB_VID   0xCafe" in descriptors
     assert "#define USB_BCD   0x0200" in descriptors

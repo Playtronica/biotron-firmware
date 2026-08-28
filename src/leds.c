@@ -10,6 +10,7 @@
 #include "params.h"
 #include "PLSDK/music.h"
 #include "PLSDK.h"
+#include "runtime_safety.h"
 
 const uint8_t ALL_LEDS[] = {
         GROUP_BlUE_LED_CENTER, GROUP_BlUE_LED_LEFT, GROUP_BlUE_LED_RIGHT,
@@ -234,7 +235,8 @@ void light_note_observer() {
 }
 
 void active_led_loop_light_bpm_sync() {
-    uint64_t time_light_bpm = settings.BPM * settings.lightBPM;
+    const uint64_t time_light_bpm = (uint64_t)settings.BPM *
+            biotron_effective_light_bpm(settings.lightBPM);
 
     if (time_us_32() - last_pulse_timestamp > time_light_bpm) {
         return;

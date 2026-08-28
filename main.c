@@ -12,6 +12,9 @@
 
 void setup() {
     stdio_init_all();
+    // Load settings before USB callbacks, button IRQs or plant timers observe
+    // the zero-initialized global settings object.
+    read_settings();
     init_midi();
 
     adc_init();
@@ -23,7 +26,6 @@ void setup() {
     init_plant();
 
     intro_leds();
-    read_settings();
     setup_commands();
 }
 
@@ -41,4 +43,3 @@ int main(void)
         sleep_ms(1);
     }
 }
-

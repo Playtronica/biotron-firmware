@@ -40,6 +40,7 @@ const NotesScale_t scales[] = {
 
 
 int calculate_note_by_scale(uint8_t start_note, int counter, ScaleNums_t scale) {
+    if ((unsigned int)scale >= SCALES_COUNT) scale = SCALE_MAJOR;
     NotesScale_t _scale = scales[scale];
 
     if (counter < 0) {
@@ -59,29 +60,32 @@ int calculate_note_by_scale(uint8_t start_note, int counter, ScaleNums_t scale) 
 
 
 void change_volume(uint8_t channel_id, uint8_t volume) {
-    uint8_t change_volume[3] = {CC_START | channel_id, CC_VOLUME, volume};
+    uint8_t change_volume[3] = {CC_START | (channel_id & 0x0f), CC_VOLUME,
+                                volume & VALUE_LIMIT};
     print_pure(CABLE_NUM_MAIN, change_volume, 3);
 }
 
 void note_on(uint8_t channel_id, uint8_t note, uint8_t velocity) {
-    uint8_t note_on[3] = {NOTE_ON | channel_id, note, velocity};
+    uint8_t note_on[3] = {NOTE_ON | (channel_id & 0x0f), note & VALUE_LIMIT,
+                          velocity & VALUE_LIMIT};
     print_pure(CABLE_NUM_MAIN, note_on, 3);
 }
 
 void note_off(uint8_t channel_id, uint8_t note) {
-    uint8_t note_off[3] = {NOTE_OFF | channel_id, note, 0};
+    uint8_t note_off[3] = {NOTE_OFF | (channel_id & 0x0f), note & VALUE_LIMIT, 0};
     print_pure(CABLE_NUM_MAIN, note_off, 3);
 }
 
 void change_pitch(uint8_t channel_id, uint8_t lsb, uint8_t msb) {
-    uint8_t change_pitch[3] = {CHANGE_PITCH | channel_id, lsb, msb};
+    uint8_t change_pitch[3] = {CHANGE_PITCH | (channel_id & 0x0f),
+                               lsb & VALUE_LIMIT, msb & VALUE_LIMIT};
     print_pure(CABLE_NUM_MAIN, change_pitch, 3);
 }
 
 void stop_all_notes(uint8_t channel_id) {
-    uint8_t stop_all_notes[3] = {CC_START | channel_id, CC_STOP_ALL_NOTES};
+    uint8_t stop_all_notes[3] = {CC_START | (channel_id & 0x0f),
+                                 CC_STOP_ALL_NOTES, 0};
     print_pure(CABLE_NUM_MAIN, stop_all_notes, 3);
 }
-
 
 

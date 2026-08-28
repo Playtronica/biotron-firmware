@@ -11,6 +11,7 @@
 #include <hardware/sync.h>
 #include <pico/bootrom.h>
 #include <pico/printf.h>
+#include "runtime_safety.h"
 
 Settings_t settings;
 bool isMutedByButton = false;
@@ -255,7 +256,7 @@ void set_scale_sys_ex(const uint8_t data[], uint8_t len) {
 }
 
 void set_scale_cc(uint8_t channel, uint8_t value) {
-    settings.scale = (int)(value / (127.0 / SCALES_COUNT));
+    settings.scale = ((int)value * SCALES_COUNT) / 128;
 }
 
 void set_max_plant_vel_sys_ex(const uint8_t data[], uint8_t len) {
@@ -408,12 +409,12 @@ void set_light_range_cc(const uint8_t channel, uint8_t value) {
 
 void set_light_pitch_mode_sys_ex(const uint8_t data[], uint8_t len) {
     settings.light_pitch_mode = data[0] > 0;
-    change_pitch(0, 63, 63);
+    change_pitch(settings.plant_channel, 0, 64);
 }
 
 void set_light_pitch_mode_cc(uint8_t channel, uint8_t value) {
     settings.light_pitch_mode = value > 63;
-    change_pitch(0, 63, 63);
+    change_pitch(settings.plant_channel, 0, 64);
 }
 
 void set_stuck_mode_sys_ex(const uint8_t data[], uint8_t len) {

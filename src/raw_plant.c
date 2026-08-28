@@ -6,6 +6,7 @@
 #include "pico/time.h"
 #include "hardware/irq.h"
 #include "params.h"
+#include "runtime_safety.h"
 
 
 struct repeating_timer getFrequencyTimer;
@@ -33,8 +34,10 @@ static uint16_t _pwm_read(uint sliceNum) {
 
 
 static bool _repeating_timer_callback_t(repeating_timer_t *rt) {
+    const uint32_t random_value = settings.random_note ? (uint32_t)rand() : 0u;
+    realFreq = _pwm_read(slice_num) * TIMER_MULTIPLIER +
+            biotron_random_note_jitter(random_value, settings.random_note);
     freq_ready = true;
-    realFreq = _pwm_read(slice_num) * TIMER_MULTIPLIER + rand() % (settings.random_note * 10);
     return true;
 }
 
