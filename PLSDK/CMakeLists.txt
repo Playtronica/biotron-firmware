@@ -9,6 +9,7 @@ project(PLSDK
 add_library(PLSDK_lib STATIC
         src/cap_buttons.c
         src/commands.c
+        src/midi_diagnostics.c
         src/midi_parser.c
         src/midi_tx.c
         src/PLSDK.c

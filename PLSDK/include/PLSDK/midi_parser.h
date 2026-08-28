@@ -15,6 +15,12 @@ typedef enum {
     MIDI_EVENT_MALFORMED,
 } midi_event_kind_t;
 
+typedef enum {
+    MIDI_PARSER_ERROR_NONE = 0,
+    MIDI_PARSER_ERROR_MALFORMED,
+    MIDI_PARSER_ERROR_SYSEX_OVERFLOW,
+} midi_parser_error_t;
+
 typedef struct {
     bool in_sysex;
     size_t sysex_len;
@@ -23,6 +29,8 @@ typedef struct {
 
 typedef struct {
     midi_event_kind_t kind;
+    midi_parser_error_t error;
+    bool sysex_aborted;
     size_t len;
     uint8_t data[MIDI_PARSER_SYSEX_CAPACITY];
 } midi_event_t;

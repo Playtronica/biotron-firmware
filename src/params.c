@@ -4,6 +4,7 @@
 #include "PLSDK/constants.h"
 #include "global.h"
 #include "PLSDK/commands.h"
+#include "PLSDK/midi_diagnostics.h"
 #include "PLSDK/music.h"
 #include "music.h"
 #include "PLSDK.h"
@@ -11,6 +12,7 @@
 #include <hardware/sync.h>
 #include <pico/bootrom.h>
 #include <pico/printf.h>
+#include "tusb.h"
 #include "runtime_safety.h"
 #include "settings_storage.h"
 #include "persistence_scheduler.h"
@@ -183,10 +185,12 @@ void save_settings() {
     if (!settings_storage_pack(program_data, sizeof(program_data),
                                &settings, sizeof(settings))) return;
 
+    const uint32_t save_started_us = time_us_32();
     uint32_t interrupts = save_and_disable_interrupts();
     flash_range_erase(FLASH_TARGET_OFFSET, SETTINGS_ERASE_BYTES);
     flash_range_program(FLASH_TARGET_OFFSET, program_data, sizeof(program_data));
     restore_interrupts(interrupts);
+    midi_diagnostics_settings_saved(time_us_32() - save_started_us);
     persisted_settings_snapshot = settings;
     persisted_settings_snapshot_valid = true;
     persistence_note_saved(&settings_save_scheduler);
@@ -213,8 +217,12 @@ static bool settings_differ_from_persisted(void) {
 }
 
 static void schedule_settings_save(void) {
-    if (settings_differ_from_persisted()) {
+    const bool dirty = settings_differ_from_persisted();
+    midi_diagnostics_settings_changed(dirty);
+    if (dirty) {
         persistence_note_change(&settings_save_scheduler, time_us_64());
+    } else {
+        persistence_note_saved(&settings_save_scheduler);
     }
 }
 
@@ -611,6 +619,7 @@ void setup_commands() {
 
 
 void get_sys_ex_and_behave() {
+    midi_diagnostics_service(time_us_32(), tud_midi_available());
     for (uint8_t packet = 0; packet < 32; ++packet) {
         const int sys_ex_status = read_sys_ex();
         if (sys_ex_status == UNKNOWN) return;
@@ -661,6 +670,7 @@ void get_sys_ex_and_behave() {
 void set_next_preset() {
     static uint counter = 0;
     settings = *order_of_presets[counter];
+    midi_diagnostics_settings_changed(settings_differ_from_persisted());
     stop_bpm();
     counter = (counter + 1) % COUNT_OF_PRESETS;
     save_settings();

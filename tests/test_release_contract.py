@@ -132,7 +132,7 @@ def main() -> None:
     ):
         assert required in settings_guide, required
     assert re.findall(r"^run_pair ([a-z0-9-]+)", host_runner, re.M) == [
-        "midi-parser", "commands", "runtime-safety", "usb-string",
+        "midi-parser", "commands", "midi-diagnostics", "runtime-safety", "usb-string",
         "settings-storage", "persistence-scheduler", "storage-v1",
         "music-v1", "note-lifecycle", "music-scheduler", "raw-plant",
         "midi-tx",

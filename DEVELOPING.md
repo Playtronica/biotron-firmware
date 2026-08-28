@@ -11,6 +11,17 @@ Read it before changing MIDI, USB, settings, timers or BOOT.
   explicitly declared and rebuilt.
 - F1 is a compatibility maintenance release. Protocol v2, CRC/A-B storage,
   new USB identity and expanded diagnostics are later releases.
+- Branch `codex/biotron-p1-midi-diagnostics` is a post-F1 review branch. It
+  adds internal counters only; it does not assign a SysEx ID or make a new
+  release candidate until the firmware owner accepts F1 and the wire contract.
+  Counters are native 32-bit saturating values so observation cannot wrap or
+  impose avoidable 64-bit increments on RP2040.
+  `settings_dirty_generation` counts accepted mutation events. A successful
+  save, same-value command or revert to the persisted value makes
+  `settings_persisted_generation` catch up, so equality means RAM is clean.
+  TX completion means a full message was handed to TinyUSB, not delivered to a
+  host. The counters are RAM-only and unavailable on the wire until a
+  separately reviewed read-only command is assigned.
 - The exact `cf264aa` UF2 has passed Mac USB/version, bounded CC liveness,
   settings-preserving software BOOT on both MIDI outputs and exact legacy-unit
   rollback. It has not passed the complete Windows/REAPER/hardware matrix.
@@ -42,6 +53,7 @@ the main loop, never to an IRQ callback.
 |---|---|---|
 | Startup/main ownership | `main.c`, `src/global.c`, `src/raw_plant.c` | `test_music_scheduler.c`, `test_raw_plant_runtime.c` |
 | MIDI RX/Clock/SysEx | `PLSDK/src/midi_parser.c`, `PLSDK/src/commands.c`, `src/params.c` | `test_midi_parser.c`, `test_commands_integration.c` |
+| MIDI observability | `PLSDK/src/midi_diagnostics.c` | `test_midi_diagnostics.c`, integration assertions |
 | MIDI TX and note identity | `PLSDK/src/midi_tx.c`, `PLSDK/src/music.c`, `src/music.c` | `test_midi_tx.c`, `test_music_v1_contract.c`, `test_note_lifecycle.c` |
 | Settings/flash | `src/params.c`, `include/settings_storage.h`, `include/persistence_scheduler.h` | `test_settings_storage.c`, `test_persistence_scheduler.c`, `test_storage_v1_contract.c` |
 | USB identity | `PLSDK/src/usb_descriptors.c` | `test_usb_string_descriptor.c`, `test_release_contract.py` |

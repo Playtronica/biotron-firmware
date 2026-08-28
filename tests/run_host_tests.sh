@@ -30,8 +30,13 @@ run_pair midi-parser \
 
 run_pair commands \
   -Wno-strict-prototypes -I tests/stubs -I PLSDK/include \
-  PLSDK/src/midi_parser.c PLSDK/src/midi_tx.c PLSDK/src/commands.c \
+  PLSDK/src/midi_parser.c PLSDK/src/midi_diagnostics.c \
+  PLSDK/src/midi_tx.c PLSDK/src/commands.c \
   tests/test_commands_integration.c
+
+run_pair midi-diagnostics \
+  -I PLSDK/include \
+  PLSDK/src/midi_diagnostics.c tests/test_midi_diagnostics.c
 
 # These syntax checks make sure the production translation units compile with
 # the host stubs even when their focused runtime test links only selected code.
@@ -79,4 +84,4 @@ run_pair raw-plant \
 
 run_pair midi-tx \
   -I tests/stubs -I PLSDK/include \
-  PLSDK/src/midi_tx.c tests/test_midi_tx.c
+  PLSDK/src/midi_diagnostics.c PLSDK/src/midi_tx.c tests/test_midi_tx.c

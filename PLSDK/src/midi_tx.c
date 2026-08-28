@@ -2,6 +2,7 @@
 
 #include "PLSDK/constants.h"
 #include "PLSDK/midi_tx.h"
+#include "PLSDK/midi_diagnostics.h"
 #include "tusb.h"
 
 typedef struct {
@@ -52,6 +53,7 @@ static void request_recovery_panic(uint8_t cable, uint8_t status) {
     if (!recovery_panic_pending[cable][channel]) {
         recovery_panic_pending[cable][channel] = true;
         ++recovery_panic_count;
+        midi_diagnostics_tx_recovery_panic();
     }
 }
 
@@ -72,14 +74,17 @@ static void append_one_recovery_panic(void) {
             message->data[2] = 0;
             recovery_panic_pending[cable][channel] = false;
             --recovery_panic_count;
+            midi_diagnostics_tx_enqueued(queue_count);
             return;
         }
     }
 }
 
 bool midi_tx_enqueue(uint8_t cable, const uint8_t data[], uint16_t length) {
+    midi_diagnostics_tx_enqueue_attempt();
     if (data == NULL || length == 0 || length > MIDI_TX_MAX_MESSAGE_BYTES) {
         ++dropped_count;
+        midi_diagnostics_tx_rejected();
         return false;
     }
 
@@ -90,11 +95,13 @@ bool midi_tx_enqueue(uint8_t cable, const uint8_t data[], uint16_t length) {
             if (queued->offset == 0 && queued->cable == cable &&
                 queued->length == length &&
                 memcmp(queued->data, data, length) == 0) {
+                midi_diagnostics_tx_coalesced();
                 return true;
             }
             if ((data[0] & 0xf0u) == NOTE_OFF && is_all_notes_off(queued) &&
                 queued->cable == cable &&
                 (queued->data[0] & 0x0fu) == (data[0] & 0x0fu)) {
+                midi_diagnostics_tx_coalesced();
                 return true;
             }
         }
@@ -105,6 +112,7 @@ bool midi_tx_enqueue(uint8_t cable, const uint8_t data[], uint16_t length) {
                 if (is_note_off_message(queued) && queued->cable == cable &&
                     (queued->data[0] & 0x0fu) == (data[0] & 0x0fu)) {
                     remove_message(i);
+                    midi_diagnostics_tx_evicted();
                 } else {
                     ++i;
                 }
@@ -115,6 +123,7 @@ bool midi_tx_enqueue(uint8_t cable, const uint8_t data[], uint16_t length) {
             MIDI_TX_QUEUE_CAPACITY - MIDI_TX_RESERVED_CRITICAL;
     if (!critical && queue_count >= noncritical_limit) {
         ++dropped_count;
+        midi_diagnostics_tx_rejected();
         return false;
     }
     if (queue_count >= MIDI_TX_QUEUE_CAPACITY) {
@@ -127,11 +136,13 @@ bool midi_tx_enqueue(uint8_t cable, const uint8_t data[], uint16_t length) {
         }
         if (!critical || replace == queue_count) {
             ++dropped_count;
+            midi_diagnostics_tx_rejected();
             if (critical) request_recovery_panic(cable, data[0]);
             return false;
         }
         remove_message(replace);
         ++dropped_count;
+        midi_diagnostics_tx_evicted();
     }
 
     midi_tx_message_t *message = &queue[queue_count++];
@@ -140,6 +151,7 @@ bool midi_tx_enqueue(uint8_t cable, const uint8_t data[], uint16_t length) {
     message->cable = cable;
     message->critical = critical;
     memcpy(message->data, data, length);
+    midi_diagnostics_tx_enqueued(queue_count);
     return true;
 }
 
@@ -153,9 +165,11 @@ void service_midi_tx(void) {
                 message->cable, &message->data[message->offset], remaining);
         if (written == 0) return;
         if (written > remaining) written = remaining;
+        if (written < remaining) midi_diagnostics_tx_partial_write();
         message->offset = (uint16_t)(message->offset + written);
         if (message->offset < message->length) return;
         remove_message(0);
+        midi_diagnostics_tx_handed_to_tinyusb();
         append_one_recovery_panic();
     }
 }

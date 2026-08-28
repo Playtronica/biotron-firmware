@@ -86,6 +86,7 @@ static void test_capacity_overflow_and_recovery(void) {
                MIDI_EVENT_NONE);
     }
     assert(feed(&parser, &event, 0x05, 0xf7, 0, 0) == MIDI_EVENT_MALFORMED);
+    assert(event.error == MIDI_PARSER_ERROR_SYSEX_OVERFLOW);
     assert(!parser.in_sysex && parser.sysex_len == 0);
     assert(feed(&parser, &event, 0x0b, 0xb0, 7, 64) == MIDI_EVENT_CHANNEL);
 }
@@ -95,9 +96,11 @@ static void test_malformed_recovery(void) {
     midi_event_t event;
     midi_parser_init(&parser);
     assert(feed(&parser, &event, 0x00, 0, 0, 0) == MIDI_EVENT_MALFORMED);
+    assert(event.error == MIDI_PARSER_ERROR_MALFORMED);
     assert(feed(&parser, &event, 0x04, 1, 2, 3) == MIDI_EVENT_MALFORMED);
     assert(feed(&parser, &event, 0x04, 0xf0, 1, 2) == MIDI_EVENT_NONE);
     assert(feed(&parser, &event, 0x0b, 0xb0, 1, 2) == MIDI_EVENT_CHANNEL);
+    assert(event.sysex_aborted);
     assert(!parser.in_sysex);
     assert(feed(&parser, &event, 0x05, 0xf7, 0, 0) == MIDI_EVENT_MALFORMED);
     assert(feed(&parser, &event, 0x0b, 0xb0, 1, 3) == MIDI_EVENT_CHANNEL);

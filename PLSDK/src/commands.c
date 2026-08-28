@@ -2,6 +2,7 @@
 #include "PLSDK/commands.h"
 #include "PLSDK/constants.h"
 #include "PLSDK/midi_parser.h"
+#include "PLSDK/midi_diagnostics.h"
 #include "PLSDK/midi_tx.h"
 #include "PLSDK.h"
 #include "tusb.h"
@@ -95,14 +96,37 @@ int read_sys_ex(void) {
     remind_midi();
 
     const uint8_t cable = (packet[0] >> 4) & 0x0f;
+    midi_diagnostics_rx_packet(cable);
     if (cable > CABLE_NUM_EXTRA) return MIDI_PACKET_IGNORED;
     const midi_event_kind_t kind = midi_parser_feed_usb_packet(
             &cable_parsers[cable], packet, &event);
-    if (kind == MIDI_EVENT_NONE || kind == MIDI_EVENT_MALFORMED) {
+    if (kind == MIDI_EVENT_MALFORMED) {
+        midi_diagnostics_rx_event(
+                cable,
+                event.error == MIDI_PARSER_ERROR_SYSEX_OVERFLOW ?
+                MIDI_DIAGNOSTICS_SYSEX_OVERFLOW :
+                MIDI_DIAGNOSTICS_MALFORMED);
+        return MIDI_PACKET_IGNORED;
+    }
+    if (kind == MIDI_EVENT_NONE) {
         return MIDI_PACKET_IGNORED;
     }
     const uint8_t *res = event.data;
     const size_t len = event.len;
+
+    if (event.sysex_aborted) {
+        midi_diagnostics_rx_event(cable, MIDI_DIAGNOSTICS_SYSEX_ABORTED);
+    }
+
+    if (kind == MIDI_EVENT_REALTIME) {
+        midi_diagnostics_rx_event(cable, MIDI_DIAGNOSTICS_REALTIME);
+    } else if (kind == MIDI_EVENT_SYSEX) {
+        midi_diagnostics_rx_event(cable, MIDI_DIAGNOSTICS_SYSEX);
+    } else if (len >= 1 && res[0] >= 0xf0) {
+        midi_diagnostics_rx_event(cable, MIDI_DIAGNOSTICS_SYSTEM_COMMON);
+    } else {
+        midi_diagnostics_rx_event(cable, MIDI_DIAGNOSTICS_CHANNEL);
+    }
 
     if (len >= 1 && res[0] == BPM_CLOCK_START_BYTE) {
         clocks_since_beat = 0;

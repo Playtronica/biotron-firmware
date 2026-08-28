@@ -6,6 +6,7 @@
 
 #include "PLSDK/constants.h"
 #include "PLSDK/midi_tx.h"
+#include "PLSDK/midi_diagnostics.h"
 
 static uint8_t captured[4096];
 static size_t captured_length = 0;
@@ -31,6 +32,7 @@ static void drain(void) {
 }
 
 int main(void) {
+    midi_diagnostics_reset();
     const uint8_t sysex[] = {0xf0, 0x14, 0x0d, 0x7e, 0x01, 0xf7};
     write_limit = 2;
     assert(midi_tx_enqueue(1, sysex, sizeof sysex));
@@ -39,6 +41,17 @@ int main(void) {
     assert(memcmp(captured, sysex, sizeof sysex) == 0);
 
     const uint8_t note_on[] = {0x90, 60, 100};
+    const uint8_t note_off[] = {0x80, 60, 0};
+    block_writes = true;
+    assert(midi_tx_enqueue(0, note_off, sizeof note_off));
+    service_midi_tx();
+    assert(midi_tx_pending() == 1);
+    assert(midi_tx_enqueue(0, note_off, sizeof note_off));
+    assert(midi_tx_pending() == 1);
+    block_writes = false;
+    write_limit = UINT32_MAX;
+    drain();
+
     block_writes = true;
     assert(midi_tx_enqueue(0, note_on, sizeof note_on));
     service_midi_tx();
@@ -101,6 +114,19 @@ int main(void) {
 
     assert(!midi_tx_enqueue(0, NULL, 0));
     assert(midi_tx_dropped() == drops_before + 3);
+    midi_diagnostics_snapshot_t diagnostics;
+    midi_diagnostics_snapshot(&diagnostics);
+    assert(diagnostics.tx_enqueue_attempts > diagnostics.tx_enqueued);
+    assert(diagnostics.tx_enqueued > 0);
+    assert(diagnostics.tx_handed_to_tinyusb > 0);
+    assert(diagnostics.tx_coalesced > 0);
+    assert(diagnostics.tx_rejected + diagnostics.tx_evicted ==
+           midi_tx_dropped());
+    assert(diagnostics.tx_enqueued == diagnostics.tx_handed_to_tinyusb +
+           diagnostics.tx_evicted + midi_tx_pending());
+    assert(diagnostics.tx_partial_write > 0);
+    assert(diagnostics.tx_recovery_panic > 0);
+    assert(diagnostics.tx_high_water == MIDI_TX_QUEUE_CAPACITY);
     puts("midi_tx: partial writes, backpressure and Note Off reserve passed");
     return 0;
 }

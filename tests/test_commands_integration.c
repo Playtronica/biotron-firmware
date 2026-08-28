@@ -8,6 +8,7 @@
 
 #include "PLSDK/commands.h"
 #include "PLSDK/constants.h"
+#include "PLSDK/midi_diagnostics.h"
 
 #define QUEUE_CAPACITY 4096
 
@@ -39,6 +40,10 @@ bool tud_midi_packet_read(uint8_t packet[4]) {
     if (queue_read == queue_write) return false;
     memcpy(packet, queue[queue_read++], 4);
     return true;
+}
+
+uint32_t tud_midi_available(void) {
+    return (uint32_t)((queue_write - queue_read) * 4u);
 }
 
 uint32_t tud_midi_stream_write(uint8_t cable, const uint8_t *data,
@@ -150,6 +155,12 @@ static void test_query_status_and_malformed_recovery(void) {
     assert(read_sys_ex() == MIDI_PACKET_IGNORED);
     assert(read_sys_ex() == CUSTOM_CC_COMMAND);
     assert(cc_calls == 1001);
+
+    enqueue(0x04, 0xf0, PLAYTRONICA_KEY_FIRST, PLAYTRONICA_KEY_SECOND);
+    enqueue(0x0b, 0xb1, 7, 105);
+    assert(read_sys_ex() == MIDI_PACKET_IGNORED);
+    assert(read_sys_ex() == CUSTOM_CC_COMMAND);
+    assert(cc_calls == 1002);
 }
 
 static void test_system_boot_command_on_service_cable(void) {
@@ -194,6 +205,7 @@ static void test_registries_fail_closed_at_capacity(void) {
 }
 
 int main(void) {
+    midi_diagnostics_reset();
     test_1000_cc_are_not_dropped();
     test_two_cable_sysex_isolation_and_realtime();
     test_query_status_and_malformed_recovery();
@@ -202,6 +214,17 @@ int main(void) {
     test_clock_is_exactly_24_ppqn();
     test_registries_fail_closed_at_capacity();
     assert(read_sys_ex() == UNKNOWN);
+    midi_diagnostics_snapshot_t diagnostics;
+    midi_diagnostics_snapshot(&diagnostics);
+    assert(diagnostics.usb_packets_rx[0] > 1000);
+    assert(diagnostics.usb_packets_rx[1] > 0);
+    assert(diagnostics.parsed_channel[0] >= 1001);
+    assert(diagnostics.parsed_sysex[0] > 0);
+    assert(diagnostics.parsed_sysex[1] > 0);
+    assert(diagnostics.parsed_realtime[0] > 0);
+    assert(diagnostics.malformed[0] > 0);
+    assert(diagnostics.sysex_aborted[0] > 0);
+    assert(diagnostics.ignored_cable_packets == 1);
     puts("commands_integration: burst, two-cable SysEx, query and Clock passed");
     return 0;
 }
