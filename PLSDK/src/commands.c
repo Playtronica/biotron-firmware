@@ -2,6 +2,7 @@
 #include "PLSDK/commands.h"
 #include "PLSDK/constants.h"
 #include "PLSDK/midi_parser.h"
+#include "PLSDK/midi_tx.h"
 #include "PLSDK.h"
 #include "tusb.h"
 
@@ -21,21 +22,33 @@ void add_CC(void action(uint8_t channel, uint8_t value), uint8_t num) {
 }
 
 static void add_sys_ex_command(void action(const uint8_t data[], uint8_t len),
-                               uint8_t num, bool persists) {
+                               uint8_t num, bool persists,
+                               uint8_t minimum_length) {
     if (length_sys >= MAX_COUNT_COMMANDS || action == NULL) return;
     sys_ex_command_s new_sys_ex_com;
     new_sys_ex_com.num = num;
     new_sys_ex_com.action = action;
     new_sys_ex_com.persists = persists;
+    new_sys_ex_com.minimum_length = minimum_length;
     sys_com[length_sys++] = new_sys_ex_com;
 }
 
 void add_sys_ex_com(void action(const uint8_t data[], uint8_t len), uint8_t num) {
-    add_sys_ex_command(action, num, true);
+    add_sys_ex_command(action, num, true, 0);
 }
 
 void add_sys_ex_query(void action(const uint8_t data[], uint8_t len), uint8_t num) {
-    add_sys_ex_command(action, num, false);
+    add_sys_ex_command(action, num, false, 0);
+}
+
+void add_sys_ex_com_len(void action(const uint8_t data[], uint8_t len),
+                        uint8_t num, uint8_t minimum_length) {
+    add_sys_ex_command(action, num, true, minimum_length);
+}
+
+void add_sys_ex_query_len(void action(const uint8_t data[], uint8_t len),
+                          uint8_t num, uint8_t minimum_length) {
+    add_sys_ex_command(action, num, false, minimum_length);
 }
 
 void print_sys_ex(const uint8_t data[], uint8_t len) {
@@ -47,11 +60,13 @@ void print_sys_ex(const uint8_t data[], uint8_t len) {
         message[3 + i] = data[i];
     }
     message[3 + len] = SYS_EX_END;
-    tud_midi_stream_write(CABLE_NUM_EXTRA, message, 4 + len);
+    midi_tx_enqueue(CABLE_NUM_EXTRA, message, (uint16_t)(4u + len));
+    service_midi_tx();
 }
 
 void print_pure(uint8_t cable, const uint8_t data[], uint8_t len) {
-    tud_midi_stream_write(cable, data, len);
+    midi_tx_enqueue(cable, data, len);
+    service_midi_tx();
 }
 
 static uint8_t clocks_since_beat = 0;
@@ -123,7 +138,11 @@ int read_sys_ex(void) {
             res[2] == PLAYTRONICA_KEY_SECOND) {
             for (int i = 0; i < length_sys; ++i) {
                 if (sys_com[i].num == res[3]) {
-                    sys_com[i].action(&res[4], (uint8_t)(len - 5));
+                    const uint8_t payload_length = (uint8_t)(len - 5);
+                    if (payload_length < sys_com[i].minimum_length) {
+                        return MIDI_PACKET_IGNORED;
+                    }
+                    sys_com[i].action(&res[4], payload_length);
                     return sys_com[i].persists ? CUSTOM_COMMAND :
                            CUSTOM_QUERY_COMMAND;
                 }

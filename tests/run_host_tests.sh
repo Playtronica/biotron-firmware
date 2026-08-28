@@ -21,13 +21,13 @@ python3 tests/test_release_contract.py
 "$compiler" -std=c11 -O1 -g -Wall -Wextra -Werror -pedantic \
   -Wno-strict-prototypes -fno-omit-frame-pointer \
   -fsanitize=address,undefined -I tests/stubs -I PLSDK/include \
-  PLSDK/src/midi_parser.c PLSDK/src/commands.c \
+  PLSDK/src/midi_parser.c PLSDK/src/midi_tx.c PLSDK/src/commands.c \
   tests/test_commands_integration.c -o "$test_dir/commands-sanitized"
 "$test_dir/commands-sanitized"
 
 "$compiler" -std=c11 -O2 -Wall -Wextra -Werror -pedantic \
   -Wno-strict-prototypes -I tests/stubs -I PLSDK/include \
-  PLSDK/src/midi_parser.c PLSDK/src/commands.c \
+  PLSDK/src/midi_parser.c PLSDK/src/midi_tx.c PLSDK/src/commands.c \
   tests/test_commands_integration.c -o "$test_dir/commands-optimized"
 "$test_dir/commands-optimized"
 
@@ -122,3 +122,42 @@ python3 tests/test_release_contract.py
   src/music.c tests/test_note_lifecycle.c \
   -o "$test_dir/note-lifecycle-optimized"
 "$test_dir/note-lifecycle-optimized"
+
+"$compiler" -std=c11 -O1 -g -Wall -Wextra -Werror -Wno-strict-prototypes -pedantic \
+  -fno-omit-frame-pointer -fsanitize=address,undefined \
+  -I tests/stubs -I include -I PLSDK/include \
+  src/global.c tests/test_music_scheduler.c \
+  -o "$test_dir/music-scheduler-sanitized"
+"$test_dir/music-scheduler-sanitized"
+
+"$compiler" -std=c11 -O2 -Wall -Wextra -Werror -Wno-strict-prototypes -pedantic \
+  -I tests/stubs -I include -I PLSDK/include \
+  src/global.c tests/test_music_scheduler.c \
+  -o "$test_dir/music-scheduler-optimized"
+"$test_dir/music-scheduler-optimized"
+
+"$compiler" -std=c11 -O1 -g -Wall -Wextra -Werror -Wno-strict-prototypes -pedantic \
+  -fno-omit-frame-pointer -fsanitize=address,undefined \
+  -I tests/stubs -I include -I PLSDK/include \
+  src/raw_plant.c tests/test_raw_plant_runtime.c \
+  -o "$test_dir/raw-plant-sanitized"
+"$test_dir/raw-plant-sanitized"
+
+"$compiler" -std=c11 -O2 -Wall -Wextra -Werror -Wno-strict-prototypes -pedantic \
+  -I tests/stubs -I include -I PLSDK/include \
+  src/raw_plant.c tests/test_raw_plant_runtime.c \
+  -o "$test_dir/raw-plant-optimized"
+"$test_dir/raw-plant-optimized"
+
+"$compiler" -std=c11 -O1 -g -Wall -Wextra -Werror -pedantic \
+  -fno-omit-frame-pointer -fsanitize=address,undefined \
+  -I tests/stubs -I PLSDK/include \
+  PLSDK/src/midi_tx.c tests/test_midi_tx.c \
+  -o "$test_dir/midi-tx-sanitized"
+"$test_dir/midi-tx-sanitized"
+
+"$compiler" -std=c11 -O2 -Wall -Wextra -Werror -pedantic \
+  -I tests/stubs -I PLSDK/include \
+  PLSDK/src/midi_tx.c tests/test_midi_tx.c \
+  -o "$test_dir/midi-tx-optimized"
+"$test_dir/midi-tx-optimized"

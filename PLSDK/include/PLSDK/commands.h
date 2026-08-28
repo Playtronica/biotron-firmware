@@ -48,6 +48,7 @@ typedef struct sys_ex_command_s {
     void (*action)(const uint8_t data[], uint8_t len);
     uint8_t num;
     bool persists;
+    uint8_t minimum_length;
 } sys_ex_command_s;
 
 
@@ -79,6 +80,10 @@ void add_CC(void action(uint8_t channel, uint8_t value), uint8_t num);
  * */
 void add_sys_ex_com(void action(const uint8_t data[], uint8_t len), uint8_t num);
 void add_sys_ex_query(void action(const uint8_t data[], uint8_t len), uint8_t num);
+void add_sys_ex_com_len(void action(const uint8_t data[], uint8_t len),
+                        uint8_t num, uint8_t minimum_length);
+void add_sys_ex_query_len(void action(const uint8_t data[], uint8_t len),
+                          uint8_t num, uint8_t minimum_length);
 
 /**
  * @brief Parse value to sys ex format

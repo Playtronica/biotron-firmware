@@ -1,0 +1,4 @@
+#ifndef TEST_HARDWARE_TIMER_H
+#define TEST_HARDWARE_TIMER_H
+
+#endif

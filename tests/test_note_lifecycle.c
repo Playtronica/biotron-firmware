@@ -192,11 +192,25 @@ static void test_alarm_failure_fails_closed(void) {
     assert(count_event(LOG_NOTE_OFF, 5, 67) == 1);
 }
 
+static void test_cancelled_alarm_is_ignored(void) {
+    reset_fixture();
+    calculated_note = 68;
+    midi_plant(4000);
+    alarm_callback_t old_callback = scheduled_callback;
+    void *old_identity = scheduled_user_data;
+    reset_plant_note_off();
+    const size_t off_count = count_event(LOG_NOTE_OFF, 5, 68);
+    old_callback(scheduled_id, old_identity);
+    service_midi_note_lifecycle();
+    assert(count_event(LOG_NOTE_OFF, 5, 68) == off_count);
+}
+
 int main(void) {
     test_identity_round_trip();
     test_alarm_keeps_exact_note_identity();
     test_replacement_and_clock_same_note_do_not_stick();
     test_alarm_failure_fails_closed();
+    test_cancelled_alarm_is_ignored();
     puts("note_lifecycle: identity, replacement, Clock and failure passed");
     return 0;
 }

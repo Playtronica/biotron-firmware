@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <pico/stdlib.h>
+#include <pico/time.h>
 #include <hardware/adc.h>
 
 #include "PLSDK/music.h"
@@ -34,27 +35,57 @@ uint32_t filter_freq(double val, double k) {
 }
 
 
+static volatile bool music_alarm_due = false;
+static bool is_swing_note = false;
+alarm_id_t play_music_alarm_id = -1;
+
+
 int64_t play_music_alarm(alarm_id_t id, void *user_data) {
-    static bool is_swing_note = false;
-
-    int64_t to_the_next_beat_us = is_swing_note ? (int64_t)(settings.BPM * (settings.swing_first_note_percent / 100.0))
-            : (int64_t)(settings.BPM * ((100 + (100 - settings.swing_first_note_percent)) / 100.0));
-    is_swing_note = !is_swing_note;
-
-    play_music(to_the_next_beat_us);
-
-    return to_the_next_beat_us;
+    (void)user_data;
+    if (play_music_alarm_id != id) return 0;
+    play_music_alarm_id = -1;
+    // Alarm callbacks run in IRQ context. Only publish work here; all settings
+    // reads, music calculations and TinyUSB writes happen in the main loop.
+    music_alarm_due = true;
+    return 0;
 }
 
-alarm_id_t play_music_alarm_id;
+static alarm_id_t schedule_music_alarm(int64_t delay_us) {
+    return add_alarm_in_us(delay_us > 0 ? delay_us : 1,
+                           play_music_alarm, NULL, false);
+}
+
+void service_music_alarm(void) {
+    if (!music_alarm_due) return;
+    music_alarm_due = false;
+    if (status != Active) return;
+
+    const int64_t to_the_next_beat_us = is_swing_note ?
+            (int64_t)(settings.BPM *
+                    (settings.swing_first_note_percent / 100.0)) :
+            (int64_t)(settings.BPM *
+                    ((100 + (100 - settings.swing_first_note_percent)) /
+                     100.0));
+    is_swing_note = !is_swing_note;
+    play_music(to_the_next_beat_us > 0 ? to_the_next_beat_us : 1);
+    if (status == Active) {
+        play_music_alarm_id = schedule_music_alarm(to_the_next_beat_us);
+    }
+}
 
 
 void start_music_alarm() {
-    play_music_alarm_id = add_alarm_in_us(settings.BPM, play_music_alarm, NULL, false);
+    music_alarm_due = false;
+    if (play_music_alarm_id >= 0) cancel_alarm(play_music_alarm_id);
+    play_music_alarm_id = schedule_music_alarm(settings.BPM);
 }
 
 void stop_music_alarm() {
-    cancel_alarm(play_music_alarm_id);
+    music_alarm_due = false;
+    if (play_music_alarm_id >= 0) {
+        cancel_alarm(play_music_alarm_id);
+        play_music_alarm_id = -1;
+    }
 }
 
 

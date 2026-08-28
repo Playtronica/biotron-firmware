@@ -7,6 +7,7 @@
 #include "leds.h"
 #include "raw_plant.h"
 #include "params.h"
+#include "PLSDK/midi_tx.h"
 
 
 
@@ -36,10 +37,12 @@ int main(void)
     while (true)
     {
         service_midi_note_lifecycle();
+        service_music_alarm();
         status_loop();
         led_loop();
         check_buttons();
         remind_midi();
+        service_midi_tx();
         get_sys_ex_and_behave();
         service_settings_persistence();
         sleep_ms(1);

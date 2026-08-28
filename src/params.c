@@ -543,68 +543,68 @@ void set_button_mode_state_cc(uint8_t channel, uint8_t value) {
 
 
 void setup_commands() {
-    add_sys_ex_com(change_plant_bpm_sys_ex, 0);
-    add_sys_ex_com(change_light_bpm_sys_ex, 9);
+    add_sys_ex_com_len(change_plant_bpm_sys_ex, 0, 1);
+    add_sys_ex_com_len(change_light_bpm_sys_ex, 9, 1);
     add_CC(change_bpm_cc, 14);
 
-    add_sys_ex_com(set_fib_power_sys_ex, 1);
+    add_sys_ex_com_len(set_fib_power_sys_ex, 1, 1);
     add_CC(set_fib_power_cc, 22);
 
-    add_sys_ex_com(set_fib_first_sys_ex, 2);
+    add_sys_ex_com_len(set_fib_first_sys_ex, 2, 1);
     add_CC(set_fib_first_cc, 23);
 
-    add_sys_ex_com(set_filter_sys_ex, 3);
+    add_sys_ex_com_len(set_filter_sys_ex, 3, 1);
     add_CC(set_filter_cc, 3);
 
-    add_sys_ex_com(set_scale_sys_ex, 4);
+    add_sys_ex_com_len(set_scale_sys_ex, 4, 1);
     add_CC(set_scale_cc, 24);
 
-    add_sys_ex_com(set_max_plant_vel_sys_ex, 5);
-    add_sys_ex_com(set_max_light_vel_sys_ex, 6);
-    add_sys_ex_com(set_min_plant_vel_sys_ex, 15);
-    add_sys_ex_com(set_min_light_vel_sys_ex, 17);
-    add_sys_ex_com(set_random_plant_vel_sys_ex, 16);
-    add_sys_ex_com(set_random_light_vel_sys_ex, 18);
-    add_sys_ex_com(set_mute_plant_vel_sys_ex, 22);
-    add_sys_ex_com(set_mute_light_vel_sys_ex, 23);
+    add_sys_ex_com_len(set_max_plant_vel_sys_ex, 5, 1);
+    add_sys_ex_com_len(set_max_light_vel_sys_ex, 6, 1);
+    add_sys_ex_com_len(set_min_plant_vel_sys_ex, 15, 1);
+    add_sys_ex_com_len(set_min_light_vel_sys_ex, 17, 1);
+    add_sys_ex_com_len(set_random_plant_vel_sys_ex, 16, 1);
+    add_sys_ex_com_len(set_random_light_vel_sys_ex, 18, 1);
+    add_sys_ex_com_len(set_mute_plant_vel_sys_ex, 22, 1);
+    add_sys_ex_com_len(set_mute_light_vel_sys_ex, 23, 1);
 
     add_CC(set_max_vel_cc, 9);
     add_CC(set_min_vel_cc, 25);
     add_CC(set_random_vel_cc, 26);
     add_CC(set_mute_cc, 31);
 
-    add_sys_ex_com(set_default_sys_ex, 7);
+    add_sys_ex_com_len(set_default_sys_ex, 7, 0);
 
-    add_sys_ex_com(set_random_note_sys_ex, 10);
+    add_sys_ex_com_len(set_random_note_sys_ex, 10, 1);
     add_CC(set_random_note_cc, 15);
 
-    add_sys_ex_com(set_same_note_plant_sys_ex, 11);
-    add_sys_ex_com(set_same_note_light_sys_ex, 24);
+    add_sys_ex_com_len(set_same_note_plant_sys_ex, 11, 1);
+    add_sys_ex_com_len(set_same_note_light_sys_ex, 24, 1);
     add_CC(set_same_note_cc, 20);
 
-    add_sys_ex_com(set_note_off_percent_sys_ex, 12);
+    add_sys_ex_com_len(set_note_off_percent_sys_ex, 12, 1);
     add_CC(set_note_off_percent_cc, 21);
 
-    add_sys_ex_com(set_light_range_sys_ex, 13);
+    add_sys_ex_com_len(set_light_range_sys_ex, 13, 1);
     add_CC(set_light_range_cc, 28);
 
-    add_sys_ex_com(set_light_pitch_mode_sys_ex, 19);
+    add_sys_ex_com_len(set_light_pitch_mode_sys_ex, 19, 1);
     add_CC(set_light_pitch_mode_cc, 27);
 
-    add_sys_ex_com(set_stuck_mode_sys_ex, 21);
+    add_sys_ex_com_len(set_stuck_mode_sys_ex, 21, 1);
     add_CC(set_stuck_mode_cc, 30);
 
-    add_sys_ex_com(set_middle_plant_note_sys_ex, 25);
+    add_sys_ex_com_len(set_middle_plant_note_sys_ex, 25, 1);
     add_CC(set_middle_plant_note_cc, 85);
 
-    add_sys_ex_com(set_swing_first_note_percent_sys_ex, 26);
+    add_sys_ex_com_len(set_swing_first_note_percent_sys_ex, 26, 1);
     add_CC(set_swing_first_note_percent_cc, 86);
 
-    add_sys_ex_com(set_button_mode_state_sys_ex, 27);
+    add_sys_ex_com_len(set_button_mode_state_sys_ex, 27, 1);
     add_CC(set_button_mode_state_cc, 87);
 
-    add_sys_ex_com(set_channel_sys_ex, 127);
-    add_sys_ex_query(get_info_sys_ex, 126);
+    add_sys_ex_com_len(set_channel_sys_ex, 127, 2);
+    add_sys_ex_query_len(get_info_sys_ex, 126, 1);
 }
 
 

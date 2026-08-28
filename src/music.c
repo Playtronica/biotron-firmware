@@ -27,10 +27,11 @@ alarm_id_t note_off_alarm_id = -1;
 
 int64_t plant_note_off(alarm_id_t id, void *user_data) {
     const uintptr_t identity = (uintptr_t)user_data;
+    if (note_off_alarm_id != id) return 0;
     // Pico alarm callbacks run in IRQ context. Publish the exact note identity;
     // TinyUSB transmission is serviced from the main loop.
     due_plant_note_identity = identity;
-    if (note_off_alarm_id == id) note_off_alarm_id = -1;
+    note_off_alarm_id = -1;
     return 0;
 }
 

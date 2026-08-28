@@ -19,21 +19,36 @@ def decimal_arguments(text: str, function: str) -> list[int]:
     return [int(value) for value in re.findall(pattern, text)]
 
 
+def length_registrations(text: str, function: str) -> list[tuple[int, int]]:
+    pattern = rf"{function}\([^,]+,\s*(\d+)\s*,\s*(\d+)\s*\);"
+    return [(int(number), int(length)) for number, length in re.findall(pattern, text)]
+
+
+def simple_function_body(text: str, signature: str) -> str:
+    match = re.search(rf"{re.escape(signature)}\s*\{{(.*?)\n\}}", text, re.S)
+    assert match is not None, signature
+    return match.group(1)
+
+
 def main() -> None:
     params = source("src/params.c")
     params_h = source("include/params.h")
     descriptors = source("PLSDK/src/usb_descriptors.c")
     tusb_config = source("PLSDK/include/tusb_config.h")
     main_source = source("main.c")
+    raw_plant = source("src/raw_plant.c")
+    global_source = source("src/global.c")
 
     assert decimal_arguments(params, "add_CC") == [
         14, 22, 23, 3, 24, 9, 25, 26, 31, 15, 20, 21, 28, 27, 30, 85, 86, 87,
     ]
-    assert decimal_arguments(params, "add_sys_ex_com") == [
-        0, 9, 1, 2, 3, 4, 5, 6, 15, 17, 16, 18, 22, 23, 7, 10, 11, 24,
-        12, 13, 19, 21, 25, 26, 27, 127,
+    assert length_registrations(params, "add_sys_ex_com_len") == [
+        (0, 1), (9, 1), (1, 1), (2, 1), (3, 1), (4, 1), (5, 1),
+        (6, 1), (15, 1), (17, 1), (16, 1), (18, 1), (22, 1), (23, 1),
+        (7, 0), (10, 1), (11, 1), (24, 1), (12, 1), (13, 1), (19, 1),
+        (21, 1), (25, 1), (26, 1), (27, 1), (127, 2),
     ]
-    assert decimal_arguments(params, "add_sys_ex_query") == [126]
+    assert length_registrations(params, "add_sys_ex_query_len") == [(126, 1)]
 
     # Shipping 1.8.2 stores zero-based 1/2 and therefore emits human MIDI 2/3.
     assert len(re.findall(r"\.plant_channel\s*=\s*1\s*,", params)) == 4
@@ -45,6 +60,25 @@ def main() -> None:
     assert "flash_range_program(FLASH_TARGET_OFFSET" in params
     assert main_source.index("read_settings();") < main_source.index("init_midi();")
     assert main_source.index("read_settings();") < main_source.index("init_plant();")
+
+    # IRQ callbacks may publish bounded work only. Settings, randomness, music
+    # calculation and USB MIDI writes belong to the main loop.
+    raw_timer = simple_function_body(
+        raw_plant,
+        "static bool _repeating_timer_callback_t(repeating_timer_t *rt)",
+    )
+    raw_timer = re.sub(r"//.*", "", raw_timer)
+    assert "settings" not in raw_timer
+    assert "rand(" not in raw_timer
+    assert "print_" not in raw_timer
+    music_timer = simple_function_body(
+        global_source,
+        "int64_t play_music_alarm(alarm_id_t id, void *user_data)",
+    )
+    music_timer = re.sub(r"//.*", "", music_timer)
+    assert "settings" not in music_timer
+    assert "play_music(" not in music_timer
+    assert "print_" not in music_timer
 
     assert "#define USB_VID   0xCafe" in descriptors
     assert "#define USB_BCD   0x0200" in descriptors

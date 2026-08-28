@@ -24,6 +24,7 @@ static size_t expected_cc;
 static uint8_t sysex_values[8];
 static size_t sysex_calls;
 static size_t query_calls;
+static size_t bounded_calls;
 
 static void enqueue(uint8_t header, uint8_t a, uint8_t b, uint8_t c) {
     assert(queue_write < QUEUE_CAPACITY);
@@ -75,6 +76,34 @@ static void ignored_cc(uint8_t channel, uint8_t value) {
 static void ignored_sysex(const uint8_t data[], uint8_t length) {
     (void)data;
     (void)length;
+}
+
+static void capture_bounded(const uint8_t data[], uint8_t length) {
+    assert(length == 2 && data[0] == 1 && data[1] == 2);
+    ++bounded_calls;
+}
+
+static void test_sysex_minimum_payload_is_enforced(void) {
+    add_sys_ex_com_len(capture_bounded, 44, 2);
+    enqueue(0x04, 0xf0, PLAYTRONICA_KEY_FIRST, PLAYTRONICA_KEY_SECOND);
+    enqueue(0x05, 44, 0xf7, 0);
+    assert(read_sys_ex() == MIDI_PACKET_IGNORED);
+    assert(read_sys_ex() == MIDI_PACKET_IGNORED);
+    assert(bounded_calls == 0);
+
+    enqueue(0x04, 0xf0, PLAYTRONICA_KEY_FIRST, PLAYTRONICA_KEY_SECOND);
+    enqueue(0x06, 44, 1, 0xf7);
+    assert(read_sys_ex() == MIDI_PACKET_IGNORED);
+    assert(read_sys_ex() == MIDI_PACKET_IGNORED);
+    assert(bounded_calls == 0);
+
+    enqueue(0x04, 0xf0, PLAYTRONICA_KEY_FIRST, PLAYTRONICA_KEY_SECOND);
+    enqueue(0x04, 44, 1, 2);
+    enqueue(0x05, 0xf7, 0, 0);
+    assert(read_sys_ex() == MIDI_PACKET_IGNORED);
+    assert(read_sys_ex() == MIDI_PACKET_IGNORED);
+    assert(read_sys_ex() == CUSTOM_COMMAND);
+    assert(bounded_calls == 1);
 }
 
 static void test_1000_cc_are_not_dropped(void) {
@@ -154,6 +183,7 @@ int main(void) {
     test_1000_cc_are_not_dropped();
     test_two_cable_sysex_isolation_and_realtime();
     test_query_status_and_malformed_recovery();
+    test_sysex_minimum_payload_is_enforced();
     test_clock_is_exactly_24_ppqn();
     test_registries_fail_closed_at_capacity();
     assert(read_sys_ex() == UNKNOWN);
