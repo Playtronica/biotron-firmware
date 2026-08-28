@@ -22,6 +22,30 @@ python3 tests/test_release_contract.py
   -o "$test_dir/runtime-safety-optimized"
 "$test_dir/runtime-safety-optimized"
 
+"$compiler" -std=c11 -O1 -g -Wall -Wextra -Werror -pedantic \
+  -fno-omit-frame-pointer -fsanitize=address,undefined \
+  -I tests/stubs -I PLSDK/include \
+  PLSDK/src/usb_descriptors.c tests/test_usb_string_descriptor.c \
+  -o "$test_dir/usb-string-sanitized"
+"$test_dir/usb-string-sanitized"
+
+"$compiler" -std=c11 -O2 -Wall -Wextra -Werror -pedantic \
+  -I tests/stubs -I PLSDK/include \
+  PLSDK/src/usb_descriptors.c tests/test_usb_string_descriptor.c \
+  -o "$test_dir/usb-string-optimized"
+"$test_dir/usb-string-optimized"
+
+"$compiler" -std=c11 -O1 -g -Wall -Wextra -Werror -pedantic \
+  -fno-omit-frame-pointer -fsanitize=address,undefined \
+  -I include tests/test_settings_storage.c \
+  -o "$test_dir/settings-storage-sanitized"
+"$test_dir/settings-storage-sanitized"
+
+"$compiler" -std=c11 -O2 -Wall -Wextra -Werror -pedantic \
+  -I include tests/test_settings_storage.c \
+  -o "$test_dir/settings-storage-optimized"
+"$test_dir/settings-storage-optimized"
+
 "$compiler" -std=c11 -O1 -g -Wall -Wextra -Werror -Wno-strict-prototypes -pedantic \
   -fno-omit-frame-pointer -fsanitize=address,undefined \
   -I tests/stubs -I include -I PLSDK/include \

@@ -12,6 +12,7 @@
 #include <pico/bootrom.h>
 #include <pico/printf.h>
 #include "runtime_safety.h"
+#include "settings_storage.h"
 
 Settings_t settings;
 bool isMutedByButton = false;
@@ -148,6 +149,18 @@ const Settings_t * order_of_presets[COUNT_OF_PRESETS] = {
 };
 // endregion
 
+enum {
+    SETTINGS_PROGRAM_BYTES = STORAGE_ROUND_UP(sizeof(Settings_t), FLASH_PAGE_SIZE),
+    SETTINGS_ERASE_BYTES = STORAGE_ROUND_UP(SETTINGS_PROGRAM_BYTES, FLASH_SECTOR_SIZE),
+};
+
+_Static_assert(SETTINGS_PROGRAM_BYTES >= sizeof(Settings_t),
+               "settings program buffer must contain Settings_t");
+_Static_assert(SETTINGS_PROGRAM_BYTES % FLASH_PAGE_SIZE == 0,
+               "settings program size must be page aligned");
+_Static_assert(SETTINGS_ERASE_BYTES % FLASH_SECTOR_SIZE == 0,
+               "settings erase size must be sector aligned");
+
 void default_settings() {
     settings = *order_of_presets[0];
     reset_bpm();
@@ -155,15 +168,13 @@ void default_settings() {
 
 
 void save_settings() {
-    uint8_t* settingsAsBytes = (uint8_t*) &settings;
-    int settingsSize = sizeof(settings);
-
-    int writeSize = (settingsSize / FLASH_PAGE_SIZE) + 1;
-    int sectorCount = ((writeSize * FLASH_PAGE_SIZE) / FLASH_SECTOR_SIZE) + 1;
+    uint8_t program_data[SETTINGS_PROGRAM_BYTES];
+    if (!settings_storage_pack(program_data, sizeof(program_data),
+                               &settings, sizeof(settings))) return;
 
     uint32_t interrupts = save_and_disable_interrupts();
-    flash_range_erase(FLASH_TARGET_OFFSET, FLASH_SECTOR_SIZE * sectorCount);
-    flash_range_program(FLASH_TARGET_OFFSET, settingsAsBytes, FLASH_PAGE_SIZE * writeSize);
+    flash_range_erase(FLASH_TARGET_OFFSET, SETTINGS_ERASE_BYTES);
+    flash_range_program(FLASH_TARGET_OFFSET, program_data, sizeof(program_data));
     restore_interrupts(interrupts);
 }
 
