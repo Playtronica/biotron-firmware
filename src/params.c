@@ -334,10 +334,12 @@ void set_random_light_vel_sys_ex(const uint8_t data[], uint8_t len) {
 
 void set_mute_plant_vel_sys_ex(const uint8_t data[], uint8_t len) {
     settings.isMutePlantVelocity = data[0] > 0;
+    if (settings.isMutePlantVelocity) stop_plant_midi();
 }
 
 void set_mute_light_vel_sys_ex(const uint8_t data[], uint8_t len) {
     settings.isMuteLightVelocity = data[0] > 0;
+    if (settings.isMuteLightVelocity) stop_light_midi();
 }
 
 
@@ -385,9 +387,11 @@ void set_mute_cc(uint8_t channel, uint8_t value) {
     switch (channel) {
         case 0:
             settings.isMutePlantVelocity = value >= 64;
+            if (settings.isMutePlantVelocity) stop_plant_midi();
             break;
         case 1:
             settings.isMuteLightVelocity = value >= 64;
+            if (settings.isMuteLightVelocity) stop_light_midi();
             break;
         default:
             break;
@@ -501,9 +505,11 @@ void set_channel_sys_ex(const uint8_t data[], uint8_t len) {
     }
 
     if (data[0] == 0) {
+        stop_plant_midi();
         settings.plant_channel = data[1];
     }
     else {
+        stop_light_midi();
         settings.light_channel = data[1];
     }
 }

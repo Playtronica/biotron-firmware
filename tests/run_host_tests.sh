@@ -109,3 +109,16 @@ python3 tests/test_release_contract.py
   PLSDK/src/music.c tests/test_music_v1_contract.c \
   -o "$test_dir/music-v1-optimized"
 "$test_dir/music-v1-optimized"
+
+"$compiler" -std=c11 -O1 -g -Wall -Wextra -Werror -Wno-strict-prototypes -pedantic \
+  -fno-omit-frame-pointer -fsanitize=address,undefined \
+  -I tests/stubs -I include -I PLSDK/include \
+  src/music.c tests/test_note_lifecycle.c \
+  -o "$test_dir/note-lifecycle-sanitized"
+"$test_dir/note-lifecycle-sanitized"
+
+"$compiler" -std=c11 -O2 -Wall -Wextra -Werror -Wno-strict-prototypes -pedantic \
+  -I tests/stubs -I include -I PLSDK/include \
+  src/music.c tests/test_note_lifecycle.c \
+  -o "$test_dir/note-lifecycle-optimized"
+"$test_dir/note-lifecycle-optimized"

@@ -1,6 +1,7 @@
 #include "buttons.h"
 #include "PLSDK/cap_buttons.h"
 #include "params.h"
+#include "music.h"
 #include <stdlib.h>
 
 
@@ -30,6 +31,7 @@ void release_bottom() {
 void mute_button_touch_action() {
     if (settings.is_mute_button_active) {
         isMutedByButton = !isMutedByButton;
+        if (isMutedByButton) stop_midi();
     }
     button_top_pressed = true;
 

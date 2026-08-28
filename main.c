@@ -35,6 +35,7 @@ int main(void)
     setup();
     while (true)
     {
+        service_midi_note_lifecycle();
         status_loop();
         led_loop();
         check_buttons();
