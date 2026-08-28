@@ -29,13 +29,32 @@ endif()
 add_definitions(-DPICO_XOSC_STARTUP_DELAY_MULTIPLIER=64)
 
 
-IF(DEFINED ENV{FLASH_ID_STARTUP})
-        message("$ENV{FLASH_ID_STARTUP}")
-        add_definitions(-DFLASH_ID_STARTUP=$ENV{FLASH_ID_STARTUP})
-        add_definitions(-DMAJOR_VERSION=$ENV{MAJOR_VERSION})
-        add_definitions(-DMINOR_VERSION=$ENV{MINOR_VERSION})
-        add_definitions(-DPATCH_VERSION=$ENV{PATCH_VERSION})
-ENDIF()
+set(BIOTRON_FLASH_ID "$ENV{FLASH_ID_STARTUP}" CACHE STRING
+        "Persistent settings compatibility ID")
+set(BIOTRON_VERSION_MAJOR "$ENV{MAJOR_VERSION}" CACHE STRING
+        "Firmware major version")
+set(BIOTRON_VERSION_MINOR "$ENV{MINOR_VERSION}" CACHE STRING
+        "Firmware minor version")
+set(BIOTRON_VERSION_PATCH "$ENV{PATCH_VERSION}" CACHE STRING
+        "Firmware patch version")
+
+foreach(required_value
+        BIOTRON_FLASH_ID
+        BIOTRON_VERSION_MAJOR
+        BIOTRON_VERSION_MINOR
+        BIOTRON_VERSION_PATCH)
+        if(NOT "${${required_value}}" MATCHES "^[0-9]+$")
+                message(FATAL_ERROR
+                        "${required_value} must be supplied explicitly as a non-negative integer")
+        endif()
+endforeach()
+
+message(STATUS "Settings compatibility ID: ${BIOTRON_FLASH_ID}")
+message(STATUS "Firmware version: ${BIOTRON_VERSION_MAJOR}.${BIOTRON_VERSION_MINOR}.${BIOTRON_VERSION_PATCH}")
+add_definitions(-DFLASH_ID_STARTUP=${BIOTRON_FLASH_ID})
+add_definitions(-DMAJOR_VERSION=${BIOTRON_VERSION_MAJOR})
+add_definitions(-DMINOR_VERSION=${BIOTRON_VERSION_MINOR})
+add_definitions(-DPATCH_VERSION=${BIOTRON_VERSION_PATCH})
 
 
 pico_sdk_init()
