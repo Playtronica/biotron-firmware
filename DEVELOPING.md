@@ -125,6 +125,16 @@ legacy reference until the team replaces the production pipeline.
 
 ## How to change something
 
+### Reserved Biotron query/action IDs
+
+- `123` — read saved/RAM settings (read-only)
+- `124` — health diagnostics (read-only)
+- `125` — restart plant calibration (RAM-only action)
+- `126` — firmware version (read-only)
+
+Keep these IDs distinct. `tests/test_release_contract.py` is the gate: update
+the protocol and Web client together rather than reusing an assigned number.
+
 1. Name one observable behavior and its compatibility boundary.
 2. Add/update a production-linked regression that fails for the old behavior.
 3. Make the smallest production change; do not combine protocol, storage, USB

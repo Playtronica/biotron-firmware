@@ -52,7 +52,11 @@ void add_sys_ex_query_len(void action(const uint8_t data[], uint8_t len),
     add_sys_ex_command(action, num, false, minimum_length);
 }
 
-bool print_sys_ex(const uint8_t data[], uint8_t len) {
+static uint8_t command_input_cable = CABLE_NUM_EXTRA;
+
+static bool print_sys_ex_on_cable(uint8_t cable, const uint8_t data[],
+                                  uint8_t len) {
+    if (cable > CABLE_NUM_EXTRA) return false;
     uint8_t message[4 + len];
     message[0] = SYS_EX_START;
     message[1] = PLAYTRONICA_KEY_FIRST;
@@ -62,10 +66,18 @@ bool print_sys_ex(const uint8_t data[], uint8_t len) {
     }
     message[3 + len] = SYS_EX_END;
     service_midi_tx();
-    const bool accepted = midi_tx_enqueue(
-            CABLE_NUM_EXTRA, message, (uint16_t)(4u + len));
+    const bool accepted = midi_tx_enqueue(cable, message,
+                                           (uint16_t)(4u + len));
     service_midi_tx();
     return accepted;
+}
+
+bool print_sys_ex(const uint8_t data[], uint8_t len) {
+    return print_sys_ex_on_cable(CABLE_NUM_EXTRA, data, len);
+}
+
+bool print_sys_ex_reply(const uint8_t data[], uint8_t len) {
+    return print_sys_ex_on_cable(command_input_cable, data, len);
 }
 
 bool print_pure(uint8_t cable, const uint8_t data[], uint8_t len) {
@@ -98,6 +110,7 @@ int read_sys_ex(void) {
     const uint8_t cable = (packet[0] >> 4) & 0x0f;
     midi_diagnostics_rx_packet(cable);
     if (cable > CABLE_NUM_EXTRA) return MIDI_PACKET_IGNORED;
+    command_input_cable = cable;
     const midi_event_kind_t kind = midi_parser_feed_usb_packet(
             &cable_parsers[cable], packet, &event);
     if (kind == MIDI_EVENT_MALFORMED) {

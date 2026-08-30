@@ -53,13 +53,25 @@ def main() -> None:
         (21, 1), (25, 1), (26, 1), (27, 1), (127, 2),
     ]
     query_registrations = length_registrations(params, "add_sys_ex_query_len")
-    assert query_registrations == [(123, 1), (124, 1), (126, 1)]
-    assert "BIOTRON_RECALIBRATE_COMMAND 123" in params_h
+    assert query_registrations == [(124, 1), (126, 1)]
+    assert "BIOTRON_SETTINGS_QUERY_ID 123u" in source("include/settings_readback.h")
+    assert "BIOTRON_RECALIBRATE_COMMAND 125" in params_h
     assert "BIOTRON_RECALIBRATE_WAITING 1" in params_h
     assert "BIOTRON_RECALIBRATE_MEASURING 2" in params_h
     assert "BIOTRON_RECALIBRATE_READY 3" in params_h
     assert "add_sys_ex_query_len(start_plant_calibration_sys_ex" in params
+    assert "add_sys_ex_query_len(get_settings_sys_ex" in params
     assert "add_sys_ex_query_len(get_health_sys_ex, 124, 1);" in params
+
+    # The four adjacent read-only/runtime protocol commands must remain
+    # distinct. This is the regression that prevents the former 123 collision.
+    settings_query_id = int(re.search(
+        r"BIOTRON_SETTINGS_QUERY_ID\s+(\d+)u", source("include/settings_readback.h")
+    ).group(1))
+    recalibration_id = int(re.search(
+        r"BIOTRON_RECALIBRATE_COMMAND\s+(\d+)", params_h
+    ).group(1))
+    assert {settings_query_id, 124, recalibration_id, 126} == {123, 124, 125, 126}
 
     # Shipping 1.8.2 stores zero-based 1/2 and therefore emits human MIDI 2/3.
     assert len(re.findall(r"\.plant_channel\s*=\s*1\s*,", params)) == 4
@@ -82,6 +94,13 @@ def main() -> None:
     assert "print_sys_ex" in health_query
     for forbidden in ("save_settings", "schedule_settings_save", "clear_flash", "reset_usb_boot"):
         assert forbidden not in health_query
+    settings_query = simple_function_body(
+        params, "void get_settings_sys_ex(const uint8_t data[], uint8_t len)"
+    )
+    assert "biotron_settings_encode" in settings_query
+    assert "print_sys_ex_reply" in settings_query
+    for forbidden in ("save_settings", "schedule_settings_save", "clear_flash", "reset_usb_boot"):
+        assert forbidden not in settings_query
     recalibration_action = simple_function_body(
         params, "void start_plant_calibration_sys_ex(const uint8_t data[], uint8_t len)"
     )
@@ -164,7 +183,8 @@ def main() -> None:
     ):
         assert required in settings_guide, required
     assert re.findall(r"^run_pair ([a-z0-9-]+)", host_runner, re.M) == [
-        "midi-parser", "commands", "midi-diagnostics", "midi-health", "runtime-safety", "usb-string",
+        "midi-parser", "commands", "midi-diagnostics", "midi-health",
+        "settings-readback", "runtime-safety", "usb-string",
         "settings-storage", "persistence-scheduler", "storage-v1",
         "music-v1", "note-lifecycle", "music-scheduler", "raw-plant",
         "midi-tx",

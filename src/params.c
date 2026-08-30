@@ -17,6 +17,7 @@
 #include "runtime_safety.h"
 #include "settings_storage.h"
 #include "persistence_scheduler.h"
+#include "settings_readback.h"
 
 Settings_t settings;
 bool isMutedByButton = false;
@@ -530,7 +531,26 @@ void get_health_sys_ex(const uint8_t data[], uint8_t len) {
     const size_t payload_length = midi_health_encode_page(
             &snapshot, data[0], payload, sizeof payload);
     if (payload_length > 0 && payload_length <= UINT8_MAX) {
-        print_sys_ex(payload, (uint8_t)payload_length);
+        print_sys_ex_reply(payload, (uint8_t)payload_length);
+    }
+}
+
+void get_settings_sys_ex(const uint8_t data[], uint8_t len) {
+    if (len != 2 || data[0] > BIOTRON_SETTINGS_SOURCE_PERSISTED) return;
+
+    midi_diagnostics_snapshot_t snapshot;
+    uint8_t payload[BIOTRON_SETTINGS_PAYLOAD_BYTES];
+    const bool persisted = data[0] == BIOTRON_SETTINGS_SOURCE_PERSISTED;
+    const bool source_valid = !persisted || persisted_settings_snapshot_valid;
+    const Settings_t *source = persisted ? &persisted_settings_snapshot :
+                                           &settings;
+    midi_diagnostics_snapshot(&snapshot);
+    const size_t payload_length = biotron_settings_encode(
+            source, source_valid, settings_differ_from_persisted(), data[0],
+            data[1], snapshot.settings_dirty_generation,
+            snapshot.settings_persisted_generation, payload, sizeof payload);
+    if (payload_length > 0 && payload_length <= UINT8_MAX) {
+        print_sys_ex_reply(payload, (uint8_t)payload_length);
     }
 }
 
@@ -622,8 +642,10 @@ void setup_commands() {
     add_sys_ex_com_len(set_channel_sys_ex, 127, 2);
     // Runtime-only action. The non-persisting registration is intentional:
     // recalibration must never schedule a settings flash write.
+    add_sys_ex_query_len(get_settings_sys_ex,
+                         BIOTRON_SETTINGS_QUERY_ID, 2);
     add_sys_ex_query_len(start_plant_calibration_sys_ex,
-                         123, 1);
+                         BIOTRON_RECALIBRATE_COMMAND, 1);
     add_sys_ex_query_len(get_health_sys_ex, 124, 1);
     add_sys_ex_query_len(get_info_sys_ex, 126, 1);
 }

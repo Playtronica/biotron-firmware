@@ -98,6 +98,9 @@ void add_sys_ex_query_len(void action(const uint8_t data[], uint8_t len),
  * */
 bool print_sys_ex(const uint8_t data[], uint8_t len);
 
+/** Reply on the same logical MIDI cable that sent the active query. */
+bool print_sys_ex_reply(const uint8_t data[], uint8_t len);
+
 /**
  * @brief Print info in MIDI format
  *

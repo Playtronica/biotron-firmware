@@ -26,6 +26,9 @@ static uint8_t sysex_values[8];
 static size_t sysex_calls;
 static size_t query_calls;
 static size_t bounded_calls;
+static uint8_t last_write_cable = 0xff;
+static uint8_t last_write[16];
+static size_t last_write_length;
 
 static void enqueue(uint8_t header, uint8_t a, uint8_t b, uint8_t c) {
     assert(queue_write < QUEUE_CAPACITY);
@@ -48,8 +51,10 @@ uint32_t tud_midi_available(void) {
 
 uint32_t tud_midi_stream_write(uint8_t cable, const uint8_t *data,
                                uint32_t length) {
-    (void)cable;
-    (void)data;
+    assert(length <= sizeof last_write);
+    last_write_cable = cable;
+    last_write_length = length;
+    memcpy(last_write, data, length);
     return length;
 }
 
@@ -71,6 +76,12 @@ static void capture_sysex(const uint8_t data[], uint8_t length) {
 static void capture_query(const uint8_t data[], uint8_t length) {
     assert(length == 1 && data[0] == 77);
     ++query_calls;
+}
+
+static void reply_to_query_cable(const uint8_t data[], uint8_t length) {
+    assert(length == 1 && data[0] == 88);
+    const uint8_t reply[] = {99};
+    assert(print_sys_ex_reply(reply, sizeof reply));
 }
 
 static void ignored_cc(uint8_t channel, uint8_t value) {
@@ -163,6 +174,26 @@ static void test_query_status_and_malformed_recovery(void) {
     assert(cc_calls == 1002);
 }
 
+static void test_query_reply_uses_requesting_cable(void) {
+    const uint8_t legacy_reply[] = {77};
+    assert(print_sys_ex(legacy_reply, sizeof legacy_reply));
+    assert(last_write_cable == CABLE_NUM_EXTRA);
+
+    add_sys_ex_query(reply_to_query_cable, 45);
+    for (uint8_t cable = 0; cable <= CABLE_NUM_EXTRA; ++cable) {
+        enqueue((uint8_t)((cable << 4) | 0x04), 0xf0,
+                PLAYTRONICA_KEY_FIRST, PLAYTRONICA_KEY_SECOND);
+        enqueue((uint8_t)((cable << 4) | 0x07), 45, 88, 0xf7);
+        assert(read_sys_ex() == MIDI_PACKET_IGNORED);
+        assert(read_sys_ex() == CUSTOM_QUERY_COMMAND);
+        assert(last_write_cable == cable);
+        assert(last_write_length == 5);
+        const uint8_t expected[] = {0xf0, PLAYTRONICA_KEY_FIRST,
+                                    PLAYTRONICA_KEY_SECOND, 99, 0xf7};
+        assert(memcmp(last_write, expected, sizeof expected) == 0);
+    }
+}
+
 static void test_system_boot_command_on_service_cable(void) {
     /* Web updater sends this first for v1.2.2-v1.2.5 compatibility. The
        current parser must ignore it safely, then accept the namespaced frame. */
@@ -209,6 +240,7 @@ int main(void) {
     test_1000_cc_are_not_dropped();
     test_two_cable_sysex_isolation_and_realtime();
     test_query_status_and_malformed_recovery();
+    test_query_reply_uses_requesting_cable();
     test_system_boot_command_on_service_cable();
     test_sysex_minimum_payload_is_enforced();
     test_clock_is_exactly_24_ppqn();

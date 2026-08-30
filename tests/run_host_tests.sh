@@ -42,6 +42,10 @@ run_pair midi-health \
   -I PLSDK/include \
   PLSDK/src/midi_health.c tests/test_midi_health.c
 
+run_pair settings-readback \
+  -Wno-strict-prototypes -I include -I PLSDK/include \
+  src/settings_readback.c tests/test_settings_readback.c
+
 # These syntax checks make sure the production translation units compile with
 # the host stubs even when their focused runtime test links only selected code.
 "$compiler" -std=c11 -Wall -Wextra -Werror -Wno-strict-prototypes \
