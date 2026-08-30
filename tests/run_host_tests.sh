@@ -46,11 +46,24 @@ run_pair settings-readback \
   -Wno-strict-prototypes -I include -I PLSDK/include \
   src/settings_readback.c tests/test_settings_readback.c
 
+run_pair led-engine \
+  -I include src/led_engine.c tests/test_led_engine.c
+
+run_pair led-adapter \
+  -Wno-strict-prototypes -DBIOTRON_LED_MUSIC_PULSE=1 \
+  -I tests/stubs -I include -I PLSDK/include \
+  src/led_engine.c src/leds.c tests/test_led_adapter.c
+
 # These syntax checks make sure the production translation units compile with
 # the host stubs even when their focused runtime test links only selected code.
 "$compiler" -std=c11 -Wall -Wextra -Werror -Wno-strict-prototypes \
   -Wno-unused-parameter -pedantic -fsyntax-only \
   -I tests/stubs -I include -I PLSDK/include src/music.c
+
+"$compiler" -std=c11 -Wall -Wextra -Werror -Wno-strict-prototypes \
+  -Wno-unused-parameter -pedantic -fsyntax-only \
+  -DBIOTRON_LED_MUSIC_PULSE=1 \
+  -I tests/stubs -I include -I PLSDK/include src/leds.c
 
 "$compiler" -std=c11 -Wall -Wextra -Werror -Wno-strict-prototypes \
   -Wno-unused-parameter -pedantic -fsyntax-only \
@@ -79,7 +92,8 @@ run_pair music-v1 \
   PLSDK/src/music.c tests/test_music_v1_contract.c
 
 run_pair note-lifecycle \
-  -Wno-strict-prototypes -I tests/stubs -I include -I PLSDK/include \
+  -Wno-strict-prototypes -DBIOTRON_LED_MUSIC_PULSE=1 \
+  -I tests/stubs -I include -I PLSDK/include \
   src/music.c tests/test_note_lifecycle.c
 
 run_pair music-scheduler \

@@ -44,6 +44,8 @@ Maintainers working on the compatible `1.8.3` stabilization should start with
 [`DEVELOPING.md`](DEVELOPING.md). It explains the runtime ownership model,
 compatibility rules, commit stack, exact build identity, test map and the
 boundary between firmware, Windows/REAPER, offline Settings and Help.
+The optional A06-A08 note-and-beat light experiment is documented separately in
+[`LED-MUSIC-PULSE.md`](LED-MUSIC-PULSE.md); it remains disabled by default.
 
 ```bash
 ./tests/run_host_tests.sh

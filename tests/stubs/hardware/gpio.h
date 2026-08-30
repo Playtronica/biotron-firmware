@@ -10,6 +10,7 @@
 
 void gpio_set_function(uint gpio, uint function);
 void gpio_init(uint gpio);
+void gpio_init_mask(uint32_t mask);
 void gpio_set_dir(uint gpio, bool output);
 
 #endif

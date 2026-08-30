@@ -8,6 +8,7 @@
 #include "global.h"
 #include "midi_note_lifecycle.h"
 #include "music.h"
+#include "leds.h"
 #include "params.h"
 #include "PLSDK/music.h"
 
@@ -42,6 +43,11 @@ static alarm_callback_t scheduled_callback = NULL;
 static void *scheduled_user_data = NULL;
 static alarm_id_t scheduled_id = 7;
 static bool fail_next_alarm = false;
+static size_t led_note_count = 0;
+static size_t led_beat_count = 0;
+static led_source_t last_led_source = LED_SOURCE_LIGHT;
+static uint8_t last_led_note = 0;
+static uint8_t last_led_velocity = 0;
 
 static void log_midi(uint8_t kind, uint8_t channel, uint8_t note) {
     assert(midi_log_len < sizeof midi_log / sizeof midi_log[0]);
@@ -63,6 +69,13 @@ uint64_t time_us_64(void) { return 1000; }
 uint32_t time_us_32(void) { return 1000; }
 uint16_t adc_read(void) { return 1600; }
 void light_note_observer(void) {}
+void led_music_note_on(led_source_t source, uint8_t note, uint8_t velocity) {
+    ++led_note_count;
+    last_led_source = source;
+    last_led_note = note;
+    last_led_velocity = velocity;
+}
+void led_music_beat(void) { ++led_beat_count; }
 void plsdk_printf(const char *format, ...) { (void)format; }
 bool print_pure(uint8_t cable, const uint8_t data[], uint8_t len) {
     (void)cable;
@@ -137,8 +150,12 @@ static void reset_fixture(void) {
     scheduled_user_data = NULL;
     scheduled_id = 7;
     fail_next_alarm = false;
+    last_note_plant = 60;
     reset_plant_note_off();
+    stop_light_midi();
     midi_log_len = 0;
+    led_note_count = 0;
+    led_beat_count = 0;
 }
 
 static void test_identity_round_trip(void) {
@@ -206,12 +223,41 @@ static void test_cancelled_alarm_is_ignored(void) {
     assert(count_event(LOG_NOTE_OFF, 5, 68) == off_count);
 }
 
+static void test_led_events_follow_emitted_notes_and_beats(void) {
+    reset_fixture();
+    calculated_note = 64;
+    midi_plant(4000);
+    assert(led_note_count == 1);
+    assert(last_led_source == LED_SOURCE_PLANT);
+    assert(last_led_note == 64);
+    assert(last_led_velocity == 100);
+
+    reset_fixture();
+    settings.same_note_light = 0;
+    midi_light();
+    assert(led_note_count == 1);
+    assert(last_led_source == LED_SOURCE_LIGHT);
+    assert(last_led_note == 48);
+    assert(last_led_velocity == 100);
+
+    reset_fixture();
+    isMutedByButton = true;
+    midi_plant(4000);
+    assert(led_note_count == 0);
+
+    reset_fixture();
+    calculated_note = 64;
+    play_music(4000);
+    assert(led_beat_count == 1);
+}
+
 int main(void) {
     test_identity_round_trip();
     test_alarm_keeps_exact_note_identity();
     test_replacement_and_clock_same_note_do_not_stick();
     test_alarm_failure_fails_closed();
     test_cancelled_alarm_is_ignored();
-    puts("note_lifecycle: identity, replacement, Clock and failure passed");
+    test_led_events_follow_emitted_notes_and_beats();
+    puts("note_lifecycle: identity, replacement, Clock, LED and failure passed");
     return 0;
 }

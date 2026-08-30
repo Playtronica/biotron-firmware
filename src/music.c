@@ -161,6 +161,9 @@ void midi_plant(int64_t to_the_next_beat_us) {
                 biotron_midi_7bit(settings.maxPlantVelocity);
 
         note_on(settings.plant_channel, currentNote, velocity);
+#if BIOTRON_LED_MUSIC_PULSE
+        led_music_note_on(LED_SOURCE_PLANT, currentNote, velocity);
+#endif
         last_note_plant_channel = biotron_midi_channel(settings.plant_channel);
         active_plant_note_identity = midi_note_identity_pack(
                 last_note_plant_channel, currentNote);
@@ -216,6 +219,9 @@ void midi_light() {
                         settings.minLightVelocity, settings.maxLightVelocity) :
                 biotron_midi_7bit(settings.maxLightVelocity);
         note_on(settings.light_channel, current_note, vel);
+#if BIOTRON_LED_MUSIC_PULSE
+        led_music_note_on(LED_SOURCE_LIGHT, current_note, vel);
+#endif
         last_note_light_channel = biotron_midi_channel(settings.light_channel);
         light_note_active = true;
 
@@ -253,6 +259,10 @@ void play_music(int64_t to_the_next_beat) {
     static uint64_t time_log = 0;
     static uint8_t counter = 1;
     const uint8_t light_every = biotron_effective_light_bpm(settings.lightBPM);
+
+#if BIOTRON_LED_MUSIC_PULSE
+    led_music_beat();
+#endif
 
     midi_plant(to_the_next_beat);
 

@@ -28,6 +28,16 @@ else()
 endif()
 add_definitions(-DPICO_XOSC_STARTUP_DELAY_MULTIPLIER=64)
 
+option(BIOTRON_LED_MUSIC_PULSE
+        "Enable the experimental A06-A08 note-and-beat LED engine" OFF)
+if(BIOTRON_LED_MUSIC_PULSE)
+        message(STATUS "Experimental Music + Pulse LED engine: ON")
+        add_compile_definitions(BIOTRON_LED_MUSIC_PULSE=1)
+else()
+        message(STATUS "Experimental Music + Pulse LED engine: OFF")
+        add_compile_definitions(BIOTRON_LED_MUSIC_PULSE=0)
+endif()
+
 
 set(BIOTRON_FLASH_ID "$ENV{FLASH_ID_STARTUP}" CACHE STRING
         "Persistent settings compatibility ID")
