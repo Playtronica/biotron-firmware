@@ -25,6 +25,13 @@ Read it before changing MIDI, USB, settings, timers or BOOT.
   not save, reset, enter BOOT or clear counters.
   Reset reason distinguishes power/RUN, watchdog-enable timeout and
   forced/bootrom reset. No watchdog is enabled by this branch.
+- The post-F1 recalibration draft reserves vendor command `123`. Request
+  `F0 14 0D 7B <nonce> F7`; progress is reported on both logical cables as
+  `F0 0B 7B <nonce> <state> F7`, where state `1` is waiting for a stable plant
+  signal, `2` is measuring and `3` is ready. It stops active notes and clears
+  only the transient sensor baseline. It does not change settings, write flash,
+  reset USB or enter BOOT. This ID remains provisional until firmware-owner
+  review and physical testing.
 - The exact `cf264aa` UF2 has passed Mac USB/version, bounded CC liveness,
   settings-preserving software BOOT on both MIDI outputs and exact legacy-unit
   rollback. It has not passed the complete Windows/REAPER/hardware matrix.

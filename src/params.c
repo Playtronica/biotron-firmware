@@ -534,6 +534,11 @@ void get_health_sys_ex(const uint8_t data[], uint8_t len) {
     }
 }
 
+void start_plant_calibration_sys_ex(const uint8_t data[], uint8_t len) {
+    if (len != 1) return;
+    start_plant_calibration(data[0]);
+}
+
 
 void set_button_mode_state_sys_ex(const uint8_t data[], uint8_t len) {
     if (len != 1) return;
@@ -615,6 +620,10 @@ void setup_commands() {
     add_CC(set_button_mode_state_cc, 87);
 
     add_sys_ex_com_len(set_channel_sys_ex, 127, 2);
+    // Runtime-only action. The non-persisting registration is intentional:
+    // recalibration must never schedule a settings flash write.
+    add_sys_ex_query_len(start_plant_calibration_sys_ex,
+                         123, 1);
     add_sys_ex_query_len(get_health_sys_ex, 124, 1);
     add_sys_ex_query_len(get_info_sys_ex, 126, 1);
 }

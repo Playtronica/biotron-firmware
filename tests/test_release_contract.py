@@ -52,7 +52,13 @@ def main() -> None:
         (7, 0), (10, 1), (11, 1), (24, 1), (12, 1), (13, 1), (19, 1),
         (21, 1), (25, 1), (26, 1), (27, 1), (127, 2),
     ]
-    assert length_registrations(params, "add_sys_ex_query_len") == [(124, 1), (126, 1)]
+    query_registrations = length_registrations(params, "add_sys_ex_query_len")
+    assert query_registrations == [(123, 1), (124, 1), (126, 1)]
+    assert "BIOTRON_RECALIBRATE_COMMAND 123" in params_h
+    assert "BIOTRON_RECALIBRATE_WAITING 1" in params_h
+    assert "BIOTRON_RECALIBRATE_MEASURING 2" in params_h
+    assert "BIOTRON_RECALIBRATE_READY 3" in params_h
+    assert "add_sys_ex_query_len(start_plant_calibration_sys_ex" in params
     assert "add_sys_ex_query_len(get_health_sys_ex, 124, 1);" in params
 
     # Shipping 1.8.2 stores zero-based 1/2 and therefore emits human MIDI 2/3.
@@ -76,6 +82,17 @@ def main() -> None:
     assert "print_sys_ex" in health_query
     for forbidden in ("save_settings", "schedule_settings_save", "clear_flash", "reset_usb_boot"):
         assert forbidden not in health_query
+    recalibration_action = simple_function_body(
+        params, "void start_plant_calibration_sys_ex(const uint8_t data[], uint8_t len)"
+    )
+    assert "start_plant_calibration(data[0]);" in recalibration_action
+    for forbidden in ("save_settings", "schedule_settings_save", "clear_flash", "reset_usb_boot"):
+        assert forbidden not in recalibration_action
+    recalibration_runtime = simple_function_body(
+        global_source, "void start_plant_calibration(uint8_t request_nonce)"
+    )
+    for forbidden in ("settings =", "save_settings", "clear_flash", "reset_usb_boot"):
+        assert forbidden not in recalibration_runtime
     query_case = re.search(
         r"case CUSTOM_QUERY_COMMAND:\s*(.*?)\s*break;", dispatcher, re.S
     )

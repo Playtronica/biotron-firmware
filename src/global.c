@@ -5,6 +5,7 @@
 #include <hardware/sync.h>
 
 #include "PLSDK/music.h"
+#include "PLSDK/commands.h"
 #include "PLSDK.h"
 #include "PLSDK/cap_buttons.h"
 
@@ -20,6 +21,25 @@ enum Status active_status = Active;
 uint32_t last_freq = 0;
 uint32_t average_freq = 0;
 uint32_t average_delta_freq = 0;
+static uint8_t status_counter = 0;
+static bool requested_calibration_active = false;
+static uint8_t requested_calibration_nonce = 0;
+
+static void report_requested_calibration(uint8_t state) {
+    if (!requested_calibration_active) return;
+    const uint8_t response[] = {
+            SYS_EX_START, PLAYTRONICA_SYS_KEY,
+            BIOTRON_RECALIBRATE_COMMAND, requested_calibration_nonce,
+            state, SYS_EX_END,
+    };
+    // The browser may have either logical cable selected. Report on both
+    // without changing their established music/service roles.
+    print_pure(0, response, sizeof response);
+    print_pure(1, response, sizeof response);
+    if (state == BIOTRON_RECALIBRATE_READY) {
+        requested_calibration_active = false;
+    }
+}
 
 uint32_t filter_freq(double val, double k) {
     static uint32_t filter_val = 0;
@@ -149,10 +169,26 @@ void load_settings() {
     is_stopped = !is_stopped;
 }
 
+void start_plant_calibration(uint8_t request_nonce) {
+    // Calibration is a runtime reset only: preserve user settings and the
+    // selected internal/Clock mode, but stop every note and discard the old
+    // sensor baseline before returning to the normal Sleep -> Stabilization
+    // state machine.
+    stop_music_alarm();
+    stop_midi();
+    status_counter = 0;
+    last_freq = 0;
+    average_freq = 0;
+    average_delta_freq = 0;
+    filter_freq(0, 0);
+    status = Sleep;
+    requested_calibration_nonce = request_nonce & 0x7f;
+    requested_calibration_active = true;
+    report_requested_calibration(BIOTRON_RECALIBRATE_WAITING);
+}
+
 
 void status_loop() {
-    static uint8_t counter = 0;
-
     if (!plant_is_ready()) {
         return;
     }
@@ -171,20 +207,21 @@ void status_loop() {
             }
 
             if (raw_freq > MIN_FREQ) {
-                counter++;
+                status_counter++;
             } else {
-                counter = 0;
+                status_counter = 0;
             }
 
-            if (counter >= STABILIZATION_COUNTER) {
+            if (status_counter >= STABILIZATION_COUNTER) {
                 status = Stabilization;
-                counter = 0;
+                status_counter = 0;
+                report_requested_calibration(BIOTRON_RECALIBRATE_MEASURING);
                 plsdk_printf("[+] Change status: Sleep -> Stab\n");
             }
             break;
         case Stabilization: {
             if (raw_freq > MIN_FREQ && !TestMode) {
-                counter++;
+                status_counter++;
                 uint32_t b = filter_freq(raw_freq, 0.3);
                 if (average_freq == 0) {
                     last_freq = raw_freq;
@@ -195,27 +232,29 @@ void status_loop() {
                 }
                 average_freq += b;
             } else {
-                counter = 0;
+                status_counter = 0;
                 average_delta_freq = 0;
                 average_freq = 0;
                 last_freq = 0;
                 note_off(settings.plant_channel, 92);
                 note_off(settings.plant_channel, 91);
                 status = Sleep;
+                report_requested_calibration(BIOTRON_RECALIBRATE_WAITING);
                 plsdk_printf("[+] Change status: Stab -> Sleep\n");
                 break;
             }
 
-            if (counter > AVERAGE_COUNTER) {
-                average_freq /= counter;
-                average_delta_freq /= counter;
-                counter = 0;
+            if (status_counter > AVERAGE_COUNTER) {
+                average_freq /= status_counter;
+                average_delta_freq /= status_counter;
+                status_counter = 0;
                 note_off(settings.plant_channel, 92);
                 note_off(settings.plant_channel, 91);
                 if (active_status == Active) {
                     start_music_alarm();
                 }
                 status = active_status;
+                report_requested_calibration(BIOTRON_RECALIBRATE_READY);
                 plsdk_printf("[+] Change status: Stab -> Active\n");
             }
 
@@ -224,9 +263,9 @@ void status_loop() {
         case Active:
         case BPMClockActive:
             if (raw_freq < MIN_FREQ) {
-                counter++;
+                status_counter++;
             } else {
-                counter = 0;
+                status_counter = 0;
             }
 
             if (settings.filterPercent != 0) {
@@ -237,8 +276,8 @@ void status_loop() {
             }
 
 
-            if (counter > SLEEP_COUNTER || TestMode) {
-                counter = 0;
+            if (status_counter > SLEEP_COUNTER || TestMode) {
+                status_counter = 0;
                 last_freq = 0;
                 average_freq = 0;
                 average_delta_freq = 0;

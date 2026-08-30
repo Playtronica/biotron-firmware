@@ -17,6 +17,7 @@ enum Status {
 extern enum Status status;
 extern enum Status active_status;
 void status_loop();
+void start_plant_calibration(uint8_t request_nonce);
 
 extern uint32_t last_freq;
 extern uint32_t average_freq;
