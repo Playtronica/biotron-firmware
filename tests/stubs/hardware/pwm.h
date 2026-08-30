@@ -20,5 +20,6 @@ void pwm_config_set_clkdiv(pwm_config *config, float divider);
 void pwm_init(uint slice_num, const pwm_config *config, bool start);
 void pwm_set_enabled(uint slice_num, bool enabled);
 void pwm_set_irq_enabled(uint slice_num, bool enabled);
+void pwm_set_gpio_level(uint gpio, uint16_t level);
 
 #endif

@@ -1,6 +1,16 @@
 #ifndef BIOTRON_LEDS_H
 #define BIOTRON_LEDS_H
 
+#ifndef BIOTRON_LED_MUSIC_PULSE
+#define BIOTRON_LED_MUSIC_PULSE 0
+#endif
+
+#if BIOTRON_LED_MUSIC_PULSE
+#include <stdint.h>
+
+#include "led_engine.h"
+#endif
+
 #define GROUP_BlUE_LED_CENTER 1
 #define GROUP_BlUE_LED_LEFT 0
 #define GROUP_BlUE_LED_RIGHT 2
@@ -28,4 +38,8 @@ void intro_leds();
 void led_loop();
 
 void light_note_observer();
+#if BIOTRON_LED_MUSIC_PULSE
+void led_music_note_on(led_source_t source, uint8_t note, uint8_t velocity);
+void led_music_beat(void);
+#endif
 #endif //BIOTRON_LEDS_H

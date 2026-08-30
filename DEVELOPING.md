@@ -67,7 +67,7 @@ the main loop, never to an IRQ callback.
 | MIDI TX and note identity | `PLSDK/src/midi_tx.c`, `PLSDK/src/music.c`, `src/music.c` | `test_midi_tx.c`, `test_music_v1_contract.c`, `test_note_lifecycle.c` |
 | Settings/flash | `src/params.c`, `include/settings_storage.h`, `include/persistence_scheduler.h` | `test_settings_storage.c`, `test_persistence_scheduler.c`, `test_storage_v1_contract.c` |
 | USB identity | `PLSDK/src/usb_descriptors.c` | `test_usb_string_descriptor.c`, `test_release_contract.py` |
-| User controls/LED | `src/buttons.c`, `PLSDK/src/cap_buttons.c`, `src/leds.c` | physical functional card; factory logger has the caveat below |
+| User controls/LED | `src/buttons.c`, `PLSDK/src/cap_buttons.c`, `src/leds.c`, `src/led_engine.c` | `test_led_engine.c`, `test_led_adapter.c`, `test_note_lifecycle.c`, physical functional card; see `LED-MUSIC-PULSE.md` |
 | Wire documentation | `SettingsDescription.md` | registry assertions in `test_release_contract.py` and `test_commands_integration.c` |
 
 ## F1 compatibility rules
@@ -100,7 +100,7 @@ Run the complete host suite first:
 ./tests/run_host_tests.sh
 ```
 
-It compiles 14 production-linked test groups twice: ASan/UBSan and optimized
+It compiles 17 production-linked test groups twice: ASan/UBSan and optimized
 `-O2`, plus source/ABI/descriptor contracts. A focused test is useful while
 editing, but the full script is the pre-commit gate.
 

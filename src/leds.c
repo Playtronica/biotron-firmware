@@ -18,6 +18,28 @@ const uint8_t ALL_LEDS[] = {
 };
 const uint8_t LED_COUNT = 9;
 
+#if BIOTRON_LED_MUSIC_PULSE
+static led_engine_t music_pulse_engine;
+static bool music_pulse_suppressed = false;
+
+/* Physical left, center, right order on A06-A08. */
+static const uint8_t BLUE_SPATIAL[LED_ENGINE_LANES] = {
+        GROUP_BlUE_LED_LEFT, GROUP_BlUE_LED_CENTER, GROUP_BlUE_LED_RIGHT,
+};
+static const uint8_t FIRST_GREEN_SPATIAL[LED_ENGINE_LANES] = {
+        FIRST_GROUP_GREEN_LED_2, FIRST_GROUP_GREEN_LED_3,
+        FIRST_GROUP_GREEN_LED_1,
+};
+static const uint8_t SECOND_GREEN_SPATIAL[LED_ENGINE_LANES] = {
+        SECOND_GROUP_GREEN_LED_2, SECOND_GROUP_GREEN_LED_3,
+        SECOND_GROUP_GREEN_LED_1,
+};
+
+static uint32_t led_now_ms(void) {
+    return time_us_32() / 1000u;
+}
+#endif
+
 
 inline uint8_t mute_plant() {
     return isMutedByButton ? 8 : 1;
@@ -42,7 +64,9 @@ void init_leds() {
         pwm_init(pwm_gpio_to_slice_num(ALL_LEDS[i]), &config, true);
         remind_midi();
     }
-
+#if BIOTRON_LED_MUSIC_PULSE
+    led_engine_init(&music_pulse_engine, led_now_ms());
+#endif
 }
 
 void intro_leds() {
@@ -63,8 +87,59 @@ static int16_t level = (MAX_LIGHT - MIN_LIGHT) / (TIMER_MULTIPLIER * 40);
 void active_led_loop_classic();
 void active_led_loop_light_bpm_sync();
 
+#if BIOTRON_LED_MUSIC_PULSE
+static void blue_leds(uint16_t value) {
+    pwm_set_gpio_level_invert(GROUP_BlUE_LED_RIGHT, value);
+    pwm_set_gpio_level_invert(GROUP_BlUE_LED_LEFT, value);
+    pwm_set_gpio_level_invert(GROUP_BlUE_LED_CENTER, value);
+}
+
+static void reset_music_pulse(void) {
+    led_engine_reset(&music_pulse_engine, led_now_ms());
+}
+
+static void render_music_pulse(void) {
+    led_frame_t frame;
+    if (!led_engine_service(&music_pulse_engine, led_now_ms(), &frame)) return;
+    for (uint8_t lane = 0; lane < LED_ENGINE_LANES; ++lane) {
+        pwm_set_gpio_level_invert(BLUE_SPATIAL[lane], frame.blue[lane]);
+        pwm_set_gpio_level_invert(FIRST_GREEN_SPATIAL[lane],
+                                  frame.green[LED_SOURCE_LIGHT][lane]);
+        pwm_set_gpio_level_invert(SECOND_GREEN_SPATIAL[lane],
+                                  frame.green[LED_SOURCE_PLANT][lane]);
+    }
+}
+
+void led_music_note_on(led_source_t source, uint8_t note, uint8_t velocity) {
+    int minimum;
+    int maximum;
+    if (source == LED_SOURCE_PLANT) {
+        minimum = settings.middle_plant_note - LOWEST_NOTE_RANGE;
+        maximum = settings.middle_plant_note + HIGHEST_NOTE_RANGE;
+    } else if (source == LED_SOURCE_LIGHT) {
+        const int range = biotron_effective_light_range(
+                settings.light_note_range);
+        const int center = settings.middle_plant_note - LIGHT_DIFFERENCE;
+        minimum = center - range;
+        maximum = center + range;
+    } else {
+        return;
+    }
+    led_engine_note_on(&music_pulse_engine, source, note, velocity,
+                       biotron_midi_7bit(minimum),
+                       biotron_midi_7bit(maximum));
+}
+
+void led_music_beat(void) {
+    led_engine_beat(&music_pulse_engine);
+}
+#endif
+
 void led_loop() {
     if (TestMode) {
+#if BIOTRON_LED_MUSIC_PULSE
+        reset_music_pulse();
+#endif
         if (isTestModeGreen) {
             pwm_set_gpio_level_invert(GROUP_BlUE_LED_RIGHT, 0);
             pwm_set_gpio_level_invert(GROUP_BlUE_LED_LEFT, 0);
@@ -91,9 +166,11 @@ void led_loop() {
         return;
     }
 
+#if !BIOTRON_LED_MUSIC_PULSE
     pwm_set_gpio_level_invert(GROUP_BlUE_LED_RIGHT, MAX_LIGHT);
     pwm_set_gpio_level_invert(GROUP_BlUE_LED_LEFT, MAX_LIGHT);
     pwm_set_gpio_level_invert(GROUP_BlUE_LED_CENTER, MAX_LIGHT);
+#endif
 
     if (button_top_pressed) {
         pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_1, MAX_LIGHT);
@@ -125,11 +202,19 @@ void led_loop() {
     }
 
     if (button_top_pressed || button_bottom_pressed || button_finger_pressed) {
+#if BIOTRON_LED_MUSIC_PULSE
+        blue_leds(MAX_LIGHT);
+        reset_music_pulse();
+#endif
         return;
     }
 
     switch (status) {
         case Sleep:
+#if BIOTRON_LED_MUSIC_PULSE
+            blue_leds(MAX_LIGHT);
+            reset_music_pulse();
+#endif
             if (level < 0) level *= -1;
 
             for (int i = ASYNC_LEDS - 1; i >= 0; i--) {
@@ -145,6 +230,10 @@ void led_loop() {
 
             break;
         case Stabilization: {
+#if BIOTRON_LED_MUSIC_PULSE
+            blue_leds(MAX_LIGHT);
+            reset_music_pulse();
+#endif
             static int16_t led_step = 1000;
             static uint16_t value = MIN_LIGHT;
             if ((value + led_step > MAX_LIGHT && led_step > 0)
@@ -172,6 +261,17 @@ void led_loop() {
         }
         case Active:
         case BPMClockActive: {
+#if BIOTRON_LED_MUSIC_PULSE
+            if (isMutedByButton) {
+                if (!music_pulse_suppressed) {
+                    led_engine_clear_notes(&music_pulse_engine);
+                }
+                music_pulse_suppressed = true;
+            } else {
+                music_pulse_suppressed = false;
+            }
+            render_music_pulse();
+#else
             pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_1, 0);
             pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_2, 0);
             pwm_set_gpio_level_invert(FIRST_GROUP_GREEN_LED_3, 0);
@@ -180,6 +280,7 @@ void led_loop() {
             pwm_set_gpio_level_invert(SECOND_GROUP_GREEN_LED_3, 0);
 //            active_led_loop_classic();
             active_led_loop_light_bpm_sync();
+#endif
             break;
         }
     }
