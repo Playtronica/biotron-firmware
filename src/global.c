@@ -29,17 +29,19 @@ typedef struct {
     uint8_t tick;
     uint8_t note;
     uint8_t velocity;
+    uint8_t duration_ticks;
 } calibration_cue_event_t;
 
 /*
- * 100 ms ticks: a soft descending "step back" phrase, then a resolving
- * ascending "ready" phrase. These remain normal MIDI notes for DAWs and
- * external instruments; the firmware only replaces the old rapid 91/92
- * alternation used during Stabilization.
+ * 100 ms ticks: a quiet cadence with a clear opening, high point and final
+ * resting note. These remain normal MIDI notes for DAWs and external
+ * instruments; the firmware only replaces the old rapid 91/92 alternation
+ * used during Stabilization.
  */
 static const calibration_cue_event_t CALIBRATION_CUE[] = {
-        {1, 79, 42}, {6, 76, 42}, {11, 72, 42}, {17, 67, 42},
-        {23, 72, 48}, {29, 76, 48}, {35, 79, 48}, {41, 84, 52},
+        {3, 64, 22, 3}, {8, 65, 24, 3}, {13, 67, 26, 4},
+        {18, 72, 28, 4}, {24, 71, 26, 3}, {29, 67, 24, 3},
+        {34, 62, 22, 4}, {40, 60, 18, 9},
 };
 static uint8_t calibration_cue_index = 0;
 static uint8_t calibration_cue_active_note = 0xff;
@@ -67,7 +69,7 @@ static void service_calibration_cue(uint8_t tick) {
     if (event->tick != tick) return;
     note_on(settings.plant_channel, event->note, event->velocity);
     calibration_cue_active_note = event->note;
-    calibration_cue_note_off_tick = tick + 2;
+    calibration_cue_note_off_tick = tick + event->duration_ticks;
     calibration_cue_index++;
 }
 

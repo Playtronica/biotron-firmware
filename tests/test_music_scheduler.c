@@ -200,8 +200,8 @@ int main(void) {
     assert(calibration_messages[4][4] == BIOTRON_RECALIBRATE_READY);
     assert(calibration_messages[5][4] == BIOTRON_RECALIBRATE_READY);
 
-    const uint8_t expected_notes[] = {79, 76, 72, 67, 72, 76, 79, 84};
-    const uint8_t expected_velocities[] = {42, 42, 42, 42, 48, 48, 48, 52};
+    const uint8_t expected_notes[] = {64, 65, 67, 72, 71, 67, 62, 60};
+    const uint8_t expected_velocities[] = {22, 24, 26, 28, 26, 24, 22, 18};
     assert(calibration_note_count == sizeof expected_notes * 2);
     for (size_t i = 0; i < sizeof expected_notes; ++i) {
         const size_t on = i * 2;
@@ -219,14 +219,14 @@ int main(void) {
     start_plant_calibration(43);
     for (size_t i = 0; i < STABILIZATION_COUNTER; ++i) status_loop();
     assert(status == Stabilization);
-    status_loop();
+    for (size_t i = 0; i < 3; ++i) status_loop();
     assert(calibration_notes[calibration_note_count - 1][0] == 1);
-    assert(calibration_notes[calibration_note_count - 1][2] == 79);
+    assert(calibration_notes[calibration_note_count - 1][2] == 64);
     plant_frequency = 0;
     status_loop();
     assert(status == Sleep);
     assert(calibration_notes[calibration_note_count - 1][0] == 0);
-    assert(calibration_notes[calibration_note_count - 1][2] == 79);
+    assert(calibration_notes[calibration_note_count - 1][2] == 64);
 
     puts("music_scheduler: IRQ deferral, swing and calibration cue passed");
     return 0;

@@ -25,4 +25,13 @@ next physical flash, audition several lower-velocity phrases against measured
 normal-play velocity, select one with a clear beginning and resolution, and
 retain balanced Note On/Off plus legacy Web detection.
 
+## Candidate after the failed gate
+
+The next source iteration uses the auditioned **Gentle Cadence** contour:
+`64, 65, 67, 72, 71, 67, 62, 60`, with velocities `18–28` instead of the
+failed `42–52`. Per-note duration is now part of the small static cue table so
+the ending can resolve without adding another scheduler. This is still a team
+candidate until an owner hears it on the physical Biotron; the earlier failed
+result remains recorded above and is not overwritten.
+
 No merge, release or production deployment is approved by this result.
