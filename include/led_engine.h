@@ -20,8 +20,10 @@ typedef struct {
 } led_frame_t;
 
 typedef struct {
-    uint16_t green_energy[LED_ENGINE_SOURCE_COUNT][LED_ENGINE_LANES];
-    uint16_t beat_energy;
+    uint16_t green_target[LED_ENGINE_SOURCE_COUNT][LED_ENGINE_LANES];
+    uint16_t green_level[LED_ENGINE_SOURCE_COUNT][LED_ENGINE_LANES];
+    uint16_t beat_target;
+    uint16_t beat_level;
     uint32_t last_tick_ms;
     bool dirty;
 } led_engine_t;

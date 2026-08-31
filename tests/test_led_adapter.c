@@ -85,14 +85,16 @@ static void test_spatial_pin_map_and_polarity(void) {
     reset_fixture();
     led_music_note_on(LED_SOURCE_LIGHT, 24, 127);
     led_loop();
-    assert(brightness(3) == LED_ENGINE_MAX_LEVEL);
+    assert(brightness(3) > 0);
+    assert(brightness(3) < LED_ENGINE_MAX_LEVEL);
     assert(brightness(4) == 0);
     assert(brightness(9) == 0);
 
     reset_fixture();
     led_music_note_on(LED_SOURCE_PLANT, 97, 127);
     led_loop();
-    assert(brightness(14) == LED_ENGINE_MAX_LEVEL);
+    assert(brightness(14) > 0);
+    assert(brightness(14) < LED_ENGINE_MAX_LEVEL);
     assert(brightness(10) == 0);
     assert(brightness(11) == 0);
 }
@@ -102,15 +104,17 @@ static void test_beat_and_mute_domains(void) {
     led_music_note_on(LED_SOURCE_PLANT, 60, 127);
     led_music_beat();
     led_loop();
-    assert(brightness(0) == LED_ENGINE_MAX_LEVEL);
-    assert(brightness(1) == LED_ENGINE_MAX_LEVEL);
-    assert(brightness(2) == LED_ENGINE_MAX_LEVEL);
-    assert(brightness(11) == LED_ENGINE_MAX_LEVEL);
+    const uint16_t beat = brightness(0);
+    const uint16_t note = brightness(11);
+    assert(beat > 0 && beat < LED_ENGINE_MAX_LEVEL);
+    assert(note > 0 && note < LED_ENGINE_MAX_LEVEL);
+    assert(brightness(1) == beat);
+    assert(brightness(2) == beat);
 
     isMutedByButton = true;
     led_loop();
     assert(brightness(11) == 0);
-    assert(brightness(0) == LED_ENGINE_MAX_LEVEL);
+    assert(brightness(0) == beat);
 }
 
 int main(void) {
