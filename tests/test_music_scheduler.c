@@ -31,8 +31,10 @@ static size_t critical_exits = 0;
 static size_t stop_midi_count = 0;
 static bool plant_ready = false;
 static uint32_t plant_frequency = 0;
-static uint8_t calibration_messages[8][6];
+static uint8_t calibration_messages[12][6];
 static size_t calibration_message_count = 0;
+static uint8_t calibration_notes[20][4];
+static size_t calibration_note_count = 0;
 
 extern void start_music_alarm(void);
 extern void stop_music_alarm(void);
@@ -63,15 +65,27 @@ void stop_midi(void) { ++stop_midi_count; }
 bool plant_is_ready(void) { return plant_ready; }
 uint32_t get_real_freq(void) { return plant_frequency; }
 uint16_t adc_read(void) { return 0; }
+void note_on(uint8_t channel, uint8_t note, uint8_t velocity) {
+    assert(calibration_note_count < 20);
+    calibration_notes[calibration_note_count][0] = 1;
+    calibration_notes[calibration_note_count][1] = channel;
+    calibration_notes[calibration_note_count][2] = note;
+    calibration_notes[calibration_note_count][3] = velocity;
+    ++calibration_note_count;
+}
 void note_off(uint8_t channel, uint8_t note) {
-    (void)channel;
-    (void)note;
+    assert(calibration_note_count < 20);
+    calibration_notes[calibration_note_count][0] = 0;
+    calibration_notes[calibration_note_count][1] = channel;
+    calibration_notes[calibration_note_count][2] = note;
+    calibration_notes[calibration_note_count][3] = 0;
+    ++calibration_note_count;
 }
 void plsdk_printf(const char *format, ...) { (void)format; }
 bool print_pure(uint8_t cable, const uint8_t data[], uint8_t len) {
     assert(cable <= 1);
     assert(len == 6);
-    assert(calibration_message_count < 8);
+    assert(calibration_message_count < 12);
     for (size_t i = 0; i < len; ++i) {
         calibration_messages[calibration_message_count][i] = data[i];
     }
@@ -186,6 +200,34 @@ int main(void) {
     assert(calibration_messages[4][4] == BIOTRON_RECALIBRATE_READY);
     assert(calibration_messages[5][4] == BIOTRON_RECALIBRATE_READY);
 
-    puts("music_scheduler: IRQ deferral, swing and recalibration passed");
+    const uint8_t expected_notes[] = {79, 76, 72, 67, 72, 76, 79, 84};
+    const uint8_t expected_velocities[] = {42, 42, 42, 42, 48, 48, 48, 52};
+    assert(calibration_note_count == sizeof expected_notes * 2);
+    for (size_t i = 0; i < sizeof expected_notes; ++i) {
+        const size_t on = i * 2;
+        const size_t off = on + 1;
+        assert(calibration_notes[on][0] == 1);
+        assert(calibration_notes[on][1] == settings.plant_channel);
+        assert(calibration_notes[on][2] == expected_notes[i]);
+        assert(calibration_notes[on][3] == expected_velocities[i]);
+        assert(calibration_notes[off][0] == 0);
+        assert(calibration_notes[off][1] == settings.plant_channel);
+        assert(calibration_notes[off][2] == expected_notes[i]);
+    }
+
+    /* Losing the sensor mid-phrase must emit the matching Note Off. */
+    start_plant_calibration(43);
+    for (size_t i = 0; i < STABILIZATION_COUNTER; ++i) status_loop();
+    assert(status == Stabilization);
+    status_loop();
+    assert(calibration_notes[calibration_note_count - 1][0] == 1);
+    assert(calibration_notes[calibration_note_count - 1][2] == 79);
+    plant_frequency = 0;
+    status_loop();
+    assert(status == Sleep);
+    assert(calibration_notes[calibration_note_count - 1][0] == 0);
+    assert(calibration_notes[calibration_note_count - 1][2] == 79);
+
+    puts("music_scheduler: IRQ deferral, swing and calibration cue passed");
     return 0;
 }

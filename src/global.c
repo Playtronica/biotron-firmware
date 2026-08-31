@@ -25,6 +25,52 @@ static uint8_t status_counter = 0;
 static bool requested_calibration_active = false;
 static uint8_t requested_calibration_nonce = 0;
 
+typedef struct {
+    uint8_t tick;
+    uint8_t note;
+    uint8_t velocity;
+} calibration_cue_event_t;
+
+/*
+ * 100 ms ticks: a soft descending "step back" phrase, then a resolving
+ * ascending "ready" phrase. These remain normal MIDI notes for DAWs and
+ * external instruments; the firmware only replaces the old rapid 91/92
+ * alternation used during Stabilization.
+ */
+static const calibration_cue_event_t CALIBRATION_CUE[] = {
+        {1, 79, 42}, {6, 76, 42}, {11, 72, 42}, {17, 67, 42},
+        {23, 72, 48}, {29, 76, 48}, {35, 79, 48}, {41, 84, 52},
+};
+static uint8_t calibration_cue_index = 0;
+static uint8_t calibration_cue_active_note = 0xff;
+static uint8_t calibration_cue_note_off_tick = 0;
+
+static void stop_calibration_cue(void) {
+    if (calibration_cue_active_note != 0xff) {
+        note_off(settings.plant_channel, calibration_cue_active_note);
+        calibration_cue_active_note = 0xff;
+    }
+}
+
+static void reset_calibration_cue(void) {
+    stop_calibration_cue();
+    calibration_cue_index = 0;
+}
+
+static void service_calibration_cue(uint8_t tick) {
+    if (calibration_cue_active_note != 0xff &&
+        tick >= calibration_cue_note_off_tick) stop_calibration_cue();
+    if (calibration_cue_index >=
+        sizeof CALIBRATION_CUE / sizeof CALIBRATION_CUE[0]) return;
+    const calibration_cue_event_t *event =
+            &CALIBRATION_CUE[calibration_cue_index];
+    if (event->tick != tick) return;
+    note_on(settings.plant_channel, event->note, event->velocity);
+    calibration_cue_active_note = event->note;
+    calibration_cue_note_off_tick = tick + 2;
+    calibration_cue_index++;
+}
+
 static void report_requested_calibration(uint8_t state) {
     if (!requested_calibration_active) return;
     const uint8_t response[] = {
@@ -181,6 +227,7 @@ void start_plant_calibration(uint8_t request_nonce) {
     average_freq = 0;
     average_delta_freq = 0;
     filter_freq(0, 0);
+    reset_calibration_cue();
     status = Sleep;
     requested_calibration_nonce = request_nonce & 0x7f;
     requested_calibration_active = true;
@@ -215,6 +262,7 @@ void status_loop() {
             if (status_counter >= STABILIZATION_COUNTER) {
                 status = Stabilization;
                 status_counter = 0;
+                reset_calibration_cue();
                 report_requested_calibration(BIOTRON_RECALIBRATE_MEASURING);
                 plsdk_printf("[+] Change status: Sleep -> Stab\n");
             }
@@ -222,6 +270,7 @@ void status_loop() {
         case Stabilization: {
             if (raw_freq > MIN_FREQ && !TestMode) {
                 status_counter++;
+                service_calibration_cue(status_counter);
                 uint32_t b = filter_freq(raw_freq, 0.3);
                 if (average_freq == 0) {
                     last_freq = raw_freq;
@@ -236,8 +285,7 @@ void status_loop() {
                 average_delta_freq = 0;
                 average_freq = 0;
                 last_freq = 0;
-                note_off(settings.plant_channel, 92);
-                note_off(settings.plant_channel, 91);
+                reset_calibration_cue();
                 status = Sleep;
                 report_requested_calibration(BIOTRON_RECALIBRATE_WAITING);
                 plsdk_printf("[+] Change status: Stab -> Sleep\n");
@@ -248,8 +296,7 @@ void status_loop() {
                 average_freq /= status_counter;
                 average_delta_freq /= status_counter;
                 status_counter = 0;
-                note_off(settings.plant_channel, 92);
-                note_off(settings.plant_channel, 91);
+                stop_calibration_cue();
                 if (active_status == Active) {
                     start_music_alarm();
                 }

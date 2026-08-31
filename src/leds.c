@@ -234,19 +234,13 @@ void led_loop() {
             blue_leds(MAX_LIGHT);
             reset_music_pulse();
 #endif
-            static int16_t led_step = 1000;
+            /* About one second per half-cycle at the 1 ms main-loop cadence. */
+            static int16_t led_step =
+                    (MAX_LIGHT - MIN_LIGHT) / 1000;
             static uint16_t value = MIN_LIGHT;
             if ((value + led_step > MAX_LIGHT && led_step > 0)
                 || (value + led_step < MIN_LIGHT && led_step < 0)) {
                 led_step *= -1;
-                if (led_step < 0) {
-                    note_off(settings.plant_channel, 91);
-                    note_on(settings.plant_channel, 92, 90);
-                }
-                else {
-                    note_off(settings.plant_channel, 92);
-                    note_on(settings.plant_channel, 91, 90);
-                }
             }
 
             value += led_step;
