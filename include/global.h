@@ -17,6 +17,7 @@ enum Status {
 extern enum Status status;
 extern enum Status active_status;
 void status_loop();
+void start_plant_calibration(uint8_t request_nonce);
 
 extern uint32_t last_freq;
 extern uint32_t average_freq;
@@ -26,5 +27,7 @@ void bpm_clock_control(bool enabled);
 void stop_bpm();
 void reset_bpm();
 void load_settings();
+void service_music_alarm(void);
+void refresh_music_alarm_timing(void);
 
 #endif //BIOTRON_GLOBAL_H

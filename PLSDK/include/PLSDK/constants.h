@@ -36,6 +36,7 @@
 #define MS_TO_BPM(MS) (int)(60.0 * 1000.0 / (MS))
 
 #define BPM_CLOCK_START_BYTE 250 // 0xFA
+#define BPM_CLOCK_CONTINUE_BYTE 251 // 0xFB
 #define BPM_CLOCK_STOP_BYTE 252 // 0xFC
 #define BPM_CLOCK_BYTE 248 // 0xF8
 #define MUSIC_SELECT 242

@@ -84,11 +84,11 @@ The `set_plant_bpm` function allows for the control of the beats per minute (bpm
 
 ### Description
 
-The `set_light_bpm` feature governs the synchronization between plant notes and light notes, where for every 'n' plant notes played, one light note is triggered. The parameter value sets the ratio of plant notes to light notes played. The range of this parameter spans from 0 (indicating that the light channel is inactive) to 10 (denoting a light note played for every 10 plant notes).
+The `set_light_bpm` feature governs the synchronization between plant notes and light notes, where for every effective 'n' plant notes played, one light note is triggered. The wire value ranges from 0 to 127. For compatibility with the released 1.8.2 firmware, values 0 and 1 both mean that a light note is triggered on every plant beat; values 2 to 127 set the corresponding ratio.
 
 ### Sys Ex Format
 
-- Accepted values range from 0 to 10, with 0 indicating no connection between plant and light notes, and 10 representing a one-to-ten ratio of plant notes to light notes.
+- Accepted values range from 0 to 127. Values 0 and 1 both produce a one-to-one ratio; values 2 to 127 produce the corresponding one-to-n ratio. There is no "disable light" value in this command; use the light mute setting instead.
 
 
 ---

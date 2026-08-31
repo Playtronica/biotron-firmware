@@ -2,6 +2,10 @@
 #define BIOTRON_PARAMS_H
 
 #define FLASH_TARGET_OFFSET (512 * 1024)
+#define BIOTRON_RECALIBRATE_COMMAND 125
+#define BIOTRON_RECALIBRATE_WAITING 1
+#define BIOTRON_RECALIBRATE_MEASURING 2
+#define BIOTRON_RECALIBRATE_READY 3
 
 #ifdef FLASH_ID_STARTUP
 #define ID_FLASH FLASH_ID_STARTUP
@@ -84,10 +88,10 @@ extern bool isTestModeGreen;
 
 void save_settings();
 void read_settings();
-void clear_flash();
 
 void setup_commands();
 void get_sys_ex_and_behave();
 void set_next_preset();
+void service_settings_persistence(void);
 
 #endif //BIOTRON_PARAMS_H

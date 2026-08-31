@@ -1,3 +1,6 @@
 file(GLOB src "*.c")
+if(NOT BIOTRON_LED_MUSIC_PULSE)
+    list(REMOVE_ITEM src "${CMAKE_CURRENT_SOURCE_DIR}/led_engine.c")
+endif()
 target_sources(${TARGET_NAME} PUBLIC ${src})
 target_include_directories(${TARGET_NAME} PUBLIC ../include)

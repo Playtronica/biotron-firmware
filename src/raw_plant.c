@@ -1,19 +1,21 @@
-#include <pico/printf.h>
+#include <assert.h>
 #include <stdlib.h>
 #include "hardware/pwm.h"
 #include "hardware/gpio.h"
 #include "raw_plant.h"
 #include "pico/time.h"
 #include "hardware/irq.h"
+#include "hardware/sync.h"
 #include "params.h"
+#include "runtime_safety.h"
 
 
 struct repeating_timer getFrequencyTimer;
 uint8_t slice_num = 0;
-uint32_t count = 0;
+volatile uint32_t count = 0;
 uint32_t LastCount = 0;
-bool freq_ready = false;
-uint32_t realFreq = 0;
+static volatile bool freq_ready = false;
+static volatile uint32_t raw_frequency_sample = 0;
 
 
 static void _on_pwm_wrap() {
@@ -33,8 +35,10 @@ static uint16_t _pwm_read(uint sliceNum) {
 
 
 static bool _repeating_timer_callback_t(repeating_timer_t *rt) {
+    (void)rt;
+    raw_frequency_sample = _pwm_read(slice_num) * TIMER_MULTIPLIER;
+    // Publish last: the main loop never consumes a partially written sample.
     freq_ready = true;
-    realFreq = _pwm_read(slice_num) * TIMER_MULTIPLIER + rand() % (settings.random_note * 10);
     return true;
 }
 
@@ -46,10 +50,18 @@ bool plant_is_ready() {
 
 uint32_t get_real_freq() {
     static uint32_t old_one = 0;
-    if (freq_ready) {
+    const uint32_t irq_state = save_and_disable_interrupts();
+    const bool has_sample = freq_ready;
+    const uint32_t sample = raw_frequency_sample;
+    if (has_sample) {
         freq_ready = false;
-        old_one = realFreq;
-        return realFreq;
+    }
+    restore_interrupts(irq_state);
+    if (has_sample) {
+        const uint32_t random_value = settings.random_note ?
+                (uint32_t)rand() : 0u;
+        old_one = sample + biotron_random_note_jitter(
+                random_value, settings.random_note);
     }
     return old_one;
 }

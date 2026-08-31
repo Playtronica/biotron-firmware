@@ -10,22 +10,53 @@
 #include "PLSDK/commands.h"
 #include "leds.h"
 #include "PLSDK.h"
+#include "runtime_safety.h"
+#include "midi_note_lifecycle.h"
 
 uint8_t last_note_plant = MIDDLE_NOTE;
 uint8_t last_note_light = 0;
+static uint8_t last_note_plant_channel = 1;
+static uint8_t last_note_light_channel = 2;
+static uintptr_t active_plant_note_identity = 0;
+static bool light_note_active = false;
+static volatile uintptr_t due_plant_note_identity = 0;
 
 
-alarm_id_t note_off_alarm_id;
+alarm_id_t note_off_alarm_id = -1;
 
 
 int64_t plant_note_off(alarm_id_t id, void *user_data) {
-    note_off(settings.plant_channel, last_note_plant);
+    const uintptr_t identity = (uintptr_t)user_data;
+    if (note_off_alarm_id != id) return 0;
+    // Pico alarm callbacks run in IRQ context. Publish the exact note identity;
+    // TinyUSB transmission is serviced from the main loop.
+    due_plant_note_identity = identity;
+    note_off_alarm_id = -1;
     return 0;
 }
 
+void service_midi_note_lifecycle(void) {
+    const uintptr_t identity = due_plant_note_identity;
+    if (identity == 0) return;
+    due_plant_note_identity = 0;
+    note_off(midi_note_identity_channel(identity),
+             midi_note_identity_note(identity));
+    if (active_plant_note_identity == identity) {
+        active_plant_note_identity = 0;
+    }
+}
+
 void reset_plant_note_off() {
-    note_off(settings.plant_channel, last_note_plant);
-    cancel_alarm(note_off_alarm_id);
+    if (note_off_alarm_id >= 0) {
+        cancel_alarm(note_off_alarm_id);
+        note_off_alarm_id = -1;
+    }
+    due_plant_note_identity = 0;
+    if (active_plant_note_identity != 0) {
+        note_off(midi_note_identity_channel(active_plant_note_identity),
+                 midi_note_identity_note(active_plant_note_identity));
+        active_plant_note_identity = 0;
+    }
 }
 
 uint8_t get_CC(int counter) {
@@ -46,7 +77,7 @@ uint8_t get_CC(int counter) {
 //        lastCC -= (lastCC - target_CC) / 2;
 //    }
 
-    return 63 + counter;
+    return biotron_midi_7bit(63 + counter);
 }
 
 
@@ -57,11 +88,14 @@ int get_plant_counter() {
     const uint8_t a = 10, b = 30;
 
 
-    int diff = (int)average_freq - (int)last_freq;
-    bool minus = diff < 0;
-    diff = abs(diff);
+    const bool minus = average_freq < last_freq;
+    const uint32_t diff_magnitude = biotron_abs_diff_u32(
+            average_freq, last_freq);
+    int diff = diff_magnitude > (uint32_t)INT_MAX ? INT_MAX :
+            (int)diff_magnitude;
 
-    if ((abs((int)last_val - (int)last_freq) >= average_delta_freq * 3) || settings.performance_mode) {
+    if (((uint64_t)biotron_abs_diff_u32(last_val, last_freq) >=
+         (uint64_t)average_delta_freq * 3u) || settings.performance_mode) {
         last_change_time = time_us_64();
         last_val = last_freq;
         extra_counter = 0;
@@ -82,29 +116,22 @@ int get_plant_counter() {
         }
     }
 
-    double first = 0;
-    double second = settings.firstValue;
-
-    int i;
-
-    if (diff - average_delta_freq >= 0) {
-        i = 1;
+    if (average_delta_freq <= (uint32_t)INT_MAX &&
+        diff >= (int)average_delta_freq) {
         diff -= (int)average_delta_freq;
-    } else return extra_counter;
-
-    double extra;
-    while (diff - (average_delta_freq + settings.fibPower * (first + second)) > 0) {
-        diff -= (int)average_delta_freq + (int)(settings.fibPower * (first + second));
-        extra = first + second;
-        first = second;
-        second = extra;
-        i++;
+    } else {
+        // Released integer promotions made this path return one scale step.
+        // Preserve that observable behaviour while avoiding underflow.
+        diff = 0;
     }
+
+    const int i = biotron_fibonacci_counter(
+            diff, average_delta_freq, settings.fibPower, settings.firstValue);
 
     if (minus) {
-        return -i + extra_counter;
+        return biotron_clamp_int(-i + extra_counter, -127, 127);
     }
-    return i + extra_counter;
+    return biotron_clamp_int(i + extra_counter, -127, 127);
 }
 
 
@@ -117,22 +144,39 @@ void midi_plant(int64_t to_the_next_beat_us) {
                                                           plant_counter, settings.scale)));
 
     if (!isMutedByButton && !settings.isMutePlantVelocity) {
+        if (active_status == BPMClockActive) {
+            reset_plant_note_off();
+        }
         if (abs((int)currentNote - (int)last_note_plant) < settings.same_note_plant) {
             return;
         }
 
-        if (active_status == BPMClockActive) {
-            note_off(settings.plant_channel, last_note_plant);
+        if (active_status == Active && active_plant_note_identity != 0) {
+            reset_plant_note_off();
         }
 
         uint8_t velocity = settings.isRandomPlantVelocity ?
-                rand() % (settings.maxPlantVelocity + 1 - settings.minPlantVelocity) + settings.minPlantVelocity :
-                settings.maxPlantVelocity;
+                biotron_random_velocity((uint32_t)rand(),
+                        settings.minPlantVelocity, settings.maxPlantVelocity) :
+                biotron_midi_7bit(settings.maxPlantVelocity);
 
         note_on(settings.plant_channel, currentNote, velocity);
+#if BIOTRON_LED_MUSIC_PULSE
+        led_music_note_on(LED_SOURCE_PLANT, currentNote, velocity);
+#endif
+        last_note_plant_channel = biotron_midi_channel(settings.plant_channel);
+        active_plant_note_identity = midi_note_identity_pack(
+                last_note_plant_channel, currentNote);
 
         if (active_status == Active) {
-            add_alarm_in_us(MAX(1, to_the_next_beat_us / settings.fraction_note_off), plant_note_off, NULL, false);
+            note_off_alarm_id = add_alarm_in_us(
+                    MAX(1, to_the_next_beat_us /
+                            MAX(1, settings.fraction_note_off)),
+                    plant_note_off, (void *)active_plant_note_identity, false);
+            if (note_off_alarm_id < 0) {
+                note_off(last_note_plant_channel, currentNote);
+                active_plant_note_identity = 0;
+            }
         }
     }
 
@@ -145,7 +189,9 @@ void midi_plant(int64_t to_the_next_beat_us) {
 
 void midi_light() {
     uint16_t adc = MIN(adc_read(), MAX_OF_LIGHT);
-    uint16_t step = MAX_OF_LIGHT / (settings.light_note_range * 2);
+    const uint8_t light_note_range = biotron_effective_light_range(
+            settings.light_note_range);
+    uint16_t step = MAX_OF_LIGHT / (light_note_range * 2);
 
     int counter = abs(MAX_OF_LIGHT / 2 - (int)adc) / step;
     if (adc > MAX_OF_LIGHT / 2) {
@@ -153,12 +199,15 @@ void midi_light() {
     }
 
 
-    uint8_t current_note = MAX(settings.middle_plant_note - LIGHT_DIFFERENCE - settings.light_note_range,
-                               MIN(settings.middle_plant_note - LIGHT_DIFFERENCE + settings.light_note_range,
+    uint8_t current_note = MAX(settings.middle_plant_note - LIGHT_DIFFERENCE - light_note_range,
+                               MIN(settings.middle_plant_note - LIGHT_DIFFERENCE + light_note_range,
                                    calculate_note_by_scale(settings.middle_plant_note - LIGHT_DIFFERENCE, counter,
                                                            settings.scale)));
 
-    note_off(settings.light_channel, last_note_light);
+    if (light_note_active) {
+        note_off(last_note_light_channel, last_note_light);
+        light_note_active = false;
+    }
 
     if (abs((int)current_note - (int)last_note_light) < settings.same_note_light) {
         return;
@@ -166,33 +215,59 @@ void midi_light() {
 
     if (!isMutedByButton && !settings.isMuteLightVelocity) {
         uint8_t vel = settings.isRandomLightVelocity ?
-                rand() % (settings.maxLightVelocity + 1 - settings.minLightVelocity) + settings.minLightVelocity :
-                      settings.maxLightVelocity;
+                biotron_random_velocity((uint32_t)rand(),
+                        settings.minLightVelocity, settings.maxLightVelocity) :
+                biotron_midi_7bit(settings.maxLightVelocity);
         note_on(settings.light_channel, current_note, vel);
+#if BIOTRON_LED_MUSIC_PULSE
+        led_music_note_on(LED_SOURCE_LIGHT, current_note, vel);
+#endif
+        last_note_light_channel = biotron_midi_channel(settings.light_channel);
+        light_note_active = true;
 
     }
     last_note_light = current_note;
 }
 
 void midi_light_pitch() {
-    uint16_t buff = (uint16_t)(((double)MIN(adc_read(), MAX_OF_LIGHT) / (double)MAX_OF_LIGHT) * 4096.0);
-    change_pitch(0, buff % 127, buff / 12);
+    const uint16_t bend = biotron_pitch_from_adc(
+            MIN(adc_read(), MAX_OF_LIGHT), MAX_OF_LIGHT);
+    change_pitch(settings.plant_channel, biotron_pitch_lsb(bend),
+                 biotron_pitch_msb(bend));
 }
 
 void stop_midi() {
-    note_off(settings.plant_channel, last_note_plant);
-    note_off(settings.light_channel, last_note_light);
-    change_pitch(0, 63, 63);
+    stop_plant_midi();
+    stop_light_midi();
+}
+
+void stop_plant_midi(void) {
+    reset_plant_note_off();
+    stop_all_notes(last_note_plant_channel);
+    change_pitch(last_note_plant_channel, 0, 64);
+}
+
+void stop_light_midi(void) {
+    if (light_note_active) {
+        note_off(last_note_light_channel, last_note_light);
+        light_note_active = false;
+    }
+    stop_all_notes(last_note_light_channel);
 }
 
 void play_music(int64_t to_the_next_beat) {
     static uint64_t time_log = 0;
     static uint8_t counter = 1;
+    const uint8_t light_every = biotron_effective_light_bpm(settings.lightBPM);
+
+#if BIOTRON_LED_MUSIC_PULSE
+    led_music_beat();
+#endif
 
     midi_plant(to_the_next_beat);
 
     if (settings.light_pitch_mode) midi_light_pitch();
-    else if (counter++ >= settings.lightBPM) {
+    else if (counter++ >= light_every) {
         midi_light();
         light_note_observer();
         counter = 1;
