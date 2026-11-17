@@ -464,7 +464,6 @@ void get_info_sys_ex(const uint8_t data[], uint8_t len) {
     uint8_t sys_ex_info[] = {SYS_EX_START, PLAYTRONICA_SYS_KEY, 126, data[0],
                              MAJOR_VERSION, MINOR_VERSION, PATCH_VERSION, SYS_EX_END};
     print_pure(0, sys_ex_info, 8);
-    print_pure(1, sys_ex_info, 8);
 }
 
 

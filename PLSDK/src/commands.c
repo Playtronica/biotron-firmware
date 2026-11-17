@@ -34,7 +34,7 @@ void print_sys_ex(const uint8_t data[], uint8_t len) {
         message[3 + i] = data[i];
     }
     message[3 + len] = SYS_EX_END;
-    tud_midi_stream_write(CABLE_NUM_EXTRA, message, 4 + len);
+    tud_midi_stream_write(CABLE_NUM_MAIN, message, 4 + len);
 }
 
 void print_pure(uint8_t cable, const uint8_t data[], uint8_t len) {
