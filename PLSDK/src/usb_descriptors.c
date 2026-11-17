@@ -51,14 +51,14 @@ tusb_desc_device_t const desc_device =
 
                 // Use Interface Association Descriptor (IAD) for CDC
                 // As required by USB Specs IAD's subclass must be common class (2) and protocol must be IAD (1)
-                .bDeviceClass       = 0x00,
-                .bDeviceSubClass    = 0x00,
-                .bDeviceProtocol    = 0x00,
+                .bDeviceClass       = TUSB_CLASS_MISC,
+                .bDeviceSubClass    = MISC_SUBCLASS_COMMON,
+                .bDeviceProtocol    = MISC_PROTOCOL_IAD,
                 .bMaxPacketSize0    = CFG_TUD_ENDPOINT0_SIZE,
 
                 .idVendor           = USB_VID,
                 .idProduct          = USB_PID,
-                .bcdDevice          = 0x0100,
+                .bcdDevice          = 0x0102,
 
                 .iManufacturer      = 0x01,
                 .iProduct           = 0x02,
@@ -98,7 +98,7 @@ enum
 #else
 #define EPNUM_MIDI   0x01
 #endif
-#define MIDI_NUM_CABLES 2
+#define MIDI_NUM_CABLES 1
 
 #if CFG_TUSB_MCU == OPT_MCU_LPC175X_6X || CFG_TUSB_MCU == OPT_MCU_LPC177X_8X || CFG_TUSB_MCU == OPT_MCU_LPC40XX
 // LPC 17xx and 40xx endpoint type (bulk/interrupt/iso) are fixed by its number
@@ -148,16 +148,16 @@ uint8_t const desc_fs_configuration[] =
                 // Config number, interface count, string index, total length, attribute, power in mA
                 TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, CONFIG_TOTAL_LEN, 0x00, 100),
 
-                TUD_CDC_DESCRIPTOR(ITF_NUM_CDC, 0, EPNUM_CDC_0_NOTIF, 8, EPNUM_CDC_0_OUT, EPNUM_CDC_0_IN, 64),
+                // Interfaces must appear in ascending order: MIDI (0, 1), then CDC (2, 3)
+                // One MIDI cable: Windows Chromium hangs on unplug of a device with two MIDI ports (crbug 566965142)
                 TUD_MIDI_DESC_HEAD(ITF_NUM_MIDI, 0, MIDI_NUM_CABLES),
                 TUD_MIDI_DESC_JACK(1),
-                TUD_MIDI_DESC_JACK(2),
                 TUD_MIDI_DESC_EP(EPNUM_MIDI, 64, MIDI_NUM_CABLES),
                 TUD_MIDI_JACKID_IN_EMB(1),
-                TUD_MIDI_JACKID_IN_EMB(2),
                 TUD_MIDI_DESC_EP(0x80 | EPNUM_MIDI, 64, MIDI_NUM_CABLES),
                 TUD_MIDI_JACKID_OUT_EMB(1),
-                TUD_MIDI_JACKID_OUT_EMB(2),
+
+                TUD_CDC_DESCRIPTOR(ITF_NUM_CDC, 0, EPNUM_CDC_0_NOTIF, 8, EPNUM_CDC_0_OUT, EPNUM_CDC_0_IN, 64),
         };
 
 #if TUD_OPT_HIGH_SPEED

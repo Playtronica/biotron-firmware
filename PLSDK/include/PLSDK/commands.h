@@ -95,7 +95,7 @@ uint8_t *parse_value_to_sys_ex(uint32_t data);
  * @return Nothing
  *
  * @note
- * Sends data only on 2 MIDI cable. Also sends data in Playtronica format
+ * Sends data on the only (1st) MIDI cable. Also sends data in Playtronica format
  * */
 void print_sys_ex(const uint8_t data[], uint8_t len);
 
